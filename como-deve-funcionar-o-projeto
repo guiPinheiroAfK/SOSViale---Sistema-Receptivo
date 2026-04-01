@@ -1,0 +1,48 @@
+Sistema Receptivo - SOS Viale Turismo: Guia de estrutura e comportamento
+
+Este projeto utiliza o padrão Maven com arquitetura em camadas para garantir
+manutenibilidade e escalabilidade.
+
+--- CAMADA: MAIN (Ponto de Entrada) ---
+* Main.java: Inicializa a aplicação, carrega configurações de ambiente
+  e invoca o menu principal da CLI.
+
+
+--- CAMADA: CLI (Interface com Usuário) ---
+* Responsabilidade: Entrada e saída de dados via console (Scanner e System.out).
+* Comportamento: Não deve conter lógica de banco ou cálculos. Apenas exibe
+  menus, solicita dados ao usuário e mostra resultados.
+* Requisito relacionado: Uso de sequências ANSI para formatação.
+
+
+--- CAMADA: MODEL (Entidades) ---
+* Responsabilidade: Classes que representam os objetos do mundo real.
+* Arquivos: Passageiro.java, Veiculo.java, Transfer.java.
+* Comportamento: Classes POJO (Plain Old Java Objects) com atributos,
+  getters, setters e construtores. Refletem exatamente o schema.sql.
+
+
+--- CAMADA: REPOSITORY (Persistência) ---
+* Responsabilidade: Comunicação direta com o banco PostgreSQL (porta 5600).
+* Comportamento: Aqui ficam os DAOs (Data Access Objects). Contém o código SQL
+  e utiliza JDBC para salvar, buscar, atualizar ou deletar dados.
+
+
+--- CAMADA: SERVICE (Cérebro do Sistema) ---
+* Responsabilidade: Regras de negócio e processamento de dados.
+* Comportamento: Validações de documentos (RG/Passaporte), lógica para
+  cálculo de câmbio (BRL/USD/PYG) e regras de status do transfer.
+* Intermediação: O CLI chama o Service, que chama o Repository.
+
+
+--- CAMADA: UTIL (Ferramentas) ---
+* Responsabilidade: Códigos utilitários reutilizáveis.
+* Comportamento: Gerador de PDF (Ordem de Serviço), validador de JWT para
+  segurança e conversores de moedas.
+
+
+--- ARQUIVOS DE CONFIGURAÇÃO NA RAIZ ---
+* pom.xml: Gerenciamento de dependências (Java 17, iText, JWT, Postgres).
+* docker-compose.yml: Configura o container do banco na porta 5600.
+* schema.sql: Script de criação das tabelas e relacionamentos.
+* applications.properties: Credenciais de conexão e constantes do sistema.
