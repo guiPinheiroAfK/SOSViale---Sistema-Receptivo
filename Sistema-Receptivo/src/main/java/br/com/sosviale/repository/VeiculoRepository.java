@@ -1,0 +1,32 @@
+package br.com.sosviale.repository;
+
+import br.com.sosviale.config.JPAUtil;
+import br.com.sosviale.model.Veiculo;
+import jakarta.persistence.EntityManager;
+import java.util.List;
+
+public class VeiculoRepository {
+
+    public void salvar(Veiculo veiculo) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(veiculo);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Veiculo> listarTodos() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT v FROM Veiculo v", Veiculo.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+}

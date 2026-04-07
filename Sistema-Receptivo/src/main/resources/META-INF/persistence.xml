@@ -4,20 +4,25 @@
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
              version="3.0">
 
-    <persistence-unit name="sos-viale-pu">
+    <persistence-unit name="sos-viale-pu" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>br.com.sosviale.model.Passageiro</class>
+        <class>br.com.sosviale.model.Motorista</class>
+        <class>br.com.sosviale.model.Veiculo</class>
+        <class>br.com.sosviale.model.Transfer</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5600/sos_viale_db"/>
             <property name="jakarta.persistence.jdbc.user" value="viale_user"/>
-            <property name="jakarta.persistence.jdbc.password" value="viale_password"/>
+            <property name="jakarta.persistence.jdbc.password" value="teste_viale"/>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
 
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.hbm2ddl.auto" value="validate"/>
         </properties>
     </persistence-unit>
 </persistence>

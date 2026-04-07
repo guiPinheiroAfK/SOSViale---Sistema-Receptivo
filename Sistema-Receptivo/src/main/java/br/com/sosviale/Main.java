@@ -2,7 +2,9 @@ package br.com.sosviale;
 
 import br.com.sosviale.config.DbConfig;
 import br.com.sosviale.repository.ConnectionFactory;
+import br.com.sosviale.repository.PassageiroRepository;
 import java.sql.Connection;
+import br.com.sosviale.model.Passageiro;
 
 public class Main {
     public static void main(String[] args) {
@@ -29,5 +31,21 @@ public class Main {
             System.err.println("Java não conseguiu chegar no banco.");
             System.err.println("Motivo: " + e.getMessage());
         }
+
+        try {
+            PassageiroRepository repo = new PassageiroRepository();
+
+            // Criando um objeto para teste
+            Passageiro p = new Passageiro("Guilherme Gocks", "123.456.789-00", "Brasileira");
+
+            System.out.println("Salvando passageiro via JPA...");
+            repo.salvar(p);
+
+            System.out.println("Passageiro salvo com ID: " + p.getId());
+
+        } catch (Exception e) {
+            System.err.println("Erro ao operar com JPA: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
-}
+    }

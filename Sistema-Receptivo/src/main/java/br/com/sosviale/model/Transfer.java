@@ -1,0 +1,76 @@
+package br.com.sosviale.model;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "transfers")
+public class Transfer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "data_hora", nullable = false)
+    private LocalDateTime dataHora;
+
+    @Column(nullable = false, length = 100)
+    private String origem;
+
+    @Column(nullable = false, length = 100)
+    private String destino;
+
+    @Column(length = 20)
+    private String status = "PENDENTE";
+
+    @Column(name = "valor_base", precision = 10, scale = 2)
+    private BigDecimal valorBase;
+
+    // Relacionamento: Muitos transfers para um motorista
+    @ManyToOne
+    @JoinColumn(name = "motorista_id") // Nome da coluna FK no banco
+    private Motorista motorista;
+
+    // Relacionamento: Muitos transfers para um veículo
+    @ManyToOne
+    @JoinColumn(name = "veiculo_id")
+    private Veiculo veiculo;
+
+    public Transfer() {
+    }
+
+    public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase, Motorista motorista, Veiculo veiculo) {
+        this.dataHora = dataHora;
+        this.origem = origem;
+        this.destino = destino;
+        this.valorBase = valorBase;
+        this.motorista = motorista;
+        this.veiculo = veiculo;
+    }
+
+    // Getters e Setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public LocalDateTime getDataHora() { return dataHora; }
+    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+
+    public String getOrigem() { return origem; }
+    public void setOrigem(String origem) { this.origem = origem; }
+
+    public String getDestino() { return destino; }
+    public void setDestino(String destino) { this.destino = destino; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public BigDecimal getValorBase() { return valorBase; }
+    public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
+
+    public Motorista getMotorista() { return motorista; }
+    public void setMotorista(Motorista motorista) { this.motorista = motorista; }
+
+    public Veiculo getVeiculo() { return veiculo; }
+    public void setVeiculo(Veiculo veiculo) { this.veiculo = veiculo; }
+}
