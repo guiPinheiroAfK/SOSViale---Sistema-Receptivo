@@ -8,13 +8,11 @@ import java.util.List;
 
 public class PassageiroRepository {
 
-    // O nome deve ser identico ao <persistence-unit> do seu persistence.xml
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("sos-viale-pu");
 
-    /**
-     * Salva um passageiro no banco.
-     * Atende ao critério: Operações de CRUD e Tratamento de Erros.
-     */
+
+     //Salva um passageiro no banco.
+
     public void salvar(Passageiro passageiro) {
         EntityManager em = emf.createEntityManager();
         try {
@@ -32,9 +30,9 @@ public class PassageiroRepository {
         }
     }
 
-    /**
-     * Lista todos os passageiros.
-     */
+
+     // Lista todos os passageiros.
+
     public List<Passageiro> listarTodos() {
         EntityManager em = emf.createEntityManager();
         try {

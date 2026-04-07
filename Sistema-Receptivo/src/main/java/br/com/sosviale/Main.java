@@ -1,10 +1,13 @@
 package br.com.sosviale;
 
 import br.com.sosviale.config.DbConfig;
-import br.com.sosviale.repository.ConnectionFactory;
-import br.com.sosviale.repository.PassageiroRepository;
-import java.sql.Connection;
-import br.com.sosviale.model.Passageiro;
+import br.com.sosviale.model.*;
+import br.com.sosviale.repository.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,31 +23,56 @@ public class Main {
             return;
         }
 
-        //O teste de conexão do banco
-        System.out.println("Tentando conectar ao banco SOS Viale na porta 5600...");
-
-        try (Connection conn = ConnectionFactory.getConnection()) {
-            if (conn != null) {
-                System.out.println("O Java finalmente conectou!");
-            }
-        } catch (Exception e) {
-            System.err.println("Java não conseguiu chegar no banco.");
-            System.err.println("Motivo: " + e.getMessage());
-        }
-
+        //teste
         try {
-            PassageiroRepository repo = new PassageiroRepository();
+            // 1. Instanciar Repositórios
+            MotoristaRepository motoristaRepo = new MotoristaRepository();
+            VeiculoRepository veiculoRepo = new VeiculoRepository();
+            PassageiroRepository passageiroRepo = new PassageiroRepository();
+            TransferRepository transferRepo = new TransferRepository();
+            PontoColetaRepository pontoRepo = new PontoColetaRepository();
 
-            // Criando um objeto para teste
-            Passageiro p = new Passageiro("Guilherme Gocks", "123.456.789-00", "Brasileira");
+            //Criar e Salvar Infraestrutura (Motorista e Veículo)
+            Motorista m1 = new Motorista("Sancho Pança", "CNH-123456");
+            motoristaRepo.salvar(m1);
 
-            System.out.println("Salvando passageiro via JPA...");
-            repo.salvar(p);
+            Veiculo v1 = new Veiculo("Van Executiva", "SOS-2026", 15);
+            veiculoRepo.salvar(v1);
 
-            System.out.println("Passageiro salvo com ID: " + p.getId());
+            //Criar e Salvar Passageiros
+            Passageiro p1 = new Passageiro("Guilherme Gocks", "DOC-999", "Brasileira");
+            Passageiro p2 = new Passageiro("Miguel de Cervantes", "DOC-777", "Espanhola");
+            passageiroRepo.salvar(p1);
+            passageiroRepo.salvar(p2);
+
+            //Criar o Transfer e Associar Passageiros (ManyToMany)
+            Transfer t1 = new Transfer(
+                    LocalDateTime.now().plusDays(1), // Amanhã
+                    "Aeroporto IGU",
+                    "Hotel das Cataratas",
+                    new java.math.BigDecimal("250.00"),
+                    m1,
+                    v1
+            );
+
+            // Adicionando passageiros à lista do transfer
+            t1.getPassageiros().add(p1);
+            t1.getPassageiros().add(p2);
+
+            // Salvar o Transfer
+            transferRepo.salvar(t1);
+
+            //Criar e Salvar Pontos de Coleta (Logística)
+            PontoColeta pc1 = new PontoColeta(t1, "Parada para Câmbio", 1, java.time.LocalTime.of(10, 30));
+            pontoRepo.salvar(pc1);
+
+            System.out.println("\n=== TESTE DE LOGÍSTICA CONCLUÍDO COM SUCESSO! ===");
+            System.out.println("Transfer ID: " + t1.getId());
+            System.out.println("Passageiros no transfer: " + t1.getPassageiros().size());
+            System.out.println("Ponto de coleta salvo para o local: " + pc1.getLocalColeta());
 
         } catch (Exception e) {
-            System.err.println("Erro ao operar com JPA: " + e.getMessage());
+            System.err.println("ERRO NO TESTE: " + e.getMessage());
             e.printStackTrace();
         }
     }

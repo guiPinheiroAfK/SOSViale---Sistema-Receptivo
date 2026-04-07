@@ -11,6 +11,7 @@
         <class>br.com.sosviale.model.Motorista</class>
         <class>br.com.sosviale.model.Veiculo</class>
         <class>br.com.sosviale.model.Transfer</class>
+        <class>br.com.sosviale.model.PontoColeta</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5600/sos_viale_db"/>

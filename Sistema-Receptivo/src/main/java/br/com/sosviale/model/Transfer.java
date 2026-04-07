@@ -3,6 +3,8 @@ package br.com.sosviale.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "transfers")
@@ -36,6 +38,14 @@ public class Transfer {
     @ManyToOne
     @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
+
+    @ManyToMany
+    @JoinTable(
+            name = "transfer_passageiros", // Nome da tabela associativa
+            joinColumns = @JoinColumn(name = "transfer_id"),
+            inverseJoinColumns = @JoinColumn(name = "passageiro_id")
+    )
+    private List<Passageiro> passageiros = new ArrayList<>();
 
     public Transfer() {
     }
@@ -73,4 +83,7 @@ public class Transfer {
 
     public Veiculo getVeiculo() { return veiculo; }
     public void setVeiculo(Veiculo veiculo) { this.veiculo = veiculo; }
+
+    public List<Passageiro> getPassageiros() { return passageiros; }
+    public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
 }
