@@ -33,10 +33,10 @@ public class Main {
             PontoColetaRepository pontoRepo = new PontoColetaRepository();
 
             //Criar e Salvar Infraestrutura (Motorista e Veículo)
-            Motorista m1 = new Motorista("Sancho Pança", "CNH-123456");
+            Motorista m1 = new Motorista("Sancho Pança", "CNH-124356");
             motoristaRepo.salvar(m1);
 
-            Veiculo v1 = new Veiculo("Van Executiva", "SOS-2026", 15);
+            Veiculo v1 = new Veiculo("Van Luxo", "SOS-2023", 15);
             veiculoRepo.salvar(v1);
 
             //Criar e Salvar Passageiros
