@@ -13,21 +13,6 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
 
-        // instancia o serviço que gerencia a interface
-        MenuService menuService = new MenuService();
-
-        try {
-            menuService.iniciar();
-
-        } catch (Exception e) {
-            // tratamento de erro caso o terminal falhe ao abrir
-            System.err.println("Erro crítico ao carregar a interface do sistema.");
-            System.err.println("Detalhes: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            System.out.println("\nSistema encerrado. SOS Viale agradece!");
-        }
-
         //O Flyway prepara o banco (Cria/Atualiza as tabelas)
         try {
             System.out.println("Iniciando migrações do Flyway...");
@@ -47,6 +32,9 @@ public class Main {
             PassageiroRepository passageiroRepo = new PassageiroRepository();
             TransferRepository transferRepo = new TransferRepository();
             PontoColetaRepository pontoRepo = new PontoColetaRepository();
+            MenuService menuService = new MenuService(passageiroRepo, veiculoRepo);
+
+            menuService.iniciar();
 
             //Criar e Salvar Infraestrutura (Motorista e Veículo)
             Motorista m1 = new Motorista("Sancho Pança", "CNH-124356");
@@ -91,5 +79,7 @@ public class Main {
             System.err.println("ERRO NO TESTE: " + e.getMessage());
             e.printStackTrace();
         }
+
+
     }
     }
