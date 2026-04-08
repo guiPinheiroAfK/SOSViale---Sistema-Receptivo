@@ -28,7 +28,7 @@ public class MenuService {
     private MotoristaRepository motoristaRepo;
 
     // construtor que recebe os repositórios da main
-    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo) {
+    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo, MotoristaRepository motoristaRepo) {
         this.passageiroRepo = passageiroRepo;
         this.veiculoRepo = veiculoRepo;
         this.transferRepo = transferRepo;
@@ -85,8 +85,10 @@ public class MenuService {
                 listarPassageiros();
                 break;
             case "4":
+                cadastrarMotorista(reader);
                 break;
             case "5":
+                listarMotoristas();
                 break;
             default:
                 System.out.println("\u001B[31mComando desconhecido.\u001B[0m");
@@ -103,18 +105,29 @@ public class MenuService {
             String valorStr = reader.readLine("Valor do Transfer (R$): ");
             BigDecimal valor = new BigDecimal(valorStr.replace(",", "."));
 
-            // vinculação por ID (é critério: Critério III - Relacionamentos JPA)
-            System.out.println("\nIDs necessários (use a listagem para consultar):");
-            String passageiroId = reader.readLine("ID do Passageiro: ");
-            String veiculoId = reader.readLine("ID do Veículo: ");
+            // para facilitar a vida do usuário
+            String ver = reader.readLine("Deseja listar passageiros e veículos antes de informar os IDs? (s/n): ");
+            if (ver.equalsIgnoreCase("s")) {
+                listarPassageiros();
+                listarMotoristas();
+                // adicionar listarVeiculos()
+            }
+
+            String passageiroId = reader.readLine("\nDigite o ID do Passageiro: ");
+            String motoristaId = reader.readLine("Digite o ID do Motorista: ");
+            String veiculoId = reader.readLine("Digite o ID do Veículo: ");
+
 
             // busca os objetos reais no banco
             Passageiro passageiro = passageiroRepo.buscarPorId(Long.parseLong(passageiroId));
+            Motorista motorista = motoristaRepo.buscarPorId(Long.parseLong(motoristaId));
             Veiculo veiculo = veiculoRepo.buscarPorId(Long.parseLong(veiculoId));
 
-            if (passageiro == null || veiculo == null) {
-                throw new Exception("Passageiro ou Veículo não encontrado!");
+            //da pra melhorar essa verificação, vou deixar essa temporariamente
+            if (passageiro == null || veiculo == null || motorista == null) {
+                throw new Exception("Passageiro, Veículo ou Motorista não encontrado!");
             }
+            //----------------------------------------
 
             // criação do Objeto Transfer
             Transfer novoTransfer = new Transfer();
@@ -122,6 +135,8 @@ public class MenuService {
             novoTransfer.setDestino(destino);
             novoTransfer.setValorBase(valor);
             novoTransfer.setDataHora(LocalDateTime.now().plusDays(1)); // Ex: Amanhã
+
+            novoTransfer.setMotorista(motorista);
             novoTransfer.setVeiculo(veiculo);
 
             // relacionamento ManyToMany (adicionando o passageiro à lista)

@@ -32,7 +32,7 @@ public class Main {
             PassageiroRepository passageiroRepo = new PassageiroRepository();
             TransferRepository transferRepo = new TransferRepository();
             PontoColetaRepository pontoRepo = new PontoColetaRepository();
-            MenuService menuService = new MenuService(passageiroRepo, veiculoRepo, transferRepo);
+            MenuService menuService = new MenuService(passageiroRepo, veiculoRepo, transferRepo, motoristaRepo);
 
             menuService.iniciar();
 
