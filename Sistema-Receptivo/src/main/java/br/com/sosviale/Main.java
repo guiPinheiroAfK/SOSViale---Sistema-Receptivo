@@ -34,7 +34,7 @@ public class Main {
             PontoColetaRepository pontoRepo = new PontoColetaRepository();
             MenuService menuService = new MenuService(passageiroRepo, veiculoRepo, transferRepo, motoristaRepo);
 
-            menuService.iniciar();
+            menuService.menu();
 
             //Criar e Salvar Infraestrutura (Motorista e Veículo)
             Motorista m1 = new Motorista("Sancho Pança", "CNH-124356");

@@ -35,63 +35,56 @@ public class MenuService {
         this.motoristaRepo = motoristaRepo;
     }
 
-    public void iniciar() {
+    public void menu() {
         try {
             Terminal terminal = TerminalBuilder.builder().system(true).build();
             LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
 
+            boolean executando = true;
             String prompt = new AttributedStringBuilder()
-                    .append("SOS VIALE", AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN).bold())
+                    .append("OPÇÃO", AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN).bold())
                     .append(" > ", AttributedStyle.DEFAULT)
                     .toAnsi();
 
-            imprimirBoasVindas();
-
-            while (true) {
-                String line = reader.readLine(prompt);
-                if (line == null || line.equalsIgnoreCase("sair")) break;
-
-                processarComando(line.trim().toLowerCase(), reader);
-            }
-        } catch (Exception e) {
-            System.err.println("Erro na interface: " + e.getMessage());
-        }
-    }
-
-    private void imprimirBoasVindas() {
-        System.out.println("\u001B[36m========================================");
-        System.out.println("   BEM-VINDO AO SISTEMA SOS VIALE");
-        System.out.println("   (Digite 'menu' para ver as opções)");
-        System.out.println("========================================\u001B[0m");
-    }
-
-    private void processarComando(String comando, LineReader reader) {
-        switch (comando) {
-            case "menu":
+            while (executando) {
+                System.out.println("\u001B[36m========================================");
+                System.out.println("   SISTEMA DE AGENDAMENTOS - SOS VIALE ");
+                System.out.println("========================================\u001B[0m");
                 System.out.println("\u001B[32m[1]\u001B[0m Agendar Transfer");
                 System.out.println("\u001B[32m[2]\u001B[0m Cadastrar Passageiro");
                 System.out.println("\u001B[32m[3]\u001B[0m Listar Passageiros");
                 System.out.println("\u001B[32m[4]\u001B[0m Cadastrar Motorista");
                 System.out.println("\u001B[32m[5]\u001B[0m Listar Motorista");
                 System.out.println("\u001B[32m[sair]\u001B[0m Encerra o sistema");
-                break;
-            case "1":
-                agendarTransfer(reader);
-                break;
-            case "2":
-                cadastrarPassageiro(reader);
-                break;
-            case "3":
-                listarPassageiros();
-                break;
-            case "4":
-                cadastrarMotorista(reader);
-                break;
-            case "5":
-                listarMotoristas();
-                break;
-            default:
-                System.out.println("\u001B[31mComando desconhecido.\u001B[0m");
+                String comando = reader.readLine(prompt).toLowerCase().trim();
+
+                switch (comando) {
+                    case "1":
+                        agendarTransfer(reader);
+                        break;
+                    case "2":
+                        cadastrarPassageiro(reader);
+                        break;
+                    case "3":
+                        listarPassageiros();
+                        break;
+                    case "4":
+                        cadastrarMotorista(reader);
+                        break;
+                    case "5":
+                        listarMotoristas();
+                        break;
+                    case "sair":
+                        executando = false;
+                        break;
+                    default:
+                        System.out.println("\u001B[31mComando desconhecido.\u001B[0m");
+                }
+
+
+            }
+        } catch (Exception e) {
+            System.err.println("Erro na interface: " + e.getMessage());
         }
     }
 
