@@ -1,7 +1,10 @@
 package br.com.sosviale.service;
 
 import br.com.sosviale.model.Passageiro;
+import br.com.sosviale.model.Transfer;
+import br.com.sosviale.model.Veiculo;
 import br.com.sosviale.repository.PassageiroRepository;
+import br.com.sosviale.repository.TransferRepository;
 import br.com.sosviale.repository.VeiculoRepository;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -10,6 +13,8 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class MenuService {
@@ -17,11 +22,13 @@ public class MenuService {
     // atributos para guardar os repositórios
     private PassageiroRepository passageiroRepo;
     private VeiculoRepository veiculoRepo;
+    private TransferRepository transferRepo;
 
     // construtor que recebe os repositórios da main
-    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo) {
+    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo) {
         this.passageiroRepo = passageiroRepo;
         this.veiculoRepo = veiculoRepo;
+        this.transferRepo = transferRepo;
     }
 
     public void iniciar() {
@@ -63,7 +70,7 @@ public class MenuService {
                 System.out.println("\u001B[32m[sair]\u001B[0m Encerra o sistema");
                 break;
             case "1":
-                System.out.println("Iniciando fluxo de agendamento...");
+                agendarTransfer(reader);
                 break;
             case "2":
                 cadastrarPassageiro(reader);
@@ -73,6 +80,50 @@ public class MenuService {
                 break;
             default:
                 System.out.println("\u001B[31mComando desconhecido.\u001B[0m");
+        }
+    }
+
+    private void agendarTransfer(LineReader reader) {
+        System.out.println("\n\u001B[36m--- NOVO AGENDAMENTO DE TRANSFER --- \u001B[0m");
+
+        try {
+            // coleta de dados básicos
+            String origem = reader.readLine("Origem (Ex: Aeroporto IGU): ");
+            String destino = reader.readLine("Destino (Ex: Hotel Cataratas): ");
+            String valorStr = reader.readLine("Valor do Transfer (R$): ");
+            BigDecimal valor = new BigDecimal(valorStr.replace(",", "."));
+
+            // vinculação por ID (é critério: Critério III - Relacionamentos JPA)
+            System.out.println("\nIDs necessários (use a listagem para consultar):");
+            String passageiroId = reader.readLine("ID do Passageiro: ");
+            String veiculoId = reader.readLine("ID do Veículo: ");
+
+            // busca os objetos reais no banco
+            Passageiro passageiro = passageiroRepo.buscarPorId(Long.parseLong(passageiroId));
+            Veiculo veiculo = veiculoRepo.buscarPorId(Long.parseLong(veiculoId));
+
+            if (passageiro == null || veiculo == null) {
+                throw new Exception("Passageiro ou Veículo não encontrado!");
+            }
+
+            // criação do Objeto Transfer
+            Transfer novoTransfer = new Transfer();
+            novoTransfer.setOrigem(origem);
+            novoTransfer.setDestino(destino);
+            novoTransfer.setValorBase(valor);
+            novoTransfer.setDataHora(LocalDateTime.now().plusDays(1)); // Ex: Amanhã
+            novoTransfer.setVeiculo(veiculo);
+
+            // relacionamento ManyToMany (adicionando o passageiro à lista)
+            novoTransfer.getPassageiros().add(passageiro);
+
+            // salva no banco via repository
+            transferRepo.salvar(novoTransfer);
+
+            System.out.println("\n\u001B[32m✔ Transfer agendado com sucesso para " + passageiro.getNome() + "!\u001B[0m");
+
+        } catch (Exception e) {
+            System.out.println("\u001B[31m[ERRO NO AGENDAMENTO]: " + e.getMessage() + "\u001B[0m");
         }
     }
 

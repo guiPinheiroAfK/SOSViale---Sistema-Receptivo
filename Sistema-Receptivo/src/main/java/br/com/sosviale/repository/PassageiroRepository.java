@@ -43,4 +43,9 @@ public class PassageiroRepository {
         }
     }
 
+    public Passageiro buscarPorId(Long id) {
+        EntityManager em = emf.createEntityManager();
+        return em.find(Passageiro.class, id);
+    }
+
 }

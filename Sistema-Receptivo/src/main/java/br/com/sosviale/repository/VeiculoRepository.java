@@ -1,6 +1,7 @@
 package br.com.sosviale.repository;
 
 import br.com.sosviale.config.JPAUtil;
+import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.Veiculo;
 import jakarta.persistence.EntityManager;
 import java.util.List;
@@ -28,5 +29,10 @@ public class VeiculoRepository {
         } finally {
             em.close();
         }
+    }
+
+    public Veiculo buscarPorId(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        return em.find(Veiculo.class, id);
     }
 }
