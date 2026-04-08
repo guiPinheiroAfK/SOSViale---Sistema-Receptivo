@@ -29,4 +29,13 @@ public class MotoristaRepository {
             em.close();
         }
     }
+
+    public Motorista buscarPorId(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.find(Motorista.class, id);
+        } finally {
+            em.close();
+        }
+    }
 }

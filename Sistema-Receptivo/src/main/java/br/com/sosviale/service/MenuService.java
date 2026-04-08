@@ -1,8 +1,10 @@
 package br.com.sosviale.service;
 
+import br.com.sosviale.model.Motorista;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.Transfer;
 import br.com.sosviale.model.Veiculo;
+import br.com.sosviale.repository.MotoristaRepository;
 import br.com.sosviale.repository.PassageiroRepository;
 import br.com.sosviale.repository.TransferRepository;
 import br.com.sosviale.repository.VeiculoRepository;
@@ -23,12 +25,14 @@ public class MenuService {
     private PassageiroRepository passageiroRepo;
     private VeiculoRepository veiculoRepo;
     private TransferRepository transferRepo;
+    private MotoristaRepository motoristaRepo;
 
     // construtor que recebe os repositórios da main
     public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo) {
         this.passageiroRepo = passageiroRepo;
         this.veiculoRepo = veiculoRepo;
         this.transferRepo = transferRepo;
+        this.motoristaRepo = motoristaRepo;
     }
 
     public void iniciar() {
@@ -67,6 +71,8 @@ public class MenuService {
                 System.out.println("\u001B[32m[1]\u001B[0m Agendar Transfer");
                 System.out.println("\u001B[32m[2]\u001B[0m Cadastrar Passageiro");
                 System.out.println("\u001B[32m[3]\u001B[0m Listar Passageiros");
+                System.out.println("\u001B[32m[4]\u001B[0m Cadastrar Motorista");
+                System.out.println("\u001B[32m[5]\u001B[0m Listar Motorista");
                 System.out.println("\u001B[32m[sair]\u001B[0m Encerra o sistema");
                 break;
             case "1":
@@ -77,6 +83,10 @@ public class MenuService {
                 break;
             case "3":
                 listarPassageiros();
+                break;
+            case "4":
+                break;
+            case "5":
                 break;
             default:
                 System.out.println("\u001B[31mComando desconhecido.\u001B[0m");
@@ -184,6 +194,40 @@ public class MenuService {
 
         } catch (Exception e) {
             System.out.println("\u001B[31m[ERRO AO LISTAR]: " + e.getMessage() + "\u001B[0m");
+        }
+    }
+
+    private void cadastrarMotorista(LineReader reader) {
+        System.out.println("\n\u001B[36m--- CADASTRO DE MOTORISTA --- \u001B[0m");
+        try {
+            String nome = reader.readLine("Nome Completo: ").toUpperCase().trim();
+            String cnh = reader.readLine("Número da CNH (11 dígitos): ").trim();
+            String categoria = reader.readLine("Categoria (A, B, D, etc): ").toUpperCase().trim();
+
+            // validação da CNH
+            if (cnh.length() != 11) {
+                throw new Exception("CNH Inválida! O número deve conter exatamente 11 dígitos.");
+            }
+
+            Motorista m = new Motorista();
+            m.setNome(nome);
+            m.setCnh(cnh);
+
+            motoristaRepo.salvar(m);
+
+            System.out.println("\u001B[32m✔ Motorista " + nome + " salvo com sucesso!\u001B[0m");
+
+        } catch (Exception e) {
+            System.out.println("\u001B[31m[ERRO]: " + e.getMessage() + "\u001B[0m");
+        }
+    }
+
+    private void listarMotoristas() {
+        System.out.println("\n\u001B[36m--- MOTORISTAS CADASTRADOS --- \u001B[0m");
+        List<Motorista> lista = motoristaRepo.listarTodos();
+        System.out.println(String.format("%-5s | %-25s | %-15s", "ID", "NOME", "CNH"));
+        for (Motorista m : lista) {
+            System.out.println(String.format("%-5d | %-25s | %-15s", m.getId(), m.getNome(), m.getCnh()));
         }
     }
 }
