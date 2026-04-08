@@ -36,12 +36,11 @@ public class PassageiroRepository {
     public List<Passageiro> listarTodos() {
         EntityManager em = emf.createEntityManager();
         try {
-            // Usamos JPQL (Java Persistence Query Language) referenciando a Classe, não a Tabela
+            // JPQL (Java Persistence Query Language) referenciando a Classe, não a Tabela
             return em.createQuery("SELECT p FROM Passageiro p", Passageiro.class).getResultList();
         } finally {
             em.close();
         }
     }
 
-    // Futuramente você pode adicionar buscarPorId, atualizar e deletar aqui para fechar o CRUD
 }

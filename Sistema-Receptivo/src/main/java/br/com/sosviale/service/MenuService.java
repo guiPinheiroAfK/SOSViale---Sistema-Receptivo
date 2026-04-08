@@ -10,6 +10,8 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
+import java.util.List;
+
 public class MenuService {
 
     // atributos para guardar os repositórios
@@ -57,6 +59,7 @@ public class MenuService {
             case "menu":
                 System.out.println("\u001B[32m[1]\u001B[0m Agendar Transfer");
                 System.out.println("\u001B[32m[2]\u001B[0m Cadastrar Passageiro");
+                System.out.println("\u001B[32m[3]\u001B[0m Listar Passageiros");
                 System.out.println("\u001B[32m[sair]\u001B[0m Encerra o sistema");
                 break;
             case "1":
@@ -64,6 +67,9 @@ public class MenuService {
                 break;
             case "2":
                 cadastrarPassageiro(reader);
+                break;
+            case "3":
+                listarPassageiros();
                 break;
             default:
                 System.out.println("\u001B[31mComando desconhecido.\u001B[0m");
@@ -96,6 +102,37 @@ public class MenuService {
 
         } catch (Exception e) {
             System.out.println("\u001B[31m[ERRO]: " + e.getMessage() + "\u001B[0m");
+        }
+    }
+
+    private void listarPassageiros() {
+        System.out.println("\n\u001B[36m--- LISTA DE PASSAGEIROS CADASTRADOS --- \u001B[0m");
+
+        try {
+            // Busca a lista real do banco via Repository
+            List<Passageiro> lista = passageiroRepo.listarTodos(); // Verifique se o nome no seu repo é buscarTodos ou listar
+
+            if (lista.isEmpty()) {
+                System.out.println("\u001B[33mNenhum passageiro encontrado.\u001B[0m");
+                return;
+            }
+
+            // Cabeçalho da "Tabela"
+            System.out.println(String.format("%-5s | %-25s | %-15s | %-15s", "ID", "NOME", "DOCUMENTO", "NACIONALIDADE"));
+            System.out.println("-------------------------------------------------------------------------");
+
+            // Linhas da Tabela
+            for (Passageiro p : lista) {
+                System.out.println(String.format("%-5d | %-25s | %-15s | %-15s",
+                        p.getId(),
+                        p.getNome(),
+                        p.getDocumento(),
+                        p.getNacionalidade()));
+            }
+            System.out.println("-------------------------------------------------------------------------");
+
+        } catch (Exception e) {
+            System.out.println("\u001B[31m[ERRO AO LISTAR]: " + e.getMessage() + "\u001B[0m");
         }
     }
 }
