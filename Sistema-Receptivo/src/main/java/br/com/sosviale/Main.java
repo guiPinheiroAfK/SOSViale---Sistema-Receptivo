@@ -3,6 +3,7 @@ package br.com.sosviale;
 import br.com.sosviale.config.DbConfig;
 import br.com.sosviale.model.*;
 import br.com.sosviale.repository.*;
+import br.com.sosviale.service.MenuService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,6 +12,21 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
+
+        // instancia o serviço que gerencia a interface
+        MenuService menuService = new MenuService();
+
+        try {
+            menuService.iniciar();
+
+        } catch (Exception e) {
+            // tratamento de erro caso o terminal falhe ao abrir
+            System.err.println("Erro crítico ao carregar a interface do sistema.");
+            System.err.println("Detalhes: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            System.out.println("\nSistema encerrado. SOS Viale agradece!");
+        }
 
         //O Flyway prepara o banco (Cria/Atualiza as tabelas)
         try {
