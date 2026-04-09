@@ -1,5 +1,6 @@
 package br.com.sosviale.model;
 
+import br.com.sosviale.enums.StatusTransfer;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,8 +24,9 @@ public class Transfer {
     @Column(nullable = false, length = 100)
     private String destino;
 
-    @Column(length = 20)
-    private String status = "PENDENTE";
+    @Enumerated(EnumType.STRING) // Salva o nome do Enum no banco
+    @Column(name = "status", length = 20, nullable = false)
+    private StatusTransfer status = StatusTransfer.AGENDADO;
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
@@ -39,7 +41,7 @@ public class Transfer {
     @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
 
-    @ManyToMany(fetch = FetchType.EAGER) // Adicione isso aqui!
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "transfer_passageiros",
             joinColumns = @JoinColumn(name = "transfer_id"),
@@ -58,6 +60,7 @@ public class Transfer {
         this.valorBase = valorBase;
         this.motorista = motorista;
         this.veiculo = veiculo;
+        this.status = StatusTransfer.AGENDADO;
     }
 
     // Getters e Setters
@@ -73,8 +76,8 @@ public class Transfer {
     public String getDestino() { return destino; }
     public void setDestino(String destino) { this.destino = destino; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public StatusTransfer getStatus() {return status;}
+    public void setStatus(StatusTransfer status) { this.status = status; }
 
     public BigDecimal getValorBase() { return valorBase; }
     public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
