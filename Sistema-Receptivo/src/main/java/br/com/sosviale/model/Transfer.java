@@ -39,12 +39,13 @@ public class Transfer {
     @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER) // Adicione isso aqui!
     @JoinTable(
-            name = "transfer_passageiros", // Nome da tabela associativa
+            name = "transfer_passageiros",
             joinColumns = @JoinColumn(name = "transfer_id"),
             inverseJoinColumns = @JoinColumn(name = "passageiro_id")
     )
+
     private List<Passageiro> passageiros = new ArrayList<>();
 
     public Transfer() {

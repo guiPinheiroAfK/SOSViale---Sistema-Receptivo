@@ -1,3 +1,5 @@
+SET search_path TO public;
+
 -- 1. Gestão de Passageiros (RF02)
 CREATE TABLE passageiros (
                              id SERIAL PRIMARY KEY,

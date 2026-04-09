@@ -87,80 +87,88 @@ public class MenuService {
     }
 
     private void agendarTransfer(LineReader reader) {
-        String opcao;
-        do {
-            System.out.println("\n\u001B[36m--- NOVO AGENDAMENTO DE TRANSFER --- \u001B[0m");
+        System.out.println("\n\u001B[36m--- NOVO AGENDAMENTO DE TRANSFER --- \u001B[0m");
 
-            try {
-                // coleta de dados básicos
-                String origem = reader.readLine("Origem (Ex: Aeroporto IGU): ");
-                String destino = reader.readLine("Destino (Ex: Hotel Cataratas): ");
-                String valorStr = reader.readLine("Valor do Transfer (R$): ");
-                BigDecimal valor = new BigDecimal(valorStr.replace(",", "."));
+        try {
+            // 1. Dados básicos da viagem
+            String origem = reader.readLine("Origem (Ex: Aeroporto IGU): ");
+            String destino = reader.readLine("Destino (Ex: Hotel Cataratas): ");
+            String valorStr = reader.readLine("Valor Total do Transfer (R$): ");
+            BigDecimal valor = new BigDecimal(valorStr.replace(",", "."));
 
-                // para facilitar a vida do usuário
-                String ver = reader.readLine("Deseja listar passageiros e veículos antes de informar os IDs? (s/n): ");
-                if (ver.equalsIgnoreCase("s")) {
-                    listarPassageiros();
-                    listarMotoristas();
-                    listarVeiculos();
-                }
-
-                String passageiroId = reader.readLine("\nDigite o ID do Passageiro: ");
-                String motoristaId = reader.readLine("Digite o ID do Motorista: ");
-                String veiculoId = reader.readLine("Digite o ID do Veículo: ");
-
-
-                // busca os objetos reais no banco
-                Passageiro passageiro = passageiroRepo.buscarPorId(Long.parseLong(passageiroId));
-                Motorista motorista = motoristaRepo.buscarPorId(Long.parseLong(motoristaId));
-                Veiculo veiculo = veiculoRepo.buscarPorId(Long.parseLong(veiculoId));
-
-                //da pra melhorar essa verificação, vou deixar essa temporariamente
-                if (passageiro == null || veiculo == null || motorista == null) {
-                    throw new Exception("Passageiro, Veículo ou Motorista não encontrado!");
-                }
-                //----------------------------------------
-// Validação de lotação do veículo
-                int totalPassageiros = transferRepo.contarPassageirosPorVeiculo(veiculo.getId().longValue());
-                if (totalPassageiros >= veiculo.getCapacidade()) {
-                    throw new Exception("Veículo lotado! Capacidade máxima de " + veiculo.getCapacidade() + " passageiros atingida.");
-                }
-                // criação do Objeto Transfer
-                Transfer novoTransfer = new Transfer();
-                novoTransfer.setOrigem(origem);
-                novoTransfer.setDestino(destino);
-                novoTransfer.setValorBase(valor);
-                novoTransfer.setDataHora(LocalDateTime.now().plusDays(1)); // Ex: Amanhã
-
-                novoTransfer.setMotorista(motorista);
-                novoTransfer.setVeiculo(veiculo);
-
-                // relacionamento ManyToMany (adicionando o passageiro à lista)
-                novoTransfer.getPassageiros().add(passageiro);
-
-                // salva no banco via repository
-                transferRepo.salvar(novoTransfer);
-
-                System.out.println("\n\u001B[32m✔ Transfer agendado com sucesso para " + passageiro.getNome() + "!\u001B[0m");
-
-            } catch (Exception e) {
-                System.out.println("\u001B[31m[ERRO NO AGENDAMENTO]: " + e.getMessage() + "\u001B[0m");
+            // Apoio ao usuário
+            String ver = reader.readLine("Deseja listar Motoristas e Veículos? (s/n): ");
+            if (ver.equalsIgnoreCase("s")) {
+                listarMotoristas();
+                listarVeiculos();
             }
 
-            System.out.println("\u001B[32m[1]\u001B[0m Retornar ao Menu Inicial");
-            System.out.println("\u001B[32m[2]\u001B[0m Iniciar Novo Agendamento");
-            opcao = reader.readLine("Escolha: ").trim();
-            if(opcao.equals("1")){
-                menu();
-            }else if (!opcao.equals("1") && !opcao.equals("2")){
-                System.out.println("\u001B[31mOpção inválida.\u001B[0m");
-                System.out.println("\u001B[32m[1]\u001B[0m Retornar ao Menu Inicial");
-                System.out.println("\u001B[32m[2]\u001B[0m Iniciar Novo Agendamento");
-                opcao = reader.readLine("Escolha: ").trim();
-            }
-        } while (opcao.equals("2"));
+            // 2. Definir quem leva e em qual carro
+            String motoristaId = reader.readLine("\nDigite o ID do Motorista: ");
+            String veiculoId = reader.readLine("Digite o ID do Veículo: ");
 
+            Motorista motorista = motoristaRepo.buscarPorId(Long.parseLong(motoristaId));
+            Veiculo veiculo = veiculoRepo.buscarPorId(Long.parseLong(veiculoId));
+
+            if (motorista == null || veiculo == null) {
+                throw new Exception("Motorista ou Veículo não encontrado!");
+            }
+
+            // 3. Criar o objeto Transfer antes do loop de passageiros
+            Transfer novoTransfer = new Transfer();
+            novoTransfer.setOrigem(origem);
+            novoTransfer.setDestino(destino);
+            novoTransfer.setValorBase(valor);
+            novoTransfer.setDataHora(LocalDateTime.now().plusDays(1));
+            novoTransfer.setMotorista(motorista);
+            novoTransfer.setVeiculo(veiculo);
+
+            String ver2 = reader.readLine("Deseja listar Passageiros? (s/n): ");
+            if (ver2.equalsIgnoreCase("s")) {
+                listarPassageiros();
+            }
+
+            // 4. LOOP DE PASSAGEIROS (O CORAÇÃO DA MUDANÇA)
+            System.out.println("\n\u001B[33m--- ADICIONANDO PASSAGEIROS (Capacidade: " + veiculo.getCapacidade() + ") --- \u001B[0m");
+
+            boolean adicionando = true;
+            while (adicionando) {
+                int atuais = novoTransfer.getPassageiros().size();
+
+                if (atuais >= veiculo.getCapacidade()) {
+                    System.out.println("\u001B[31mLOTAÇÃO MÁXIMA ATINGIDA!\u001B[0m");
+                    break;
+                }
+
+                System.out.println("Passageiros atuais: " + atuais + "/" + veiculo.getCapacidade());
+                String pIdStr = reader.readLine("Digite o ID do Passageiro (ou 'fim' para encerrar): ");
+
+                if (pIdStr.equalsIgnoreCase("fim")) {
+                    if (atuais == 0) {
+                        System.out.println("\u001B[31mErro: O transfer precisa de pelo menos 1 passageiro!\u001B[0m");
+                        continue;
+                    }
+                    adicionando = false;
+                } else {
+                    Passageiro p = passageiroRepo.buscarPorId(Long.parseLong(pIdStr));
+                    if (p == null) {
+                        System.out.println("\u001B[31mPassageiro não encontrado!\u001B[0m");
+                    } else if (novoTransfer.getPassageiros().contains(p)) {
+                        System.out.println("\u001B[31mEste passageiro já está na lista!\u001B[0m");
+                    } else {
+                        novoTransfer.getPassageiros().add(p);
+                        System.out.println("\u001B[32m✔ " + p.getNome() + " adicionado.\u001B[0m");
+                    }
+                }
+            }
+
+            // 5. Salva tudo de uma vez
+            transferRepo.salvar(novoTransfer);
+            System.out.println("\n\u001B[32m✔ Transfer agendado com sucesso com " + novoTransfer.getPassageiros().size() + " passageiro(s)!\u001B[0m");
+
+        } catch (Exception e) {
+            System.out.println("\u001B[31m[ERRO NO AGENDAMENTO]: " + e.getMessage() + "\u001B[0m");
+        }
     }
 
     private void listarTransfers() {
@@ -172,12 +180,25 @@ public class MenuService {
                 return;
             }
 
-            System.out.println(String.format("%-4s | %-15s | %-15s | %-15s | %-10s", "ID", "ORIGEM", "DESTINO", "MOTORISTA", "VALOR"));
-            System.out.println("----------------------------------------------------------------------");
+            // Ajustei o espaçamento para caber a coluna de passageiros
+            System.out.println(String.format("%-4s | %-15s | %-15s | %-15s | %-30s | %-10s",
+                    "ID", "ORIGEM", "DESTINO", "MOTORISTA", "PASSAGEIROS", "VALOR"));
+            System.out.println("------------------------------------------------------------------------------------------------------------------------");
+
             for (Transfer t : lista) {
-                System.out.println(String.format("%-4d | %-15s | %-15s | %-15s | R$%-10s",
-                        t.getId(), t.getOrigem(), t.getDestino(),
-                        t.getMotorista().getNome(), t.getValorBase()));
+                // Transforma a lista de objetos Passageiro em uma String de nomes separada por vírgula
+                String nomesPassageiros = t.getPassageiros().stream()
+                        .map(Passageiro::getNome)
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("Nenhum");
+
+                System.out.println(String.format("%-4d | %-15s | %-15s | %-15s | %-30s | R$%-10.2f",
+                        t.getId(),
+                        t.getOrigem(),
+                        t.getDestino(),
+                        t.getMotorista().getNome(),
+                        nomesPassageiros,
+                        t.getValorBase()));
             }
         } catch (Exception e) {
             System.out.println("\u001B[31mErro ao listar: " + e.getMessage() + "\u001B[0m");
@@ -398,7 +419,6 @@ public class MenuService {
         try {
             String nome = reader.readLine("Nome Completo: ").toUpperCase().trim();
             String cnh = reader.readLine("Número da CNH (11 dígitos): ").trim();
-            String categoria = reader.readLine("Categoria (A, B, D, etc): ").toUpperCase().trim();
 
             // validação da CNH
             if (cnh.length() != 11) {
@@ -548,6 +568,16 @@ public class MenuService {
 
                 String novaPlaca = reader.readLine("Nova Placa [" + v.getPlaca() + "]: ");
                 if (!novaPlaca.trim().isEmpty()) v.setPlaca(novaPlaca);
+
+                String novaCapacidadeStr = reader.readLine("Nova Capacidade [" + v.getCapacidade() + "]: ");
+                if (!novaCapacidadeStr.trim().isEmpty()) {
+                    int novaCapacidade = Integer.parseInt(novaCapacidadeStr);
+                    if (novaCapacidade <= 0) {
+                        System.out.println("\u001B[31mCapacidade inválida! Mantendo a anterior.\u001B[0m");
+                    } else {
+                        v.setCapacidade(novaCapacidade);
+                    }
+                }
 
                 veiculoRepo.atualizar(v);
                 System.out.println("\u001B[32m✔ Veículo atualizado!\u001B[0m");

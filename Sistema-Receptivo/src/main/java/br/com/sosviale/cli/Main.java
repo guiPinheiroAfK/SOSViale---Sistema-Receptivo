@@ -29,6 +29,7 @@ public class Main {
                 veiculoRepo,
                 transferRepo,
                 motoristaRepo
+
         );
 
         // 3. Liga o motor!
