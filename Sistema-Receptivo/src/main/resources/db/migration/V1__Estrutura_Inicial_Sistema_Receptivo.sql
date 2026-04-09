@@ -10,7 +10,9 @@ CREATE TABLE passageiros (
 CREATE TABLE motoristas (
                             id SERIAL PRIMARY KEY,
                             nome VARCHAR(100) NOT NULL,
-                            cnh VARCHAR(20) UNIQUE NOT NULL
+                            cnh VARCHAR(20) UNIQUE NOT NULL,
+                            latitude_atual DECIMAL(10,7),   -- posição atual do motorista
+                            longitude_atual DECIMAL(10,7)   -- pode ser NULL até ele atualizar
 );
 
 CREATE TABLE veiculos (
@@ -38,7 +40,9 @@ CREATE TABLE pontos_coleta (
                                transfer_id INT REFERENCES transfers(id) ON DELETE CASCADE,
                                local_coleta VARCHAR(100) NOT NULL,
                                ordem_parada INT NOT NULL, -- Define a sequência lógica do pick-up
-                               horario_previsto TIME
+                               horario_previsto TIME,
+                               latitude DECIMAL(10,7) NOT NULL,   -- necessário pro PathFinding
+                               longitude DECIMAL(10,7) NOT NULL
 );
 
 -- 5. Tabela Associativa: Quem está em qual Transfer?

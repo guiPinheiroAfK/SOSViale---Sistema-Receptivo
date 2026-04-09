@@ -16,12 +16,18 @@ public class Motorista {
     @Column(nullable = false, unique = true, length = 20)
     private String cnh;
 
+    @Column(name = "latitude_atual")
+    private Double latitudeAtual;
+
+    @Column(name = "longitude_atual")
+    private Double longitudeAtual;
+
     // Construtor padrão (obrigatório pelo JPA)
     public Motorista() {
     }
 
     // Construtor para facilitar a criação de objetos
-    public Motorista(String nome, String cnh) {
+    public Motorista(String nome, String cnh /*, String endereco*/) {
         this.nome = nome;
         this.cnh = cnh;
     }
@@ -49,5 +55,21 @@ public class Motorista {
 
     public void setCnh(String cnh) {
         this.cnh = cnh;
+    }
+
+    public Double getLatitudeAtual() {
+        return latitudeAtual;
+    }
+
+    public void setLatitudeAtual(Double latitudeAtual) {
+        this.latitudeAtual = latitudeAtual;
+    }
+
+    public Double getLongitudeAtual() {
+        return longitudeAtual;
+    }
+
+    public void setLongitudeAtual(Double longitudeAtual) {
+        this.longitudeAtual = longitudeAtual;
     }
 }

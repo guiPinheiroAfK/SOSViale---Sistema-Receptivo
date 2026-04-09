@@ -45,4 +45,35 @@ public class PassageiroRepository {
         return em.find(Passageiro.class, id);
     }
 
+    public void atualizar(Passageiro passageiro) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(passageiro); // O merge sincroniza o objeto com o banco
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public void excluir(Long id) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            Passageiro p = em.find(Passageiro.class, id);
+            if (p != null) {
+                em.remove(p); // Remove o registro do banco
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
 }

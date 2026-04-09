@@ -35,4 +35,35 @@ public class VeiculoRepository {
         EntityManager em = JPAUtil.getEntityManager();
         return em.find(Veiculo.class, id);
     }
+
+    public void atualizar(Veiculo veiculo) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(veiculo);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public void excluir(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Veiculo v = em.find(Veiculo.class, id);
+            if (v != null) {
+                em.remove(v);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
 }

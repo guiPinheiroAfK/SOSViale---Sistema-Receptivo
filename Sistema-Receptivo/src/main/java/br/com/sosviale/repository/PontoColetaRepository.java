@@ -40,4 +40,44 @@ public class PontoColetaRepository {
             em.close();
         }
     }
+
+    public void atualizar(PontoColeta ponto) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(ponto);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public void excluir(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            PontoColeta p = em.find(PontoColeta.class, id);
+            if (p != null) {
+                em.remove(p);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public PontoColeta buscarPorId(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.find(PontoColeta.class, id);
+        } finally {
+            em.close();
+        }
+    }
 }

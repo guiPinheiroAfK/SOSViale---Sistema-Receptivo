@@ -24,6 +24,12 @@ public class PontoColeta {
     @Column(name = "horario_previsto")
     private LocalTime horarioPrevisto;
 
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
+
     public PontoColeta() {
     }
 
@@ -45,4 +51,20 @@ public class PontoColeta {
     public void setOrdemParada(Integer ordemParada) { this.ordemParada = ordemParada; }
     public LocalTime getHorarioPrevisto() { return horarioPrevisto; }
     public void setHorarioPrevisto(LocalTime horarioPrevisto) { this.horarioPrevisto = horarioPrevisto; }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
 }

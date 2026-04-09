@@ -37,4 +37,58 @@ public class TransferRepository {
             em.close();
         }
     }
+
+    public void atualizar(Transfer transfer) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(transfer); // Sincroniza as mudanças de origem, destino, valor, etc.
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public void excluir(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Transfer t = em.find(Transfer.class, id);
+            if (t != null) {
+                em.remove(t);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public int contarPassageirosPorVeiculo(Long veiculoId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            Long total = em.createQuery(
+                            "SELECT COUNT(p) FROM Transfer t JOIN t.passageiros p WHERE t.veiculo.id = :veiculoId AND t.status = 'PENDENTE'",
+                            Long.class)
+                    .setParameter("veiculoId", veiculoId)
+                    .getSingleResult();
+            return total.intValue();
+        } finally {
+            em.close();
+        }
+    }
+
+    public Transfer buscarPorId(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.find(Transfer.class, id);
+        } finally {
+            em.close();
+        }
+    }
 }
