@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<dataSource name="postgres@localhost">
-  <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
+<dataSource name="sos_viale_db">
+  <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.54">
     <root id="1">
       <DateStyle>mdy</DateStyle>
-      <Grants>1||-9223372036854775808|c|G
-1||10|c|G
-1||10|C|G
-1||10|T|G
-4||-9223372036854775808|c|G
-4||10|c|G
-4||10|C|G
-4||10|T|G</Grants>
-      <IntrospectionStateNumber>726</IntrospectionStateNumber>
-      <ServerVersion>15.17</ServerVersion>
-      <StartupTime>1775839178</StartupTime>
+      <IntrospectionStateNumber>789</IntrospectionStateNumber>
+      <ServerVersion>15.15</ServerVersion>
+      <StartupTime>1775858087</StartupTime>
       <TimeZones>true ACDT
 true ACSST
 false ACST
@@ -702,13 +694,10 @@ true posixrules
       <Grants>11||10|C|G
 11||-9223372036854775808|U|G
 11||10|U|G
-2200||6171|C|G
-2200||-9223372036854775808|U|G
-2200||6171|U|G
 13273||10|C|G
 13273||-9223372036854775808|U|G
 13273||10|U|G</Grants>
-      <IntrospectionStateNumber>726</IntrospectionStateNumber>
+      <IntrospectionStateNumber>789</IntrospectionStateNumber>
       <ObjectId>5</ObjectId>
       <OwnerName>viale_user</OwnerName>
     </database>
@@ -4124,16 +4113,15 @@ true posixrules
     </schema>
     <schema id="262" parent="2" name="public">
       <AutoIntrospectionLevel>3</AutoIntrospectionLevel>
-      <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <LastIntrospectionL1Xid>726</LastIntrospectionL1Xid>
-      <LastIntrospectionL2Xid>726</LastIntrospectionL2Xid>
-      <LastIntrospectionL3Xid>726</LastIntrospectionL3Xid>
+      <LastIntrospectionL1Xid>789</LastIntrospectionL1Xid>
+      <LastIntrospectionL2Xid>789</LastIntrospectionL2Xid>
+      <LastIntrospectionL3Xid>789</LastIntrospectionL3Xid>
       <LastIntrospectionLevel>3</LastIntrospectionLevel>
-      <LastIntrospectionLocalTimestamp>2026-04-10.16:39:49</LastIntrospectionLocalTimestamp>
-      <ObjectId>2200</ObjectId>
-      <StateNumber>518</StateNumber>
-      <OwnerName>pg_database_owner</OwnerName>
+      <LastIntrospectionLocalTimestamp>2026-04-10.22:58:43</LastIntrospectionLocalTimestamp>
+      <ObjectId>16470</ObjectId>
+      <StateNumber>744</StateNumber>
+      <OwnerName>viale_user</OwnerName>
     </schema>
   </database-model>
 </dataSource>

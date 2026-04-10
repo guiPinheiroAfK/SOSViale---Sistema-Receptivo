@@ -33,7 +33,11 @@ public class VeiculoRepository {
 
     public Veiculo buscarPorId(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
-        return em.find(Veiculo.class, id);
+        try {
+            return em.find(Veiculo.class, id);
+        } finally {
+            em.close();
+        }
     }
 
     public void atualizar(Veiculo veiculo) {

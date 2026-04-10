@@ -21,7 +21,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
-public class MenuService {
+public class
+MenuService {
 
     // atributos para guardar os repositórios
     private PassageiroRepository passageiroRepo;
@@ -333,7 +334,7 @@ public class MenuService {
             System.out.println("\u001B[32m[2]\u001B[0m Cadastrar novo passageiro");
             opcao = reader.readLine("Escolha: ").trim();
             if (opcao.equals("1")) {
-                menu();
+                return; // volta ao menu principal sem chamar menu() recursivamente
             } else if (!opcao.equals("1") && !opcao.equals("2")) {
                 System.out.println("\u001B[31mOpção inválida.\u001B[0m");
                 System.out.println("\u001B[32m[1]\u001B[0m Retornar ao Menu Inicial");
@@ -563,11 +564,6 @@ public class MenuService {
                     break;
                 }
                 System.out.println("\u001B[31mCapacidade deve ser um número maior que zero.\u001B[0m");
-            }
-
-            // validação simples
-            if (capacidade <= 0) {
-                throw new Exception("A capacidade deve ser maior que zero.");
             }
 
             Veiculo v = new Veiculo();

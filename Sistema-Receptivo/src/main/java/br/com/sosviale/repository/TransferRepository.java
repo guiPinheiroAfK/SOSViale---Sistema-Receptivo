@@ -73,7 +73,7 @@ public class TransferRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             Long total = em.createQuery(
-                            "SELECT COUNT(p) FROM Transfer t JOIN t.passageiros p WHERE t.veiculo.id = :veiculoId AND t.status = 'PENDENTE'",
+                            "SELECT COUNT(p) FROM Transfer t JOIN t.passageiros p WHERE t.ordemServico.veiculo.id = :veiculoId AND t.status = 'AGENDADO'",
                             Long.class)
                     .setParameter("veiculoId", veiculoId)
                     .getSingleResult();
