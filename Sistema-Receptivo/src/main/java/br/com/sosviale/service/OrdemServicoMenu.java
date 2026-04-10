@@ -26,24 +26,29 @@ public class OrdemServicoMenu {
         this.veiculoRepo = veiculoRepo;
         this.transferRepo = transferRepo;
     }
-
+    // todo fala time, aqui ó, precisamos de validação em tudo desse arquivo ok
     // Adicione a opção no menu principal e chame este metodo:
     public void menuOrdemServico(LineReader reader) {
-        System.out.println("\n\u001B[35m--- GESTÃO DE ORDENS DE SERVIÇO (FROTA) --- \u001B[0m");
-        System.out.println("\u001B[32m[1]\u001B[0m Abrir Nova OS (Definir Motorista e Veículo)");
-        System.out.println("\u001B[32m[2]\u001B[0m Atribuir Transfers a uma OS (Montar a Rota)");
-        System.out.println("\u001B[32m[3]\u001B[0m Voltar");
+        boolean noMenuOS = true;
+        while (noMenuOS) {
+            System.out.println("\n\u001B[35m--- GESTÃO DE ORDENS DE SERVIÇO (FROTA) --- \u001B[0m");
+            System.out.println("\u001B[32m[1]\u001B[0m Abrir Nova OS (Definir Motorista e Veículo)");
+            System.out.println("\u001B[32m[2]\u001B[0m Atribuir Transfers a uma OS (Montar a Rota)");
+            System.out.println("\u001B[32m[3]\u001B[0m Gerar PDF da Ordem de Serviço"); // <-- NOVA OPÇÃO!
+            System.out.println("\u001B[32m[4]\u001B[0m Voltar");
 
-        try {
-            String op = reader.readLine("Escolha: ").trim();
-            switch (op) {
-                case "1" -> abrirNovaOS(reader);
-                case "2" -> gerenciarTransfersDaOS(reader);
-                case "3" -> { return; }
-                default -> System.out.println("Opção inválida.");
+            try {
+                String op = reader.readLine("Escolha: ").trim();
+                switch (op) {
+                    case "1" -> abrirNovaOS(reader);
+                    case "2" -> gerenciarTransfersDaOS(reader);
+                    case "3" -> menuGerarPdf(reader);// <-- chama o pdf
+                    case "4" -> { noMenuOS = false; } // Sai do loop e volta pro menu principal
+                    default -> System.out.println("\u001B[31mOpção inválida.\u001B[0m");
+                }
+            } catch (Exception e) {
+                System.out.println("\u001B[31m[ERRO INESPERADO]: " + e.getMessage() + "\u001B[0m");
             }
-        } catch (Exception e) {
-            System.out.println("\u001B[31mErro: " + e.getMessage() + "\u001B[0m");
         }
     }
 
@@ -144,6 +149,34 @@ public class OrdemServicoMenu {
     }
 
     // --- MÉTODOS AUXILIARES QUE FALTAVAM ---
+
+    private void menuGerarPdf(LineReader reader) {
+        System.out.println("\n\u001B[36m--- EXPORTAR OS PARA PDF --- \u001B[0m");
+        try {
+            // 1. Pergunta qual OS o usuário quer imprimir usando o reader
+            Long idOsStr = lerIdValido(reader, "Digite o ID da Ordem de Serviço: ");
+
+            // 2. Busca a OS de verdade no banco de dados
+            OrdemServico os = osRepo.buscarPorId(idOsStr.intValue());
+
+            if (os == null) {
+                System.out.println("\u001B[31mOrdem de Serviço não encontrada!\u001B[0m");
+                return;
+            }
+
+            System.out.println("\u001B[33mGerando documento...\u001B[0m");
+
+            // 3. AGORA SIM! Passamos a 'os' de verdade para a classe PdfItext
+            br.com.sosviale.util.PdfItext.gerarPdfOs(os);
+            // OBS: se lá no PdfItext você chamou o metodo de gerarPdfOs ao invés de gerarOrdemServicoPdf, é só trocar o nome aqui em cima.
+
+            System.out.println("\u001B[32m✔ PDF da OS #" + os.getId() + " gerado com sucesso na pasta do projeto!\u001B[0m");
+
+        } catch (Exception e) {
+            System.out.println("\u001B[31m[ERRO AO GERAR PDF]: " + e.getMessage() + "\u001B[0m");
+            e.printStackTrace();
+        }
+    }
 
     private void listarMotoristas() {
         System.out.println("\n\u001B[36m--- MOTORISTAS CADASTRADOS --- \u001B[0m");
