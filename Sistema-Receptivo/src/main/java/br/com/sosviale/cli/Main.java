@@ -3,6 +3,9 @@ package br.com.sosviale.cli;
 import br.com.sosviale.config.DbConfig;
 import br.com.sosviale.repository.*;
 import br.com.sosviale.service.MenuService;
+import br.com.sosviale.repository.OrdemServicoRepository;
+import br.com.sosviale.config.JPAUtil;
+import jakarta.persistence.EntityManager;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,11 +21,14 @@ public class Main {
             return;
         }
 
+        EntityManager em = JPAUtil.getEntityManager();
+
         PassageiroRepository passageiroRepo = new PassageiroRepository();
         VeiculoRepository veiculoRepo = new VeiculoRepository();
         TransferRepository transferRepo = new TransferRepository();
         MotoristaRepository motoristaRepo = new MotoristaRepository();
         PontoColetaRepository pontoColetaRepo = new PontoColetaRepository();
+        OrdemServicoRepository osRepo = new OrdemServicoRepository(em);
 
         // 2. Cria o serviço do menu passando os repositórios
         MenuService menuService = new MenuService(
@@ -30,8 +36,8 @@ public class Main {
                 veiculoRepo,
                 transferRepo,
                 motoristaRepo,
-                pontoColetaRepo
-
+                pontoColetaRepo,
+                osRepo
         );
 
         // 3. Liga o motor!

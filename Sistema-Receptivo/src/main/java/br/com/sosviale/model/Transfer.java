@@ -31,18 +31,14 @@ public class Transfer {
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
 
-    @ManyToOne
-    @JoinColumn(name = "motorista_id")
-    private Motorista motorista;
-
-    @ManyToOne
-    @JoinColumn(name = "veiculo_id")
-    private Veiculo veiculo;
-
     // @JoinTable REMOVIDO daqui — o PontoColeta já tem o @JoinColumn
     @OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @OrderBy("ordemParada ASC")
     private List<PontoColeta> pontosColeta = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "os_id")
+    private OrdemServico ordemServico;
 
     // @ManyToMany RESTAURADO — estava faltando
     @ManyToMany(fetch = FetchType.EAGER)
@@ -53,17 +49,16 @@ public class Transfer {
     )
     private List<Passageiro> passageiros = new ArrayList<>();
 
+    // Construtor vazio obrigatório para o JPA
     public Transfer() {
     }
 
-    public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase, Motorista motorista, Veiculo veiculo) {
+    // Novo construtor enxuto (apenas dados do agendamento)
+    public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase) {
         this.dataHora = dataHora;
         this.origem = origem;
         this.destino = destino;
         this.valorBase = valorBase;
-        this.motorista = motorista;
-        this.veiculo = veiculo;
-        this.status = StatusTransfer.AGENDADO;
     }
 
     // Getters e Setters
@@ -85,12 +80,6 @@ public class Transfer {
     public BigDecimal getValorBase() { return valorBase; }
     public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
 
-    public Motorista getMotorista() { return motorista; }
-    public void setMotorista(Motorista motorista) { this.motorista = motorista; }
-
-    public Veiculo getVeiculo() { return veiculo; }
-    public void setVeiculo(Veiculo veiculo) { this.veiculo = veiculo; }
-
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
 
@@ -99,5 +88,12 @@ public class Transfer {
     }
     public void setPontosColeta(List<PontoColeta> pontosColeta) {
         this.pontosColeta = pontosColeta;
+    }
+
+    public OrdemServico getOrdemServico() {
+        return ordemServico;
+    }
+    public void setOrdemServico(OrdemServico ordemServico) {
+        this.ordemServico = ordemServico;
     }
 }

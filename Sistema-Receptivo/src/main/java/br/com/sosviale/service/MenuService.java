@@ -1,22 +1,20 @@
 package br.com.sosviale.service;
 
+import br.com.sosviale.repository.*;
 import br.com.sosviale.service.StatusTransfer;
 import br.com.sosviale.model.Motorista;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.Transfer;
 import br.com.sosviale.model.Veiculo;
 import br.com.sosviale.model.PontoColeta;
-import br.com.sosviale.repository.MotoristaRepository;
-import br.com.sosviale.repository.PassageiroRepository;
-import br.com.sosviale.repository.TransferRepository;
-import br.com.sosviale.repository.VeiculoRepository;
-import br.com.sosviale.repository.PontoColetaRepository;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,14 +29,17 @@ public class MenuService {
     private TransferRepository transferRepo;
     private MotoristaRepository motoristaRepo;
     private final PontoColetaRepository pontoColetaRepo;
+    private OrdemServicoRepository osRepo;
 
     // construtor que recebe os repositórios da main
-    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo, MotoristaRepository motoristaRepo, PontoColetaRepository pontoColetaRepo) {
+    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo, MotoristaRepository motoristaRepo, PontoColetaRepository pontoColetaRepo,
+                       OrdemServicoRepository osRepo) {
         this.passageiroRepo = passageiroRepo;
         this.veiculoRepo = veiculoRepo;
         this.transferRepo = transferRepo;
         this.motoristaRepo = motoristaRepo;
         this.pontoColetaRepo = pontoColetaRepo;
+        this.osRepo = osRepo;
     }
 
     public void menu() {
@@ -60,6 +61,7 @@ public class MenuService {
                 System.out.println("\u001B[32m[2]\u001B[0m Passageiros");
                 System.out.println("\u001B[32m[3]\u001B[0m Motoristas");
                 System.out.println("\u001B[32m[4]\u001B[0m Veiculos");
+                System.out.println("\u001B[32m[5]\u001B[0m Ordens de Serviço (FROTA)"); // <-- A OPÇÃO 5 APARECE AQUI!
                 System.out.println("\u001B[32m[sair]\u001B[0m Encerra o sistema");
                 String comando = reader.readLine(prompt).toLowerCase().trim();
 
@@ -76,14 +78,16 @@ public class MenuService {
                     case "4":
                         menuVeiculos(reader);
                         break;
+                    case "5": // <-- O CASE 5 REDIRECIONA PARA O MENU NOVO!
+                        OrdemServicoMenu osMenu = new OrdemServicoMenu(osRepo, motoristaRepo, veiculoRepo, transferRepo);
+                        osMenu.menuOrdemServico(reader);
+                        break;
                     case "sair":
                         executando = false;
                         break;
                     default:
                         System.out.println("\u001B[31mComando desconhecido.\u001B[0m");
                 }
-
-
             }
         } catch (Exception e) {
             System.err.println("Erro na interface: " + e.getMessage());
@@ -99,49 +103,14 @@ public class MenuService {
             String destino = lerStringObrigatoria(reader, "Destino (Ex: Hotel Cataratas): ");
             BigDecimal valor = lerBigDecimalValido(reader, "Valor Total do Transfer (R$): ");
 
-            // apoio ao usuário
-            String ver = reader.readLine("Deseja listar Motoristas e Veículos? (s/n): ");
-            if (ver.equalsIgnoreCase("s")) {
-                listarMotoristas();
-                listarVeiculos();
-            }
+            // Lendo a data e horário exato do transfer
+            LocalDateTime dataHora = lerDataHoraValida(reader, "Data e Hora (dd/MM/yyyy HH:mm): ");
 
-            Motorista motorista = null;
-            String motoristaId = null;
-            while (motorista == null) {
-                motoristaId = reader.readLine("\nDigite o ID do Motorista: ");
-                if (motorista == null) System.out.println("\u001B[31mMotorista não encontrado!\u001B[0m");
-            }
+            // O Transfer agora nasce órfão de motorista e veículo
+            Transfer novoTransfer = new Transfer(dataHora, origem, destino, valor);
 
-            Veiculo veiculo = null;
-            String veiculoId = null;
-            while (veiculo == null) {
-                veiculoId = reader.readLine("Digite o ID do Veículo: ");
-                if (veiculo == null) System.out.println("\u001B[31mVeículo não encontrado!\u001B[0m");
-            }
-
-            motorista = motoristaRepo.buscarPorId(Long.parseLong(motoristaId));
-            veiculo = veiculoRepo.buscarPorId(Long.parseLong(veiculoId));
-
-            if (motorista == null || veiculo == null) {
-                throw new Exception("Motorista ou Veículo não encontrado!");
-            }
-
-            // O construtor já define como AGENDADO, mas vamos dar a opção:
-            Transfer novoTransfer = new Transfer(LocalDateTime.now().plusDays(1), origem, destino, valor, motorista, veiculo);
-
-            System.out.println("\nEscolha o status do transfer:");
-            System.out.println("1. AGENDADO (Padrão)");
-            System.out.println("2. EM ANDAMENTO");
-            System.out.println("3. CONCLUÍDO");
-            System.out.println("Opção (Enter para AGENDADO): ");
-            String statusOp = reader.readLine("> ");
-
-            switch (statusOp) {
-                case "2" -> novoTransfer.setStatus(StatusTransfer.EM_ANDAMENTO);
-                case "3" -> novoTransfer.setStatus(StatusTransfer.CONCLUIDO);
-                default -> novoTransfer.setStatus(StatusTransfer.AGENDADO);
-            }
+            // Forçamos o status para AGENDADO por padrão ao criar
+            novoTransfer.setStatus(StatusTransfer.AGENDADO);
 
             // LOOP DE PASSAGEIROS
             String ver2 = reader.readLine("Deseja listar Passageiros? (s/n): ");
@@ -149,19 +118,14 @@ public class MenuService {
                 listarPassageiros();
             }
 
-            System.out.println("\n\u001B[33m--- ADICIONANDO PASSAGEIROS (Capacidade: " + veiculo.getCapacidade() + ") --- \u001B[0m");
+            System.out.println("\n\u001B[33m--- ADICIONANDO PASSAGEIROS --- \u001B[0m");
+            System.out.println("A capacidade será validada depois, ao atribuir o veículo na OS.");
 
             boolean adicionando = true;
             while (adicionando) {
-                int atuais = novoTransfer.getPassageiros().size();
-                if (atuais >= veiculo.getCapacidade()) {
-                    System.out.println("\u001B[31mLOTAÇÃO MÁXIMA ATINGIDA!\u001B[0m");
-                    break;
-                }
-
                 String pIdStr = reader.readLine("ID do Passageiro (ou 'fim'): ");
                 if (pIdStr.equalsIgnoreCase("fim")) {
-                    if (atuais == 0) {
+                    if (novoTransfer.getPassageiros().isEmpty()) {
                         System.out.println("\u001B[31mErro: Precisa de pelo menos 1 passageiro!\u001B[0m");
                         continue;
                     }
@@ -179,8 +143,9 @@ public class MenuService {
 
             // Salvar
             transferRepo.salvar(novoTransfer);
-            System.out.println("\n\u001B[32m✔ Transfer [" + novoTransfer.getStatus() + "] salvo com sucesso!\u001B[0m");
+            System.out.println("\n\u001B[32m✔ Transfer [" + novoTransfer.getStatus() + "] salvo com sucesso e aguardando Ordem de Serviço!\u001B[0m");
 
+            // Pontos de coleta continuam iguais...
             System.out.println("\n--- PONTOS DE COLETA (manual) ---");
             System.out.println("Digite 'fim' para encerrar.");
             int ordem = 1;
@@ -197,7 +162,6 @@ public class MenuService {
                 if (!horario.isBlank()) {
                     ponto.setHorarioPrevisto(LocalTime.parse(horario));
                 }
-                // lat/lon = 0.0 por ora (pathfinding futuro)
                 ponto.setLatitude(0.0);
                 ponto.setLongitude(0.0);
                 pontoColetaRepo.salvar(ponto);
@@ -217,10 +181,9 @@ public class MenuService {
                 return;
             }
 
-            // 1. Aumentamos o cabeçalho para incluir "STATUS"
-            System.out.println(String.format("%-4s | %-12s | %-15s | %-15s | %-15s | %-25s | %-10s",
-                    "ID", "STATUS", "ORIGEM", "DESTINO", "MOTORISTA", "PASSAGEIROS", "VALOR"));
-            System.out.println("-----------------------------------------------------------------------------------------------------------------------------");
+            System.out.println(String.format("%-4s | %-12s | %-15s | %-15s | %-20s | %-25s | %-10s",
+                    "ID", "STATUS", "ORIGEM", "DESTINO", "SITUAÇÃO OS", "PASSAGEIROS", "VALOR"));
+            System.out.println("---------------------------------------------------------------------------------------------------------------------------------");
 
             for (Transfer t : lista) {
                 String nomesPassageiros = t.getPassageiros().stream()
@@ -228,13 +191,17 @@ public class MenuService {
                         .reduce((a, b) -> a + ", " + b)
                         .orElse("Nenhum");
 
-                // 2. Adicionamos t.getStatus() na linha de impressão
-                System.out.println(String.format("%-4d | %-12s | %-15s | %-15s | %-15s | %-25s | R$%-10.2f",
+                // Verifica se o transfer já tem uma OS e um motorista
+                String situacaoOs = (t.getOrdemServico() != null && t.getOrdemServico().getMotorista() != null)
+                        ? "OS #" + t.getOrdemServico().getId() + " - " + t.getOrdemServico().getMotorista().getNome()
+                        : "Não Atribuído";
+
+                System.out.println(String.format("%-4d | %-12s | %-15s | %-15s | %-20s | %-25s | R$%-10.2f",
                         t.getId(),
-                        t.getStatus(), // Aqui entra o nosso Enum (AGENDADO, CONCLUIDO, etc)
+                        t.getStatus(),
                         t.getOrigem(),
                         t.getDestino(),
-                        t.getMotorista().getNome(),
+                        situacaoOs,
                         nomesPassageiros,
                         t.getValorBase()));
             }
@@ -749,6 +716,18 @@ public class MenuService {
                 System.out.println("\u001B[31mO valor deve ser maior que zero.\u001B[0m");
             } catch (Exception e) {
                 System.out.println("\u001B[31mValor inválido! Ex: 150.00\u001B[0m");
+            }
+        }
+    }
+
+    private LocalDateTime lerDataHoraValida(LineReader reader, String mensagem) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        while (true) {
+            try {
+                String dataStr = reader.readLine(mensagem).trim();
+                return LocalDateTime.parse(dataStr, formatter);
+            } catch (DateTimeParseException e) {
+                System.out.println("\u001B[31mFormato inválido! Use: dd/MM/yyyy HH:mm (Ex: 15/04/2026 14:30)\u001B[0m");
             }
         }
     }
