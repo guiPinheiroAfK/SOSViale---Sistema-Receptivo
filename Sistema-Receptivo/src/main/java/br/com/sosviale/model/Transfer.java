@@ -1,6 +1,6 @@
 package br.com.sosviale.model;
 
-import br.com.sosviale.enums.StatusTransfer;
+import br.com.sosviale.service.StatusTransfer;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,30 +24,33 @@ public class Transfer {
     @Column(nullable = false, length = 100)
     private String destino;
 
-    @Enumerated(EnumType.STRING) // Salva o nome do Enum no banco
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private StatusTransfer status = StatusTransfer.AGENDADO;
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
 
-    // Relacionamento: Muitos transfers para um motorista
     @ManyToOne
-    @JoinColumn(name = "motorista_id") // Nome da coluna FK no banco
+    @JoinColumn(name = "motorista_id")
     private Motorista motorista;
 
-    // Relacionamento: Muitos transfers para um veículo
     @ManyToOne
     @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
 
+    // @JoinTable REMOVIDO daqui — o PontoColeta já tem o @JoinColumn
+    @OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OrderBy("ordemParada ASC")
+    private List<PontoColeta> pontosColeta = new ArrayList<>();
+
+    // @ManyToMany RESTAURADO — estava faltando
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "transfer_passageiros",
             joinColumns = @JoinColumn(name = "transfer_id"),
             inverseJoinColumns = @JoinColumn(name = "passageiro_id")
     )
-
     private List<Passageiro> passageiros = new ArrayList<>();
 
     public Transfer() {
@@ -77,7 +80,7 @@ public class Transfer {
     public void setDestino(String destino) { this.destino = destino; }
 
     public StatusTransfer getStatus() {return status;}
-    public void setStatus(StatusTransfer status) { this.status = status; }
+    public void setStatus(StatusTransfer status) {this.status = status;}
 
     public BigDecimal getValorBase() { return valorBase; }
     public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
@@ -90,4 +93,11 @@ public class Transfer {
 
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
+
+    public List<PontoColeta> getPontosColeta() {
+        return pontosColeta;
+    }
+    public void setPontosColeta(List<PontoColeta> pontosColeta) {
+        this.pontosColeta = pontosColeta;
+    }
 }

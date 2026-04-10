@@ -1,4 +1,4 @@
-package br.com.sosviale.enums;
+package br.com.sosviale.service;
 
 public enum StatusTransfer {
     AGENDADO,

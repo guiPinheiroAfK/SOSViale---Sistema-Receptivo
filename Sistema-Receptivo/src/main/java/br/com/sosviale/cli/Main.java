@@ -22,13 +22,15 @@ public class Main {
         VeiculoRepository veiculoRepo = new VeiculoRepository();
         TransferRepository transferRepo = new TransferRepository();
         MotoristaRepository motoristaRepo = new MotoristaRepository();
+        PontoColetaRepository pontoColetaRepo = new PontoColetaRepository();
 
         // 2. Cria o serviço do menu passando os repositórios
         MenuService menuService = new MenuService(
                 passageiroRepo,
                 veiculoRepo,
                 transferRepo,
-                motoristaRepo
+                motoristaRepo,
+                pontoColetaRepo
 
         );
 

@@ -1,5 +1,6 @@
 package br.com.sosviale.service;
 
+import br.com.sosviale.service.StatusTransfer;
 import br.com.sosviale.model.Motorista;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.Transfer;
@@ -19,6 +20,7 @@ import org.jline.utils.AttributedStyle;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public class MenuService {
@@ -28,13 +30,15 @@ public class MenuService {
     private VeiculoRepository veiculoRepo;
     private TransferRepository transferRepo;
     private MotoristaRepository motoristaRepo;
+    private final PontoColetaRepository pontoColetaRepo;
 
     // construtor que recebe os repositórios da main
-    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo, MotoristaRepository motoristaRepo) {
+    public MenuService(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo, MotoristaRepository motoristaRepo, PontoColetaRepository pontoColetaRepo) {
         this.passageiroRepo = passageiroRepo;
         this.veiculoRepo = veiculoRepo;
         this.transferRepo = transferRepo;
         this.motoristaRepo = motoristaRepo;
+        this.pontoColetaRepo = pontoColetaRepo;
     }
 
     public void menu() {
@@ -90,89 +94,122 @@ public class MenuService {
         System.out.println("\n\u001B[36m--- NOVO AGENDAMENTO DE TRANSFER --- \u001B[0m");
 
         try {
-            // 1. Dados básicos da viagem
-            String origem = reader.readLine("Origem (Ex: Aeroporto IGU): ");
-            String destino = reader.readLine("Destino (Ex: Hotel Cataratas): ");
-            String valorStr = reader.readLine("Valor Total do Transfer (R$): ");
-            BigDecimal valor = new BigDecimal(valorStr.replace(",", "."));
+            // dados básicos
+            String origem = lerStringObrigatoria(reader, "Origem (Ex: Aeroporto IGU): ");
+            String destino = lerStringObrigatoria(reader, "Destino (Ex: Hotel Cataratas): ");
+            BigDecimal valor = lerBigDecimalValido(reader, "Valor Total do Transfer (R$): ");
 
-            // Apoio ao usuário
+            // apoio ao usuário
             String ver = reader.readLine("Deseja listar Motoristas e Veículos? (s/n): ");
             if (ver.equalsIgnoreCase("s")) {
                 listarMotoristas();
                 listarVeiculos();
             }
 
-            // 2. Definir quem leva e em qual carro
-            String motoristaId = reader.readLine("\nDigite o ID do Motorista: ");
-            String veiculoId = reader.readLine("Digite o ID do Veículo: ");
+            Motorista motorista = null;
+            String motoristaId = null;
+            while (motorista == null) {
+                motoristaId = reader.readLine("\nDigite o ID do Motorista: ");
+                if (motorista == null) System.out.println("\u001B[31mMotorista não encontrado!\u001B[0m");
+            }
 
-            Motorista motorista = motoristaRepo.buscarPorId(Long.parseLong(motoristaId));
-            Veiculo veiculo = veiculoRepo.buscarPorId(Long.parseLong(veiculoId));
+            Veiculo veiculo = null;
+            String veiculoId = null;
+            while (veiculo == null) {
+                veiculoId = reader.readLine("Digite o ID do Veículo: ");
+                if (veiculo == null) System.out.println("\u001B[31mVeículo não encontrado!\u001B[0m");
+            }
+
+            motorista = motoristaRepo.buscarPorId(Long.parseLong(motoristaId));
+            veiculo = veiculoRepo.buscarPorId(Long.parseLong(veiculoId));
 
             if (motorista == null || veiculo == null) {
                 throw new Exception("Motorista ou Veículo não encontrado!");
             }
 
-            // 3. Criar o objeto Transfer antes do loop de passageiros
-            Transfer novoTransfer = new Transfer();
-            novoTransfer.setOrigem(origem);
-            novoTransfer.setDestino(destino);
-            novoTransfer.setValorBase(valor);
-            novoTransfer.setDataHora(LocalDateTime.now().plusDays(1));
-            novoTransfer.setMotorista(motorista);
-            novoTransfer.setVeiculo(veiculo);
+            // O construtor já define como AGENDADO, mas vamos dar a opção:
+            Transfer novoTransfer = new Transfer(LocalDateTime.now().plusDays(1), origem, destino, valor, motorista, veiculo);
 
+            System.out.println("\nEscolha o status do transfer:");
+            System.out.println("1. AGENDADO (Padrão)");
+            System.out.println("2. EM ANDAMENTO");
+            System.out.println("3. CONCLUÍDO");
+            System.out.println("Opção (Enter para AGENDADO): ");
+            String statusOp = reader.readLine("> ");
+
+            switch (statusOp) {
+                case "2" -> novoTransfer.setStatus(StatusTransfer.EM_ANDAMENTO);
+                case "3" -> novoTransfer.setStatus(StatusTransfer.CONCLUIDO);
+                default -> novoTransfer.setStatus(StatusTransfer.AGENDADO);
+            }
+
+            // LOOP DE PASSAGEIROS
             String ver2 = reader.readLine("Deseja listar Passageiros? (s/n): ");
             if (ver2.equalsIgnoreCase("s")) {
                 listarPassageiros();
             }
 
-            // 4. LOOP DE PASSAGEIROS (O CORAÇÃO DA MUDANÇA)
             System.out.println("\n\u001B[33m--- ADICIONANDO PASSAGEIROS (Capacidade: " + veiculo.getCapacidade() + ") --- \u001B[0m");
 
             boolean adicionando = true;
             while (adicionando) {
                 int atuais = novoTransfer.getPassageiros().size();
-
                 if (atuais >= veiculo.getCapacidade()) {
                     System.out.println("\u001B[31mLOTAÇÃO MÁXIMA ATINGIDA!\u001B[0m");
                     break;
                 }
 
-                System.out.println("Passageiros atuais: " + atuais + "/" + veiculo.getCapacidade());
-                String pIdStr = reader.readLine("Digite o ID do Passageiro (ou 'fim' para encerrar): ");
-
+                String pIdStr = reader.readLine("ID do Passageiro (ou 'fim'): ");
                 if (pIdStr.equalsIgnoreCase("fim")) {
                     if (atuais == 0) {
-                        System.out.println("\u001B[31mErro: O transfer precisa de pelo menos 1 passageiro!\u001B[0m");
+                        System.out.println("\u001B[31mErro: Precisa de pelo menos 1 passageiro!\u001B[0m");
                         continue;
                     }
                     adicionando = false;
                 } else {
                     Passageiro p = passageiroRepo.buscarPorId(Long.parseLong(pIdStr));
-                    if (p == null) {
-                        System.out.println("\u001B[31mPassageiro não encontrado!\u001B[0m");
-                    } else if (novoTransfer.getPassageiros().contains(p)) {
-                        System.out.println("\u001B[31mEste passageiro já está na lista!\u001B[0m");
-                    } else {
+                    if (p != null && !novoTransfer.getPassageiros().contains(p)) {
                         novoTransfer.getPassageiros().add(p);
                         System.out.println("\u001B[32m✔ " + p.getNome() + " adicionado.\u001B[0m");
+                    } else {
+                        System.out.println("\u001B[31mPassageiro inválido ou já adicionado!\u001B[0m");
                     }
                 }
             }
 
-            // 5. Salva tudo de uma vez
+            // Salvar
             transferRepo.salvar(novoTransfer);
-            System.out.println("\n\u001B[32m✔ Transfer agendado com sucesso com " + novoTransfer.getPassageiros().size() + " passageiro(s)!\u001B[0m");
+            System.out.println("\n\u001B[32m✔ Transfer [" + novoTransfer.getStatus() + "] salvo com sucesso!\u001B[0m");
+
+            System.out.println("\n--- PONTOS DE COLETA (manual) ---");
+            System.out.println("Digite 'fim' para encerrar.");
+            int ordem = 1;
+            boolean adicionandoPontos = true;
+            while (adicionandoPontos) {
+                String local = reader.readLine("Parada " + ordem + " - Local: ");
+                if (local.equalsIgnoreCase("fim")) break;
+                String horario = reader.readLine("Horário previsto (HH:mm, ou Enter pra pular): ");
+
+                PontoColeta ponto = new PontoColeta();
+                ponto.setTransfer(novoTransfer);
+                ponto.setLocalColeta(local);
+                ponto.setOrdemParada(ordem++);
+                if (!horario.isBlank()) {
+                    ponto.setHorarioPrevisto(LocalTime.parse(horario));
+                }
+                // lat/lon = 0.0 por ora (pathfinding futuro)
+                ponto.setLatitude(0.0);
+                ponto.setLongitude(0.0);
+                pontoColetaRepo.salvar(ponto);
+            }
 
         } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO NO AGENDAMENTO]: " + e.getMessage() + "\u001B[0m");
+            System.out.println("\u001B[31m[ERRO]: " + e.getMessage() + "\u001B[0m");
         }
     }
 
     private void listarTransfers() {
-        System.out.println("\n\u001B[36m--- LISTA DE TRANSFERS AGENDADOS --- \u001B[0m");
+        System.out.println("\n\u001B[36m--- LISTA DE TRANSFERS --- \u001B[0m");
         try {
             List<Transfer> lista = transferRepo.listarTodos();
             if (lista.isEmpty()) {
@@ -180,20 +217,21 @@ public class MenuService {
                 return;
             }
 
-            // Ajustei o espaçamento para caber a coluna de passageiros
-            System.out.println(String.format("%-4s | %-15s | %-15s | %-15s | %-30s | %-10s",
-                    "ID", "ORIGEM", "DESTINO", "MOTORISTA", "PASSAGEIROS", "VALOR"));
-            System.out.println("------------------------------------------------------------------------------------------------------------------------");
+            // 1. Aumentamos o cabeçalho para incluir "STATUS"
+            System.out.println(String.format("%-4s | %-12s | %-15s | %-15s | %-15s | %-25s | %-10s",
+                    "ID", "STATUS", "ORIGEM", "DESTINO", "MOTORISTA", "PASSAGEIROS", "VALOR"));
+            System.out.println("-----------------------------------------------------------------------------------------------------------------------------");
 
             for (Transfer t : lista) {
-                // Transforma a lista de objetos Passageiro em uma String de nomes separada por vírgula
                 String nomesPassageiros = t.getPassageiros().stream()
                         .map(Passageiro::getNome)
                         .reduce((a, b) -> a + ", " + b)
                         .orElse("Nenhum");
 
-                System.out.println(String.format("%-4d | %-15s | %-15s | %-15s | %-30s | R$%-10.2f",
+                // 2. Adicionamos t.getStatus() na linha de impressão
+                System.out.println(String.format("%-4d | %-12s | %-15s | %-15s | %-15s | %-25s | R$%-10.2f",
                         t.getId(),
+                        t.getStatus(), // Aqui entra o nosso Enum (AGENDADO, CONCLUIDO, etc)
                         t.getOrigem(),
                         t.getDestino(),
                         t.getMotorista().getNome(),
@@ -210,23 +248,48 @@ public class MenuService {
             String idStr = reader.readLine("ID do Transfer para editar: ");
             Transfer t = transferRepo.buscarPorId(Long.parseLong(idStr));
 
-            if (t != null) {
-                String novaOrigem = reader.readLine("Nova Origem [" + t.getOrigem() + "]: ");
-                if (!novaOrigem.trim().isEmpty()) t.setOrigem(novaOrigem);
-
-                String novoDestino = reader.readLine("Novo Destino [" + t.getDestino() + "]: ");
-                if (!novoDestino.trim().isEmpty()) t.setDestino(novoDestino);
-
-                String novoValor = reader.readLine("Novo Valor [R$ " + t.getValorBase() + "]: ");
-                if (!novoValor.trim().isEmpty()) t.setValorBase(new BigDecimal(novoValor.replace(",", ".")));
-
-                transferRepo.atualizar(t);
-                System.out.println("\u001B[32m✔ Transfer atualizado com sucesso!\u001B[0m");
-            } else {
-                System.out.println("Agendamento não encontrado.");
+            if (t == null) {
+                System.out.println("\u001B[31mAgendamento não encontrado.\u001B[0m");
+                return;
             }
+
+            System.out.println("\n\u001B[33m(Aperte ENTER para manter o valor atual)\u001B[0m");
+
+            // editar origem
+            String novaOrigem = reader.readLine("Nova Origem [" + t.getOrigem() + "]: ");
+            if (!novaOrigem.trim().isEmpty()) t.setOrigem(novaOrigem);
+
+            // editar destino
+            String novoDestino = reader.readLine("Novo Destino [" + t.getDestino() + "]: ");
+            if (!novoDestino.trim().isEmpty()) t.setDestino(novoDestino);
+
+            // editar valor
+            String novoValor = reader.readLine("Novo Valor [R$ " + t.getValorBase() + "]: ");
+            if (!novoValor.trim().isEmpty()) t.setValorBase(new BigDecimal(novoValor.replace(",", ".")));
+
+            // MUDAR O STATUS
+            System.out.println("\nStatus atual: " + t.getStatus());
+            System.out.println("Escolha o novo status:");
+            System.out.println("1. AGENDADO");
+            System.out.println("2. EM_ANDAMENTO");
+            System.out.println("3. CONCLUIDO");
+            System.out.println("4. CANCELADO");
+            System.out.println("Enter para manter o mesmo.");
+
+            String opStatus = reader.readLine("> ");
+            switch (opStatus) {
+                case "1" -> t.setStatus(StatusTransfer.AGENDADO);
+                case "2" -> t.setStatus(StatusTransfer.EM_ANDAMENTO);
+                case "3" -> t.setStatus(StatusTransfer.CONCLUIDO);
+                case "4" -> t.setStatus(StatusTransfer.CANCELADO);
+            }
+
+            // salvar no banco
+            transferRepo.atualizar(t);
+            System.out.println("\n\u001B[32m✔ Transfer #" + t.getId() + " atualizado e purificado!\u001B[0m");
+
         } catch (Exception e) {
-            System.out.println("\u001B[31mErro na edição.\u001B[0m");
+            System.out.println("\u001B[31m[ERRO NA EDIÇÃO]: " + e.getMessage() + "\u001B[0m");
         }
     }
 
@@ -272,12 +335,16 @@ public class MenuService {
             System.out.println("\n\u001B[36m--- CADASTRO DE PASSAGEIRO --- \u001B[0m");
 
             try {
+
                 // lendo os dados usando o reader da JLine
-                String nome = reader.readLine("Nome Completo: ");
-                if (nome.trim().isEmpty()) throw new Exception("O nome não pode ser vazio.");
+                String nome = lerNomeValido(reader,"Nome Completo: ");
+                if (!isNomeValido(nome)) {
+                    throw new Exception("Nome inválido! Use pelo menos 3 letras e sem números.");
+                }
+
 
                 String documento = reader.readLine("Documento (RG/Passaporte): ");
-                String nacionalidade = reader.readLine("Nacionalidade: ");
+                String nacionalidade = lerStringObrigatoria(reader,"Nacionalidade: ");
 
                 // (regra de negócio) validação de fronteira
                 // se for para a Argentina/Paraguai, o documento é obrigatório
@@ -355,7 +422,6 @@ public class MenuService {
                 return;
             }
 
-            // 3. Peça confirmação (Segurança em primeiro lugar!)
             String conf = reader.readLine("Tem certeza que deseja excluir " + p.getNome() + "? (s/n): ");
             if (conf.equalsIgnoreCase("s")) {
                 passageiroRepo.excluir(id);
@@ -371,19 +437,19 @@ public class MenuService {
     private void editarPassageiro(LineReader reader) {
         System.out.println("\n\u001B[34m--- EDITAR PASSAGEIRO --- \u001B[0m");
         try {
-            // 1. Busque quem vai ser editado
+            // buscando quem vai ser editado
             String idStr = reader.readLine("ID do passageiro: ");
             Passageiro p = passageiroRepo.buscarPorId(Long.parseLong(idStr));
 
             if (p != null) {
-                // 2. Peça os novos dados (se der Enter sem digitar, mantém o antigo)
+                // pedindo os novos dados (se der Enter sem digitar, mantém o antigo)
                 String novoNome = reader.readLine("Novo Nome [" + p.getNome() + "]: ");
                 if (!novoNome.trim().isEmpty()) p.setNome(novoNome);
 
                 String novoDoc = reader.readLine("Novo Documento [" + p.getDocumento() + "]: ");
                 if (!novoDoc.trim().isEmpty()) p.setDocumento(novoDoc);
 
-                // 3. Mande pro Repository fazer o 'merge'
+                // manda pro Repository fazer o 'merge'
                 passageiroRepo.atualizar(p);
                 System.out.println("\u001B[32m✔ Dados atualizados com sucesso!\u001B[0m");
             } else {
@@ -417,12 +483,12 @@ public class MenuService {
     private void cadastrarMotorista(LineReader reader) {
         System.out.println("\n\u001B[36m--- CADASTRO DE MOTORISTA --- \u001B[0m");
         try {
-            String nome = reader.readLine("Nome Completo: ").toUpperCase().trim();
-            String cnh = reader.readLine("Número da CNH (11 dígitos): ").trim();
-
-            // validação da CNH
-            if (cnh.length() != 11) {
-                throw new Exception("CNH Inválida! O número deve conter exatamente 11 dígitos.");
+            String nome = lerNomeValido(reader,"Nome Completo: ").toUpperCase().trim();
+            String cnh = "";
+            while (true) {
+                cnh = reader.readLine("Número da CNH (11 dígitos): ").trim();
+                if (cnh.length() == 11 && isApenasNumeros(cnh)) break;
+                System.out.println("\u001B[31mCNH Inválida! Deve conter exatamente 11 números.\u001B[0m");
             }
 
             Motorista m = new Motorista();
@@ -515,9 +581,22 @@ public class MenuService {
     private void cadastrarVeiculo(LineReader reader) {
         System.out.println("\n\u001B[36m--- CADASTRO DE VEÍCULO --- \u001B[0m");
         try {
-            String label = reader.readLine("Modelo (Ex: Mercedes Sprinter): ").toUpperCase().trim();
-            String placa = reader.readLine("Placa: ").toUpperCase().trim();
-            int capacidade = Integer.parseInt(reader.readLine("Capacidade de Passageiros: "));
+            String label = lerStringObrigatoria(reader,"Modelo (Ex: Mercedes Sprinter): ").toUpperCase().trim();
+            String placa = "";
+            while (true) {
+                placa = reader.readLine("Placa: ").toUpperCase().trim();
+                if (isPlacaValida(placa)) break;
+                System.out.println("\u001B[31mPlaca inválida! Use o padrão Mercosul (ABC1D23).\u001B[0m");
+            }
+            int capacidade = 0;
+            while (true) {
+                String capStr = reader.readLine("Capacidade: ");
+                if (isApenasNumeros(capStr) && Integer.parseInt(capStr) > 0) {
+                    capacidade = Integer.parseInt(capStr);
+                    break;
+                }
+                System.out.println("\u001B[31mCapacidade deve ser um número maior que zero.\u001B[0m");
+            }
 
             // validação simples
             if (capacidade <= 0) {
@@ -602,23 +681,76 @@ public class MenuService {
         }
     }
 
-            private void menuVeiculos(LineReader reader) {
-                System.out.println("\n\u001B[35m--- GESTÃO DE VEICULOS --- \u001B[0m");
-                System.out.println("\u001B[32m[1]\u001B[0m Cadastrar");
-                System.out.println("\u001B[32m[2]\u001B[0m Listar");
-                System.out.println("\u001B[32m[3]\u001B[0m Editar");
-                System.out.println("\u001B[32m[4]\u001B[0m Excluir");
-                System.out.println("\u001B[32m[5]\u001B[0m Voltar");
+    private void menuVeiculos(LineReader reader) {
+        System.out.println("\n\u001B[35m--- GESTÃO DE VEICULOS --- \u001B[0m");
+        System.out.println("\u001B[32m[1]\u001B[0m Cadastrar");
+        System.out.println("\u001B[32m[2]\u001B[0m Listar");
+        System.out.println("\u001B[32m[3]\u001B[0m Editar");
+        System.out.println("\u001B[32m[4]\u001B[0m Excluir");
+        System.out.println("\u001B[32m[5]\u001B[0m Voltar");
 
-                String op = reader.readLine("Escolha uma opção: ").toLowerCase().trim();
+        String op = reader.readLine("Escolha uma opção: ").toLowerCase().trim();
 
-                switch (op) {
-                    case "1": cadastrarVeiculo(reader); break;
-                    case "2": listarVeiculos(); break;
-                    case "3": editarVeiculo(reader); break;
-                    case "4": excluirVeiculo(reader); break;
-                    case "5": return; // Sai do metodo e volta para o menu principal
-                    default: System.out.println("Opção inválida.");
-                }
+        switch (op) {
+            case "1": cadastrarVeiculo(reader); break;
+            case "2": listarVeiculos(); break;
+            case "3": editarVeiculo(reader); break;
+            case "4": excluirVeiculo(reader); break;
+            case "5": return; // Sai do metodo e volta para o menu principal
+            default: System.out.println("Opção inválida.");
+        }
+    }
+
+    // valida se é apenas letras e espaços (útil para nomes)
+    public static boolean isNomeValido(String nome) {
+        return nome != null && nome.trim().matches("^[a-zA-ZÀ-ÿ\\s]{3,}$");
+    }
+
+    // valida se a string contém apenas números
+    public static boolean isApenasNumeros(String dados) {
+        return dados != null && dados.matches("\\d+");
+    }
+
+    // valida placa (Padrão Antigo e Mercosul)
+    public static boolean isPlacaValida(String placa) {
+        return placa != null && placa.matches("[A-Z]{3}[0-9][A-Z0-9][0-9]{2}");
+    }
+
+    private String lerStringObrigatoria(LineReader reader, String mensagem) {
+        while (true) {
+            String valor = reader.readLine(mensagem).trim();
+            if (!valor.isEmpty()) return valor;
+            System.out.println("\u001B[31mEste campo é obrigatório!\u001B[0m");
+        }
+    }
+
+    private String lerNomeValido(LineReader reader, String mensagem) {
+        while (true) {
+            String nome = reader.readLine(mensagem).trim();
+            if (isNomeValido(nome)) return nome;
+            System.out.println("\u001B[31mNome inválido! Use apenas letras (mín. 3).\u001B[0m");
+        }
+    }
+
+    private Long lerIdValido(LineReader reader, String mensagem) {
+        while (true) {
+            String idStr = reader.readLine(mensagem).trim();
+            if (isApenasNumeros(idStr)) return Long.parseLong(idStr);
+            System.out.println("\u001B[31mID inválido! Digite apenas números.\u001B[0m");
+        }
+    }
+
+    private BigDecimal lerBigDecimalValido(LineReader reader, String mensagem) {
+        while (true) {
+            String valorStr = reader.readLine(mensagem).replace(",", ".").trim();
+            try {
+                BigDecimal valor = new BigDecimal(valorStr);
+                if (valor.compareTo(BigDecimal.ZERO) > 0) return valor;
+                System.out.println("\u001B[31mO valor deve ser maior que zero.\u001B[0m");
+            } catch (Exception e) {
+                System.out.println("\u001B[31mValor inválido! Ex: 150.00\u001B[0m");
             }
+        }
+    }
+
 }
