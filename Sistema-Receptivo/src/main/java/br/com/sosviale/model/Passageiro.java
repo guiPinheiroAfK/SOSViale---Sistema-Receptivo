@@ -16,21 +16,22 @@ public class Passageiro {
     @Column(nullable = false, length = 20)
     private String documento;
 
+    // nacionalidade padrão para passageiros sem informação explícita
     @Column(length = 50)
     private String nacionalidade = "Brasileira";
 
-    // O JPA exige um construtor vazio
+    // construtor padrão obrigatório pelo JPA
     public Passageiro() {
     }
 
-    // Construtor para facilitar a vida nos testes
+    // construtor auxiliar para facilitar criação em testes e serviços
     public Passageiro(String nome, String documento, String nacionalidade) {
         this.nome = nome;
         this.documento = documento;
         this.nacionalidade = nacionalidade;
     }
 
-    // Getters e Setters
+    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

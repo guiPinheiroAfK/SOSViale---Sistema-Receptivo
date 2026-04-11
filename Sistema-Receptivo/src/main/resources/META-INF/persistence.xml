@@ -16,14 +16,16 @@
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5600/sos_viale_db"/>
             <property name="jakarta.persistence.jdbc.user" value="viale_user"/>
-            <property name="jakarta.persistence.jdbc.password" value="teste_viale"/>
+            <property name="jakarta.persistence.jdbc.password" value="viale_password"/>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.show_sql" value="false"/>
             <property name="hibernate.format_sql" value="true"/>
 
-            <property name="hibernate.hbm2ddl.auto" value="validate"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>  <!-- dps temos que alterar o "update" para "validate"
+                                                                           e criar as validações (ou talvez casting para os
+                                                                           doubles/numerics (V1 e V2 do flyway)             -->
         </properties>
     </persistence-unit>
 </persistence>

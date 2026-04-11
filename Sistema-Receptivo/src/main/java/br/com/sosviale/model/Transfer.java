@@ -1,5 +1,6 @@
 package br.com.sosviale.model;
 
+import br.com.sosviale.service.StatusTransfer;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,43 +24,46 @@ public class Transfer {
     @Column(nullable = false, length = 100)
     private String destino;
 
-    @Column(length = 20)
-    private String status = "PENDENTE";
+    // status inicial de tod0 transfer recém-criado (tive que coloco tod0 por causa do tree)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    private StatusTransfer status = StatusTransfer.AGENDADO;
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
 
-    // Relacionamento: Muitos transfers para um motorista
-    @ManyToOne
-    @JoinColumn(name = "motorista_id") // Nome da coluna FK no banco
-    private Motorista motorista;
+    // pontos de coleta são gerenciados pelo PontoColeta via @JoinColumn
+    @OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OrderBy("ordemParada ASC")
+    private List<PontoColeta> pontosColeta = new ArrayList<>();
 
-    // Relacionamento: Muitos transfers para um veículo
     @ManyToOne
-    @JoinColumn(name = "veiculo_id")
-    private Veiculo veiculo;
+    @JoinColumn(name = "os_id")
+    private OrdemServico ordemServico;
 
-    @ManyToMany
+    // tabela de junção com passageiros (relação N:N)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "transfer_passageiros", // Nome da tabela associativa
+            name = "transfer_passageiros",
             joinColumns = @JoinColumn(name = "transfer_id"),
             inverseJoinColumns = @JoinColumn(name = "passageiro_id")
     )
     private List<Passageiro> passageiros = new ArrayList<>();
 
+    // construtor padrão obrigatório pelo JPA
     public Transfer() {
     }
 
-    public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase, Motorista motorista, Veiculo veiculo) {
+    // construtor enxuto com apenas os dados essenciais do agendamento;
+    // motorista e veículo são definidos depois via OS
+    public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase) {
         this.dataHora = dataHora;
         this.origem = origem;
         this.destino = destino;
         this.valorBase = valorBase;
-        this.motorista = motorista;
-        this.veiculo = veiculo;
     }
 
-    // Getters e Setters
+    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -72,18 +76,18 @@ public class Transfer {
     public String getDestino() { return destino; }
     public void setDestino(String destino) { this.destino = destino; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public StatusTransfer getStatus() { return status; }
+    public void setStatus(StatusTransfer status) { this.status = status; }
 
     public BigDecimal getValorBase() { return valorBase; }
     public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
 
-    public Motorista getMotorista() { return motorista; }
-    public void setMotorista(Motorista motorista) { this.motorista = motorista; }
-
-    public Veiculo getVeiculo() { return veiculo; }
-    public void setVeiculo(Veiculo veiculo) { this.veiculo = veiculo; }
-
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
+
+    public List<PontoColeta> getPontosColeta() { return pontosColeta; }
+    public void setPontosColeta(List<PontoColeta> pontosColeta) { this.pontosColeta = pontosColeta; }
+
+    public OrdemServico getOrdemServico() { return ordemServico; }
+    public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
 }

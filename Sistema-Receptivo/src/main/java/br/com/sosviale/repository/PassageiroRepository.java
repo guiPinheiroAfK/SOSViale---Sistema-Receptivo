@@ -1,47 +1,87 @@
 package br.com.sosviale.repository;
 
 import br.com.sosviale.model.Passageiro;
+import br.com.sosviale.config.JPAUtil;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import java.util.List;
 
+// DAO responsável pelas operações de persistência da entidade Passageiro
 public class PassageiroRepository {
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("sos-viale-pu");
-
-
-     //Salva um passageiro no banco.
-
+    // persiste um novo passageiro no banco
     public void salvar(Passageiro passageiro) {
-        EntityManager em = emf.createEntityManager();
+        if (passageiro == null) throw new IllegalArgumentException("passageiro não pode ser nulo.");
+        EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            em.persist(passageiro); // O Hibernate gera o INSERT para você
+            em.persist(passageiro);
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            System.err.println("Erro ao salvar passageiro: " + e.getMessage());
+            System.err.println("erro ao salvar passageiro: " + e.getMessage());
             throw e;
         } finally {
             em.close();
         }
     }
 
-
-     // Lista todos os passageiros.
-
+    // retorna todos os passageiros cadastrados ordenados por nome
     public List<Passageiro> listarTodos() {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = JPAUtil.getEntityManager();
         try {
-            // Usamos JPQL (Java Persistence Query Language) referenciando a Classe, não a Tabela
-            return em.createQuery("SELECT p FROM Passageiro p", Passageiro.class).getResultList();
+            return em.createQuery("SELECT p FROM Passageiro p ORDER BY p.nome ASC", Passageiro.class)
+                    .getResultList();
         } finally {
             em.close();
         }
     }
 
-    // Futuramente você pode adicionar buscarPorId, atualizar e deletar aqui para fechar o CRUD
+    // busca um passageiro pelo ID; retorna null se não encontrado
+    public Passageiro buscarPorId(Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.find(Passageiro.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    // atualiza os dados de um passageiro existente
+    public void atualizar(Passageiro passageiro) {
+        if (passageiro == null || passageiro.getId() == null)
+            throw new IllegalArgumentException("passageiro inválido para atualização.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(passageiro);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    // remove o passageiro com o ID informado; ignorado silenciosamente se não existir
+    public void excluir(Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Passageiro p = em.find(Passageiro.class, id);
+            if (p != null) {
+                em.remove(p);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
 }

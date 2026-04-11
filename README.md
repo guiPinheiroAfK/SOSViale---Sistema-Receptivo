@@ -6,37 +6,27 @@ Um sistema robusto de Interface de Linha de Comando (CLI) para gerenciamento com
 
 O projeto foi construído priorizando performance e execução 100% no console:
 
-* **Backend / Core:** Java 17 (LTS)
-* **Banco de Dados:** PostgreSQL
-* **Containerização:** Docker & Docker Compose
-* **Design de Interface:** Wireframes textuais / Arte ASCII
-* **Versionamento:** Git e GitHub (Fluxo de trabalho para equipe de 5 desenvolvedores)
-* **IDEs Recomendadas:** IntelliJ IDEA Ultimate / JetBrains
+- **Backend / Core:** Java 17 (LTS)
+- **Banco de Dados:** PostgreSQL
+- **Containerização:** Docker & Docker Compose
+- **Design de Interface:** Wireframes textuais / Arte ASCII
+- **Versionamento:** Git e GitHub (fluxo para equipe de 5 desenvolvedores)
+- **IDEs Recomendadas:** IntelliJ IDEA Ultimate / JetBrains
 
-## 👥 Atores e Funcionalidades (Casos de Uso)
+## 👥 Atores e Funcionalidades
 
-O sistema possui controle de acesso e comandos específicos para diferentes níveis de usuários:
+O sistema possui controle de acesso com comandos específicos para cada perfil:
 
-* **Atendente:**
-    * Agendamento de Transfers.
-    * Gerenciamento de Passageiros.
-    * Gerenciamento de Pontos de Coleta.
-* **Gerente:**
-    * Controle detalhado da Frota.
-    * Emissão de Ordem de Serviço (Geração de PDF via terminal).
-    * Cálculo de Custos e Câmbio (ideal para operações em regiões de fronteira).
-* **Administrador:**
-    * Acesso global aos comandos financeiros e operacionais.
-    * Atualização forçada do Status do Serviço.
-* **Motorista:**
-    * Atualização do Status do Serviço em tempo real.
-    * Sincronização de Dados Offline (para rotas sem cobertura de internet).
+- **Atendente:** agendamento de transfers, gerenciamento de passageiros e pontos de coleta.
+- **Gerente:** controle de frota, emissão de ordem de serviço (PDF via terminal) e cálculo de custos com câmbio (ideal para regiões de fronteira).
+- **Administrador:** acesso global aos módulos financeiros e operacionais, atualização forçada de status.
+- **Motorista:** atualização de status em tempo real e sincronização de dados offline (para rotas sem internet).
 
-## 🛠️ Como Executar o Projeto
+## 🛠️ Como Executar
 
-**Pré-requisitos:** Ter o [Java 17](https://jdk.java.net/17/), [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/) instalados na sua máquina.
+**Pré-requisitos:** [Java 17](https://jdk.java.net/17/), [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/) instalados.
 
-**1. Clone o repositório:**
 ```bash
-git clone [https://github.com/sua-equipe/receptivo-cli.git](https://github.com/sua-equipe/receptivo-cli.git)
+git clone https://github.com/sua-equipe/receptivo-cli.git
 cd receptivo-cli
+```
