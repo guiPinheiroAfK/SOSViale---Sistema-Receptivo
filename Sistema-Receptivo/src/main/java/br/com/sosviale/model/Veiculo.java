@@ -13,53 +13,34 @@ public class Veiculo {
     @Column(nullable = false, length = 50)
     private String label;
 
+    // placa deve ser única no sistema
     @Column(nullable = false, unique = true, length = 10)
     private String placa;
 
     @Column(nullable = false)
     private Integer capacidade;
 
-    // Construtor padrão
+    // construtor padrão obrigatório pelo JPA
     public Veiculo() {
     }
 
-    // Construtor completo
+    // construtor completo para facilitar a criação em testes e serviços
     public Veiculo(String label, String placa, Integer capacidade) {
         this.label = label;
         this.placa = placa;
         this.capacidade = capacidade;
     }
 
-    // Getters e Setters
-    public Integer getId() {
-        return id;
-    }
+    // getters e setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public String getLabel() { return label; }
+    public void setLabel(String label) { this.label = label; }
 
-    public String getLabel() {
-        return label;
-    }
+    public String getPlaca() { return placa; }
+    public void setPlaca(String placa) { this.placa = placa; }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public String getPlaca() {
-        return placa;
-    }
-
-    public void setPlaca(String placa) {
-        this.placa = placa;
-    }
-
-    public Integer getCapacidade() {
-        return capacidade;
-    }
-
-    public void setCapacidade(Integer capacidade) {
-        this.capacidade = capacidade;
-    }
+    public Integer getCapacidade() { return capacidade; }
+    public void setCapacidade(Integer capacidade) { this.capacidade = capacidade; }
 }

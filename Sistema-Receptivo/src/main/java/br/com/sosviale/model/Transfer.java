@@ -24,6 +24,7 @@ public class Transfer {
     @Column(nullable = false, length = 100)
     private String destino;
 
+    // status inicial de tod0 transfer recém-criado (tive que coloco tod0 por causa do tree)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private StatusTransfer status = StatusTransfer.AGENDADO;
@@ -31,7 +32,7 @@ public class Transfer {
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
 
-    // @JoinTable REMOVIDO daqui — o PontoColeta já tem o @JoinColumn
+    // pontos de coleta são gerenciados pelo PontoColeta via @JoinColumn
     @OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @OrderBy("ordemParada ASC")
     private List<PontoColeta> pontosColeta = new ArrayList<>();
@@ -40,7 +41,7 @@ public class Transfer {
     @JoinColumn(name = "os_id")
     private OrdemServico ordemServico;
 
-    // @ManyToMany RESTAURADO — estava faltando
+    // tabela de junção com passageiros (relação N:N)
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "transfer_passageiros",
@@ -49,11 +50,12 @@ public class Transfer {
     )
     private List<Passageiro> passageiros = new ArrayList<>();
 
-    // Construtor vazio obrigatório para o JPA
+    // construtor padrão obrigatório pelo JPA
     public Transfer() {
     }
 
-    // Novo construtor enxuto (apenas dados do agendamento)
+    // construtor enxuto com apenas os dados essenciais do agendamento;
+    // motorista e veículo são definidos depois via OS
     public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase) {
         this.dataHora = dataHora;
         this.origem = origem;
@@ -61,7 +63,7 @@ public class Transfer {
         this.valorBase = valorBase;
     }
 
-    // Getters e Setters
+    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -74,8 +76,8 @@ public class Transfer {
     public String getDestino() { return destino; }
     public void setDestino(String destino) { this.destino = destino; }
 
-    public StatusTransfer getStatus() {return status;}
-    public void setStatus(StatusTransfer status) {this.status = status;}
+    public StatusTransfer getStatus() { return status; }
+    public void setStatus(StatusTransfer status) { this.status = status; }
 
     public BigDecimal getValorBase() { return valorBase; }
     public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
@@ -83,17 +85,9 @@ public class Transfer {
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
 
-    public List<PontoColeta> getPontosColeta() {
-        return pontosColeta;
-    }
-    public void setPontosColeta(List<PontoColeta> pontosColeta) {
-        this.pontosColeta = pontosColeta;
-    }
+    public List<PontoColeta> getPontosColeta() { return pontosColeta; }
+    public void setPontosColeta(List<PontoColeta> pontosColeta) { this.pontosColeta = pontosColeta; }
 
-    public OrdemServico getOrdemServico() {
-        return ordemServico;
-    }
-    public void setOrdemServico(OrdemServico ordemServico) {
-        this.ordemServico = ordemServico;
-    }
+    public OrdemServico getOrdemServico() { return ordemServico; }
+    public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
 }
