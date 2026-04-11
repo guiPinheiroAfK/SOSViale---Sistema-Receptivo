@@ -1,15 +1,8 @@
 package br.com.sosviale.service;
 
-// Esta classe sera utilizada para criarmos a rota
-// Como deve funcionar:
-
-// Passageiro no Ponto A
-// Passageiro no Ponto B
-// Destino perto do ponto B
-// Motorista está perto do A
-// Porém, Ordem de serviço manda ele para o Ponto B e depois para o Ponto A e
-// aí o motorista teve que voltar para o Ponto B.
-// Isso não pode acontecer ^^^
-
+// placeholder para o algoritmo de otimização de rota
+// objetivo: dados vários pontos de coleta e a posição atual do motorista,
+// calcular a ordem de visita que minimize a distância total percorrida,
+// evitando retornos desnecessários (problema do caixeiro-viajante simplificado)
 public class PathFinding {
 }

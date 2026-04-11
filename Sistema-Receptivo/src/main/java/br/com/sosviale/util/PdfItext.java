@@ -10,29 +10,33 @@ import com.itextpdf.layout.element.Paragraph;
 
 import java.time.format.DateTimeFormatter;
 
+// utilitária para geração de PDF de Ordens de Serviço usando a biblioteca iText
 public class PdfItext {
 
     /**
-     * Recebe a OS montada e gera um PDF com todos os dados da rota.
-     * Nome do arquivo gerado: OS_<id>_<nome_motorista>.pdf
+     * Gera um arquivo PDF com os dados completos da OS informada.
+     * O arquivo é salvo na pasta raiz do projeto com o nome: OS_<id>_<nome_motorista>.pdf
+     *
+     * @param os a ordem de serviço a ser exportada (não pode ser nula)
+     * @throws IllegalArgumentException se a OS ou seus dados obrigatórios estiverem nulos
+     * @throws Exception se ocorrer falha ao criar ou gravar o arquivo PDF
      */
     public static void gerarPdfOs(OrdemServico os) throws Exception {
+        if (os == null) throw new IllegalArgumentException("OS não pode ser nula.");
+        if (os.getMotorista() == null) throw new IllegalArgumentException("OS sem motorista definido.");
+        if (os.getVeiculo() == null) throw new IllegalArgumentException("OS sem veículo definido.");
 
-        // 1. Nome do arquivo dinâmico (ex: OS_5_Joao_Silva.pdf)
+        // nome do arquivo gerado dinamicamente com base no ID e nome do motorista
         String path = "OS_" + os.getId() + "_" + os.getMotorista().getNome().replace(" ", "_") + ".pdf";
 
-        // 2. Inicializa o Writer e o PdfDocument
         PdfWriter writer = new PdfWriter(path);
         PdfDocument pdf = new PdfDocument(writer);
-
-        // 3. Cria o documento de alto nível
         Document document = new Document(pdf);
 
-        // Formatadores de data e hora para exibição no documento
         DateTimeFormatter formatadorData = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         DateTimeFormatter formatadorHora = DateTimeFormatter.ofPattern("HH:mm");
 
-        // 4. Cabeçalho da OS
+        // cabeçalho da OS
         document.add(new Paragraph("======================================================"));
         document.add(new Paragraph("             ORDEM DE SERVIÇO - SOS VIALE             "));
         document.add(new Paragraph("======================================================"));
@@ -45,7 +49,7 @@ public class PdfItext {
         document.add(new Paragraph("ROTA DE TRANSFERS AGENDADOS:"));
         document.add(new Paragraph(""));
 
-        // 5. Lista de transfers ordenados da OS
+        // lista de transfers ordenados da OS
         if (os.getTransfers().isEmpty()) {
             document.add(new Paragraph("Nenhum transfer atribuído a esta OS."));
         } else {
@@ -56,7 +60,7 @@ public class PdfItext {
                 document.add(new Paragraph("   Horário: " + t.getDataHora().format(formatadorHora)));
                 document.add(new Paragraph("   De: " + t.getOrigem() + "  |  Para: " + t.getDestino()));
 
-                // Monta a lista de passageiros deste transfer
+                // monta a lista de nomes dos passageiros do transfer
                 StringBuilder nomesPax = new StringBuilder();
                 for (Passageiro p : t.getPassageiros()) {
                     nomesPax.append(p.getNome()).append(", ");
@@ -70,13 +74,13 @@ public class PdfItext {
             }
         }
 
-        // 6. Rodapé e assinatura
+        // rodapé com campo de assinatura do motorista
         document.add(new Paragraph("======================================================"));
         document.add(new Paragraph(""));
         document.add(new Paragraph(""));
         document.add(new Paragraph("Assinatura do Motorista: _______________________________"));
 
-        // 7. Fecha o documento (obrigatório para gravar o arquivo)
+        // fecha o documento — obrigatório para gravar os bytes no arquivo
         document.close();
     }
 }
