@@ -27,27 +27,45 @@ public class OrdemServicoMenu {
         this.transferRepo = transferRepo;
     }
 
+    /**
+     * Ponto de entrada do menu de Ordens de Serviço.
+     * Opção 1: Abre uma nova OS, vinculando um motorista e um veículo.
+     * Opção 2: Lista todas as OSes existentes, pede o ID desejado e entra
+     *          na montagem de rota (atribuição de transfers àquela OS).
+     * Opção 3: Gera o PDF de uma OS existente.
+     * Opção 4: Volta ao menu principal.
+     */
     public void menuOrdemServico(LineReader reader) {
-        System.out.println("\n\u001B[35m--- GESTÃO DE ORDENS DE SERVIÇO (FROTA) --- \u001B[0m");
-        System.out.println("\u001B[32m[1]\u001B[0m Abrir Nova OS (Definir Motorista e Veículo)");
-        System.out.println("\u001B[32m[2]\u001B[0m Atribuir Transfers a uma OS (Montar a Rota)");
-        System.out.println("\u001B[32m[3]\u001B[0m Voltar");
+        boolean noMenuOS = true;
+        while (noMenuOS) {
+            System.out.println("\n\u001B[35m--- GESTÃO DE ORDENS DE SERVIÇO (FROTA) --- \u001B[0m");
+            System.out.println("\u001B[32m[1]\u001B[0m Abrir Nova OS (Definir Motorista e Veículo)");
+            System.out.println("\u001B[32m[2]\u001B[0m Atribuir Transfers a uma OS (Montar a Rota)");
+            System.out.println("\u001B[32m[3]\u001B[0m Gerar PDF da Ordem de Serviço");
+            System.out.println("\u001B[32m[4]\u001B[0m Voltar");
 
-        try {
-            String op = reader.readLine("Escolha: ").trim();
-            switch (op) {
-                case "1" -> abrirNovaOS(reader);
-                case "2" -> selecionarOSParaMontagem(reader); // novo fluxo: lista OSes → pede ID → monta rota
-                case "3" -> { return; }
-                default  -> System.out.println("Opção inválida.");
+            try {
+                String op = reader.readLine("Escolha: ").trim();
+                switch (op) {
+                    case "1" -> abrirNovaOS(reader);
+                    case "2" -> selecionarOSParaMontagem(reader); // lista OSes → pede ID → monta rota
+                    case "3" -> menuGerarPdf(reader);
+                    case "4" -> noMenuOS = false; // Sai do loop e volta pro menu principal
+                    default  -> System.out.println("\u001B[31mOpção inválida.\u001B[0m");
+                }
+            } catch (Exception e) {
+                // Captura erros inesperados de leitura do terminal ou acesso ao banco
+                System.out.println("\u001B[31m[ERRO INESPERADO]: " + e.getMessage() + "\u001B[0m");
             }
-        } catch (Exception e) {
-            // Captura erros inesperados de leitura do terminal ou acesso ao banco
-            System.out.println("\u001B[31mErro no menu de OS: " + e.getMessage() + "\u001B[0m");
         }
     }
 
-
+    /**
+     * Fluxo da opção [2]:
+     * 1. Busca e exibe todas as OSes cadastradas (ID, data, motorista, veículo, status).
+     * 2. Pede ao usuário o ID da OS que deseja montar.
+     * 3. Encaminha para gerenciarTransfersDaOS com a OS já selecionada.
+     */
     private void selecionarOSParaMontagem(LineReader reader) throws Exception {
         System.out.println("\n\u001B[36m--- ORDENS DE SERVIÇO CADASTRADAS --- \u001B[0m");
 
@@ -101,6 +119,11 @@ public class OrdemServicoMenu {
         gerenciarTransfersDaOS(reader, osSelecionada);
     }
 
+    /**
+     * Abre uma nova Ordem de Serviço definindo motorista e veículo.
+     * A data da OS é definida automaticamente como a data atual do sistema.
+     * O veículo determina a capacidade máxima de passageiros para esta OS.
+     */
     private void abrirNovaOS(LineReader reader) throws Exception {
         System.out.println("\n\u001B[36m--- ABERTURA DE ORDEM DE SERVIÇO --- \u001B[0m");
 
@@ -146,7 +169,19 @@ public class OrdemServicoMenu {
         }
     }
 
-
+    /**
+     * Loop de montagem de rota para uma OS já selecionada.
+     * A cada iteração:
+     *   - Lista os transfers AGENDADOS que ainda não têm OS atribuída ("transfers soltos").
+     *   - Permite ao operador adicionar um transfer à OS pelo ID.
+     *   - Valida duas regras de negócio antes de aceitar:
+     *       Regra 1 (Lotação): a soma de passageiros de todos os transfers da OS
+     *                          não pode ultrapassar a capacidade do veículo.
+     *       Regra 2 (Cronologia): o novo transfer deve ter horário POSTERIOR
+     *                             ao do último transfer já adicionado à OS,
+     *                             evitando conflitos de agenda do motorista.
+     *   - O operador digita "fim" quando terminar de montar a rota.
+     */
     private void gerenciarTransfersDaOS(LineReader reader, OrdemServico os) throws Exception {
         System.out.println("\n\u001B[33mMontando OS #" + os.getId() + " | Motorista: " + os.getMotorista().getNome()
                 + " | Veículo: " + os.getVeiculo().getLabel()
@@ -203,7 +238,7 @@ public class OrdemServicoMenu {
                 continue;
             }
 
-            // REGRA DE NEGÓCIO 1: Capacidade
+            // ── REGRA DE NEGÓCIO 1: Capacidade ──────────────────────────────────────
             // Calcula o total de passageiros já alocados nesta OS somando os de cada transfer.
             // O novo transfer só pode ser adicionado se a soma total não exceder a capacidade do veículo.
             int totalPassageirosNaOs = os.getTransfers().stream()
@@ -218,7 +253,7 @@ public class OrdemServicoMenu {
                 continue;
             }
 
-            // REGRA DE NEGÓCIO 2: Cronologia
+            // ── REGRA DE NEGÓCIO 2: Cronologia ──────────────────────────────────────
             // O motorista não pode ter dois transfers ao mesmo tempo ou em ordem invertida.
             // O novo transfer deve ter dataHora estritamente POSTERIOR ao último já adicionado.
             if (!os.getTransfers().isEmpty()) {
@@ -250,7 +285,38 @@ public class OrdemServicoMenu {
                 + os.getTransfers().size() + " transfer(s).\u001B[0m");
     }
 
-    // --- MÉTODOS AUXILIARES QUE FALTAVAM ---
+    /**
+     * Gera o PDF de uma OS existente.
+     * Busca a OS pelo ID informado e chama PdfItext.gerarPdfOs().
+     */
+    private void menuGerarPdf(LineReader reader) {
+        System.out.println("\n\u001B[36m--- EXPORTAR OS PARA PDF --- \u001B[0m");
+        try {
+            // 1. Pergunta qual OS o usuário quer exportar
+            Long idOs = lerIdValido(reader, "Digite o ID da Ordem de Serviço: ");
+
+            // 2. Busca a OS no banco de dados
+            OrdemServico os = osRepo.buscarPorId(idOs.intValue());
+
+            if (os == null) {
+                System.out.println("\u001B[31mOrdem de Serviço não encontrada!\u001B[0m");
+                return;
+            }
+
+            System.out.println("\u001B[33mGerando documento...\u001B[0m");
+
+            // 3. Passa a OS para a classe utilitária que gera o PDF
+            br.com.sosviale.util.PdfItext.gerarPdfOs(os);
+
+            System.out.println("\u001B[32m✔ PDF da OS #" + os.getId() + " gerado com sucesso na pasta do projeto!\u001B[0m");
+
+        } catch (Exception e) {
+            System.out.println("\u001B[31m[ERRO AO GERAR PDF]: " + e.getMessage() + "\u001B[0m");
+            e.printStackTrace();
+        }
+    }
+
+    // --- MÉTODOS AUXILIARES ---
 
     private void listarMotoristas() {
         System.out.println("\n\u001B[36m--- MOTORISTAS CADASTRADOS --- \u001B[0m");
