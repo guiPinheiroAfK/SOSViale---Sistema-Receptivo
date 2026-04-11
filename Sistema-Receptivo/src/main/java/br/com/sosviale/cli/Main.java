@@ -10,19 +10,20 @@ import jakarta.persistence.EntityManager;
 public class Main {
     public static void main(String[] args) {
 
-        // O Flyway prepara o banco (Cria/Atualiza as tabelas)
+        // inicializa o flyway para criar/atualizar as tabelas no banco
         try {
             System.out.println("Iniciando migrações do Flyway...");
             DbConfig.setup();
-            System.out.println("Flyway: Tabelas atualizadas!");
+            System.out.println("Flyway: tabelas atualizadas com sucesso!");
         } catch (Exception e) {
-            System.err.println("Erro no Flyway: " + e.getMessage());
-            // Se o Flyway falhar ele não tenta o resto
+            System.err.println("Erro ao executar migrações do Flyway: " + e.getMessage());
+            // se o flyway falhar, encerra sem tentar subir o resto da aplicação
             return;
         }
 
         EntityManager em = JPAUtil.getEntityManager();
 
+        // instancia os repositórios responsáveis pelo acesso ao banco
         PassageiroRepository passageiroRepo = new PassageiroRepository();
         VeiculoRepository veiculoRepo = new VeiculoRepository();
         TransferRepository transferRepo = new TransferRepository();
@@ -30,7 +31,7 @@ public class Main {
         PontoColetaRepository pontoColetaRepo = new PontoColetaRepository();
         OrdemServicoRepository osRepo = new OrdemServicoRepository(em);
 
-        // 2. Cria o serviço do menu passando os repositórios
+        // cria o serviço de menu injetando todos os repositórios necessários
         MenuService menuService = new MenuService(
                 passageiroRepo,
                 veiculoRepo,
@@ -40,7 +41,7 @@ public class Main {
                 osRepo
         );
 
-        // 3. Liga o motor!
+        // inicia o loop principal do sistema
         menuService.menu();
     }
 }

@@ -6,10 +6,11 @@ import jakarta.persistence.Persistence;
 
 public class JPAUtil {
 
-    // Criacao de apenas UMA fábrica para o projeto todo (Static)
+    // factory estática — apenas uma instância por toda a aplicação (padrão singleton)
     private static final EntityManagerFactory FACTORY =
             Persistence.createEntityManagerFactory("sos-viale-pu");
 
+    // retorna um novo EntityManager a cada chamada; o chamador é responsável por fechar
     public static EntityManager getEntityManager() {
         return FACTORY.createEntityManager();
     }
