@@ -19,8 +19,9 @@ public class OrdemServicoMenu {
     private final VeiculoRepository veiculoRepo;
     private final TransferRepository transferRepo;
 
-    // Construtor
-    public OrdemServicoMenu(OrdemServicoRepository osRepo, MotoristaRepository motoristaRepo, VeiculoRepository veiculoRepo, TransferRepository transferRepo) {
+    // construtor com injeção de dependências
+    public OrdemServicoMenu(OrdemServicoRepository osRepo, MotoristaRepository motoristaRepo,
+                            VeiculoRepository veiculoRepo, TransferRepository transferRepo) {
         this.osRepo = osRepo;
         this.motoristaRepo = motoristaRepo;
         this.veiculoRepo = veiculoRepo;
@@ -28,12 +29,11 @@ public class OrdemServicoMenu {
     }
 
     /**
-     * Ponto de entrada do menu de Ordens de Serviço.
-     * Opção 1: Abre uma nova OS, vinculando um motorista e um veículo.
-     * Opção 2: Lista todas as OSes existentes, pede o ID desejado e entra
-     *          na montagem de rota (atribuição de transfers àquela OS).
-     * Opção 3: Gera o PDF de uma OS existente.
-     * Opção 4: Volta ao menu principal.
+     * ponto de entrada do menu de ordens de serviço.
+     * [1] abre uma nova OS definindo motorista e veículo
+     * [2] lista OSes e permite montar a rota de uma delas
+     * [3] gera o PDF de uma OS existente
+     * [4] volta ao menu principal
      */
     public void menuOrdemServico(LineReader reader) {
         boolean noMenuOS = true;
@@ -48,33 +48,30 @@ public class OrdemServicoMenu {
                 String op = reader.readLine("Escolha: ").trim();
                 switch (op) {
                     case "1" -> abrirNovaOS(reader);
-                    case "2" -> selecionarOSParaMontagem(reader); // lista OSes → pede ID → monta rota
+                    case "2" -> selecionarOSParaMontagem(reader);
                     case "3" -> menuGerarPdf(reader);
-                    case "4" -> noMenuOS = false; // Sai do loop e volta pro menu principal
+                    case "4" -> noMenuOS = false;
                     default  -> System.out.println("\u001B[31mOpção inválida.\u001B[0m");
                 }
             } catch (Exception e) {
-                // Captura erros inesperados de leitura do terminal ou acesso ao banco
                 System.out.println("\u001B[31m[ERRO INESPERADO]: " + e.getMessage() + "\u001B[0m");
             }
         }
     }
 
     /**
-     * Fluxo da opção [2]:
-     * 1. Busca e exibe todas as OSes cadastradas (ID, data, motorista, veículo, status).
-     * 2. Pede ao usuário o ID da OS que deseja montar.
-     * 3. Encaminha para gerenciarTransfersDaOS com a OS já selecionada.
+     * fluxo da opção [2]:
+     * exibe todas as OSes, solicita o ID desejado e encaminha para
+     * gerenciarTransfersDaOS com a OS já carregada do banco.
      */
     private void selecionarOSParaMontagem(LineReader reader) throws Exception {
         System.out.println("\n\u001B[36m--- ORDENS DE SERVIÇO CADASTRADAS --- \u001B[0m");
 
-        // Busca todas as OSes do banco para o usuário escolher
         List<OrdemServico> ordens;
         try {
             ordens = osRepo.listarTodos();
         } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO DB] Não foi possível carregar as Ordens de Serviço: " + e.getMessage() + "\u001B[0m");
+            System.out.println("\u001B[31m[ERRO DB] não foi possível carregar as ordens de serviço: " + e.getMessage() + "\u001B[0m");
             return;
         }
 
@@ -83,7 +80,6 @@ public class OrdemServicoMenu {
             return;
         }
 
-        // Exibe a tabela de OSes para o usuário identificar qual quer montar
         System.out.println(String.format("%-5s | %-12s | %-25s | %-20s | %-8s",
                 "ID", "DATA", "MOTORISTA", "VEÍCULO", "STATUS"));
         System.out.println("------------------------------------------------------------------------");
@@ -91,22 +87,17 @@ public class OrdemServicoMenu {
             String nomeMotorista = (os.getMotorista() != null) ? os.getMotorista().getNome() : "Não atribuído";
             String nomeVeiculo   = (os.getVeiculo()   != null) ? os.getVeiculo().getLabel()  : "Não atribuído";
             System.out.println(String.format("%-5d | %-12s | %-25s | %-20s | %-8s",
-                    os.getId(),
-                    os.getDataServico(),
-                    nomeMotorista,
-                    nomeVeiculo,
-                    os.getStatus()));
+                    os.getId(), os.getDataServico(), nomeMotorista, nomeVeiculo, os.getStatus()));
         }
         System.out.println("------------------------------------------------------------------------");
 
-        // Solicita o ID da OS que o usuário deseja montar
         Integer idOs = lerIdValido(reader, "\nDigite o ID da OS que deseja montar: ").intValue();
 
         OrdemServico osSelecionada;
         try {
             osSelecionada = osRepo.buscarPorId(idOs);
         } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO DB] Falha ao buscar a OS: " + e.getMessage() + "\u001B[0m");
+            System.out.println("\u001B[31m[ERRO DB] falha ao buscar a OS: " + e.getMessage() + "\u001B[0m");
             return;
         }
 
@@ -115,47 +106,47 @@ public class OrdemServicoMenu {
             return;
         }
 
-        // Com a OS válida em mãos, entra no loop de montagem de rota
         gerenciarTransfersDaOS(reader, osSelecionada);
     }
 
     /**
-     * Abre uma nova Ordem de Serviço definindo motorista e veículo.
-     * A data da OS é definida automaticamente como a data atual do sistema.
-     * O veículo determina a capacidade máxima de passageiros para esta OS.
+     * abre uma nova OS definindo motorista, veículo e data (hoje).
+     * valida que ambos existem antes de persistir.
      */
     private void abrirNovaOS(LineReader reader) throws Exception {
         System.out.println("\n\u001B[36m--- ABERTURA DE ORDEM DE SERVIÇO --- \u001B[0m");
 
-        // Exibe motoristas disponíveis para o operador escolher
         listarMotoristas();
         Long idMotorista = lerIdValido(reader, "ID do Motorista para esta OS: ");
         Motorista motorista;
         try {
             motorista = motoristaRepo.buscarPorId(idMotorista);
         } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO DB] Falha ao buscar motorista: " + e.getMessage() + "\u001B[0m");
+            System.out.println("\u001B[31m[ERRO DB] falha ao buscar motorista: " + e.getMessage() + "\u001B[0m");
             return;
         }
 
-        // Exibe veículos disponíveis da frota para o operador escolher
+        if (motorista == null) {
+            System.out.println("\u001B[31mMotorista não encontrado! Verifique o ID.\u001B[0m");
+            return;
+        }
+
         listarVeiculos();
         Long idVeiculo = lerIdValido(reader, "ID do Veículo: ");
         Veiculo veiculo;
         try {
             veiculo = veiculoRepo.buscarPorId(idVeiculo);
         } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO DB] Falha ao buscar veículo: " + e.getMessage() + "\u001B[0m");
+            System.out.println("\u001B[31m[ERRO DB] falha ao buscar veículo: " + e.getMessage() + "\u001B[0m");
             return;
         }
 
-        // Ambos precisam existir para criar a OS
-        if (motorista == null || veiculo == null) {
-            System.out.println("\u001B[31mMotorista ou Veículo não encontrado! Verifique os IDs.\u001B[0m");
+        if (veiculo == null) {
+            System.out.println("\u001B[31mVeículo não encontrado! Verifique o ID.\u001B[0m");
             return;
         }
 
-        // Cria a OS com a data de hoje; status padrão é "ABERTA"
+        // cria a OS com data de hoje; status padrão "ABERTA" definido na entidade
         OrdemServico os = new OrdemServico();
         os.setDataServico(java.time.LocalDate.now());
         os.setMotorista(motorista);
@@ -165,41 +156,34 @@ public class OrdemServicoMenu {
             osRepo.salvar(os);
             System.out.println("\u001B[32m✔ OS #" + os.getId() + " aberta com sucesso para o motorista " + motorista.getNome() + "!\u001B[0m");
         } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO DB] Não foi possível salvar a OS: " + e.getMessage() + "\u001B[0m");
+            System.out.println("\u001B[31m[ERRO DB] não foi possível salvar a OS: " + e.getMessage() + "\u001B[0m");
         }
     }
 
     /**
-     * Loop de montagem de rota para uma OS já selecionada.
-     * A cada iteração:
-     *   - Lista os transfers AGENDADOS que ainda não têm OS atribuída ("transfers soltos").
-     *   - Permite ao operador adicionar um transfer à OS pelo ID.
-     *   - Valida duas regras de negócio antes de aceitar:
-     *       Regra 1 (Lotação): a soma de passageiros de todos os transfers da OS
-     *                          não pode ultrapassar a capacidade do veículo.
-     *       Regra 2 (Cronologia): o novo transfer deve ter horário POSTERIOR
-     *                             ao do último transfer já adicionado à OS,
-     *                             evitando conflitos de agenda do motorista.
-     *   - O operador digita "fim" quando terminar de montar a rota.
+     * loop de montagem de rota para a OS selecionada.
+     * regra 1 (lotação): soma de passageiros não pode exceder a capacidade do veículo.
+     * regra 2 (cronologia): cada transfer adicionado deve ter horário posterior ao anterior,
+     *                       evitando conflitos de agenda do motorista.
      */
     private void gerenciarTransfersDaOS(LineReader reader, OrdemServico os) throws Exception {
-        System.out.println("\n\u001B[33mMontando OS #" + os.getId() + " | Motorista: " + os.getMotorista().getNome()
+        System.out.println("\n\u001B[33mMontando OS #" + os.getId()
+                + " | Motorista: " + os.getMotorista().getNome()
                 + " | Veículo: " + os.getVeiculo().getLabel()
                 + " | Capacidade: " + os.getVeiculo().getCapacidade() + " pax\u001B[0m");
 
         boolean adicionando = true;
         while (adicionando) {
 
-            // Busca todos os transfers e filtra os que ainda não têm OS e estão AGENDADOS
             List<Transfer> todosTransfers;
             try {
                 todosTransfers = transferRepo.listarTodos();
             } catch (Exception e) {
-                System.out.println("\u001B[31m[ERRO DB] Falha ao carregar transfers: " + e.getMessage() + "\u001B[0m");
+                System.out.println("\u001B[31m[ERRO DB] falha ao carregar transfers: " + e.getMessage() + "\u001B[0m");
                 break;
             }
 
-            System.out.println("\nTransfers Agendados e Disponíveis (sem OS atribuída):");
+            System.out.println("\nTransfers agendados e disponíveis (sem OS atribuída):");
             boolean temDisponivel = false;
             for (Transfer t : todosTransfers) {
                 if (t.getOrdemServico() == null && t.getStatus() == StatusTransfer.AGENDADO) {
@@ -209,7 +193,6 @@ public class OrdemServicoMenu {
                 }
             }
 
-            // Se não há mais transfers disponíveis, encerra o loop automaticamente
             if (!temDisponivel) {
                 System.out.println("\u001B[33mNenhum transfer disponível para adicionar.\u001B[0m");
                 break;
@@ -218,7 +201,6 @@ public class OrdemServicoMenu {
             String idAdd = reader.readLine("\nDigite o ID do Transfer para adicionar à OS (ou 'fim'): ").trim();
             if (idAdd.equalsIgnoreCase("fim")) break;
 
-            // Valida que o input é numérico antes de ir ao banco
             if (!isApenasNumeros(idAdd)) {
                 System.out.println("\u001B[31mID inválido! Digite apenas números ou 'fim'.\u001B[0m");
                 continue;
@@ -228,56 +210,48 @@ public class OrdemServicoMenu {
             try {
                 transferEscolhido = transferRepo.buscarPorId(Long.parseLong(idAdd));
             } catch (Exception e) {
-                System.out.println("\u001B[31m[ERRO DB] Falha ao buscar o transfer: " + e.getMessage() + "\u001B[0m");
+                System.out.println("\u001B[31m[ERRO DB] falha ao buscar o transfer: " + e.getMessage() + "\u001B[0m");
                 continue;
             }
 
-            // Verifica se o transfer existe e ainda não está vinculado a nenhuma OS
             if (transferEscolhido == null || transferEscolhido.getOrdemServico() != null) {
                 System.out.println("\u001B[31mTransfer inválido ou já atribuído a outra OS.\u001B[0m");
                 continue;
             }
 
-            // ── REGRA DE NEGÓCIO 1: Capacidade ──────────────────────────────────────
-            // Calcula o total de passageiros já alocados nesta OS somando os de cada transfer.
-            // O novo transfer só pode ser adicionado se a soma total não exceder a capacidade do veículo.
+            // regra 1 — verifica se a adição deste transfer não estoura a capacidade do veículo
             int totalPassageirosNaOs = os.getTransfers().stream()
                     .mapToInt(t -> t.getPassageiros().size())
                     .sum();
             int totalComNovoTransfer = totalPassageirosNaOs + transferEscolhido.getPassageiros().size();
             if (totalComNovoTransfer > os.getVeiculo().getCapacidade()) {
-                System.out.println("\u001B[31m[BLOQUEADO] Capacidade excedida! Veículo suporta "
+                System.out.println("\u001B[31m[BLOQUEADO] capacidade excedida! Veículo suporta "
                         + os.getVeiculo().getCapacidade() + " pax. Já há " + totalPassageirosNaOs
                         + " na OS, e este transfer tem " + transferEscolhido.getPassageiros().size()
                         + " (total seria " + totalComNovoTransfer + ").\u001B[0m");
                 continue;
             }
 
-            // ── REGRA DE NEGÓCIO 2: Cronologia ──────────────────────────────────────
-            // O motorista não pode ter dois transfers ao mesmo tempo ou em ordem invertida.
-            // O novo transfer deve ter dataHora estritamente POSTERIOR ao último já adicionado.
+            // regra 2 — o novo transfer deve ter horário estritamente posterior ao último adicionado
             if (!os.getTransfers().isEmpty()) {
                 Transfer ultimoTransfer = os.getTransfers().get(os.getTransfers().size() - 1);
                 if (!transferEscolhido.getDataHora().isAfter(ultimoTransfer.getDataHora())) {
-                    System.out.println("\u001B[31m[BLOQUEADO] Conflito de horário! O último transfer está marcado para "
+                    System.out.println("\u001B[31m[BLOQUEADO] conflito de horário! O último transfer está marcado para "
                             + ultimoTransfer.getDataHora() + ". Este novo começa às "
                             + transferEscolhido.getDataHora() + " (deve ser posterior).\u001B[0m");
                     continue;
                 }
             }
 
-            // Passou nas duas validações: vincula este transfer à OS e persiste no banco
+            // passou nas duas validações: vincula e persiste
             try {
                 transferEscolhido.setOrdemServico(os);
                 transferRepo.atualizar(transferEscolhido);
-
-                // Atualiza a lista em memória para que as próximas validações do loop
-                // já considerem este transfer como parte da OS
+                // atualiza a lista em memória para que as próximas iterações do loop já incluam este transfer
                 os.getTransfers().add(transferEscolhido);
-
                 System.out.println("\u001B[32m✔ Transfer #" + transferEscolhido.getId() + " adicionado à rota da OS!\u001B[0m");
             } catch (Exception e) {
-                System.out.println("\u001B[31m[ERRO DB] Não foi possível salvar o vínculo: " + e.getMessage() + "\u001B[0m");
+                System.out.println("\u001B[31m[ERRO DB] não foi possível salvar o vínculo: " + e.getMessage() + "\u001B[0m");
             }
         }
 
@@ -286,16 +260,12 @@ public class OrdemServicoMenu {
     }
 
     /**
-     * Gera o PDF de uma OS existente.
-     * Busca a OS pelo ID informado e chama PdfItext.gerarPdfOs().
+     * solicita o ID de uma OS e gera o PDF correspondente via PdfItext.
      */
     private void menuGerarPdf(LineReader reader) {
         System.out.println("\n\u001B[36m--- EXPORTAR OS PARA PDF --- \u001B[0m");
         try {
-            // 1. Pergunta qual OS o usuário quer exportar
             Long idOs = lerIdValido(reader, "Digite o ID da Ordem de Serviço: ");
-
-            // 2. Busca a OS no banco de dados
             OrdemServico os = osRepo.buscarPorId(idOs.intValue());
 
             if (os == null) {
@@ -304,10 +274,7 @@ public class OrdemServicoMenu {
             }
 
             System.out.println("\u001B[33mGerando documento...\u001B[0m");
-
-            // 3. Passa a OS para a classe utilitária que gera o PDF
             br.com.sosviale.util.PdfItext.gerarPdfOs(os);
-
             System.out.println("\u001B[32m✔ PDF da OS #" + os.getId() + " gerado com sucesso na pasta do projeto!\u001B[0m");
 
         } catch (Exception e) {
@@ -316,11 +283,15 @@ public class OrdemServicoMenu {
         }
     }
 
-    // --- MÉTODOS AUXILIARES ---
+    // --- métodos auxiliares ---
 
     private void listarMotoristas() {
         System.out.println("\n\u001B[36m--- MOTORISTAS CADASTRADOS --- \u001B[0m");
         List<Motorista> lista = motoristaRepo.listarTodos();
+        if (lista.isEmpty()) {
+            System.out.println("Nenhum motorista cadastrado.");
+            return;
+        }
         System.out.println(String.format("%-5s | %-25s | %-15s", "ID", "NOME", "CNH"));
         for (Motorista m : lista) {
             System.out.println(String.format("%-5d | %-25s | %-15s", m.getId(), m.getNome(), m.getCnh()));
@@ -342,15 +313,17 @@ public class OrdemServicoMenu {
         }
     }
 
+    // lê um ID numérico positivo; repete o prompt até receber entrada válida
     private Long lerIdValido(LineReader reader, String mensagem) {
         while (true) {
             String idStr = reader.readLine(mensagem).trim();
-            if (isApenasNumeros(idStr)) return Long.parseLong(idStr);
-            System.out.println("\u001B[31mID inválido! Digite apenas números.\u001B[0m");
+            if (isApenasNumeros(idStr) && Long.parseLong(idStr) > 0) return Long.parseLong(idStr);
+            System.out.println("\u001B[31mID inválido! Digite apenas números positivos.\u001B[0m");
         }
     }
 
+    // verifica se a string contém apenas dígitos numéricos
     private boolean isApenasNumeros(String dados) {
-        return dados != null && dados.matches("\\d+");
+        return dados != null && !dados.isEmpty() && dados.matches("\\d+");
     }
 }
