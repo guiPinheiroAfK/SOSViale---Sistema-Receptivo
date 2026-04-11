@@ -24,58 +24,31 @@ public class OrdemServico {
     @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
 
+    // status padrão ao criar uma nova OS
     @Column(length = 20)
     private String status = "ABERTA";
 
+    // transfers já vêm ordenados por horário para facilitar a exibição da rota
     @OneToMany(mappedBy = "ordemServico", fetch = FetchType.EAGER)
-    @OrderBy("dataHora ASC") // Já traz os transfers ordenados pelo horário!
+    @OrderBy("dataHora ASC")
     private List<Transfer> transfers = new ArrayList<>();
 
-    public Integer getId() {
-        return id;
-    }
+    // getters e setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public Motorista getMotorista() { return motorista; }
+    public void setMotorista(Motorista motorista) { this.motorista = motorista; }
 
-    public Motorista getMotorista() {
-        return motorista;
-    }
+    public LocalDate getDataServico() { return dataServico; }
+    public void setDataServico(LocalDate dataServico) { this.dataServico = dataServico; }
 
-    public void setMotorista(Motorista motorista) {
-        this.motorista = motorista;
-    }
+    public Veiculo getVeiculo() { return veiculo; }
+    public void setVeiculo(Veiculo veiculo) { this.veiculo = veiculo; }
 
-    public LocalDate getDataServico() {
-        return dataServico;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setDataServico(LocalDate dataServico) {
-        this.dataServico = dataServico;
-    }
-
-    public Veiculo getVeiculo() {
-        return veiculo;
-    }
-
-    public void setVeiculo(Veiculo veiculo) {
-        this.veiculo = veiculo;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public List<Transfer> getTransfers() {
-        return transfers;
-    }
-
-    public void setTransfers(List<Transfer> transfers) {
-        this.transfers = transfers;
-    }
+    public List<Transfer> getTransfers() { return transfers; }
+    public void setTransfers(List<Transfer> transfers) { this.transfers = transfers; }
 }

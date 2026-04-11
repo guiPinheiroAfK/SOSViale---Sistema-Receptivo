@@ -13,6 +13,7 @@ public class Motorista {
     @Column(nullable = false, length = 100)
     private String nome;
 
+    // CNH deve ser única no sistema
     @Column(nullable = false, unique = true, length = 20)
     private String cnh;
 
@@ -22,54 +23,29 @@ public class Motorista {
     @Column(name = "longitude_atual")
     private Double longitudeAtual;
 
-    // Construtor padrão (obrigatório pelo JPA)
+    // construtor padrão obrigatório pelo JPA
     public Motorista() {
     }
 
-    // Construtor para facilitar a criação de objetos
-    public Motorista(String nome, String cnh /*, String endereco*/) {
+    // construtor auxiliar para facilitar a criação de objetos em testes e serviços
+    public Motorista(String nome, String cnh) {
         this.nome = nome;
         this.cnh = cnh;
     }
 
-    // Getters e Setters
-    public Integer getId() {
-        return id;
-    }
+    // getters e setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public String getNome() {
-        return nome;
-    }
+    public String getCnh() { return cnh; }
+    public void setCnh(String cnh) { this.cnh = cnh; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public Double getLatitudeAtual() { return latitudeAtual; }
+    public void setLatitudeAtual(Double latitudeAtual) { this.latitudeAtual = latitudeAtual; }
 
-    public String getCnh() {
-        return cnh;
-    }
-
-    public void setCnh(String cnh) {
-        this.cnh = cnh;
-    }
-
-    public Double getLatitudeAtual() {
-        return latitudeAtual;
-    }
-
-    public void setLatitudeAtual(Double latitudeAtual) {
-        this.latitudeAtual = latitudeAtual;
-    }
-
-    public Double getLongitudeAtual() {
-        return longitudeAtual;
-    }
-
-    public void setLongitudeAtual(Double longitudeAtual) {
-        this.longitudeAtual = longitudeAtual;
-    }
+    public Double getLongitudeAtual() { return longitudeAtual; }
+    public void setLongitudeAtual(Double longitudeAtual) { this.longitudeAtual = longitudeAtual; }
 }
