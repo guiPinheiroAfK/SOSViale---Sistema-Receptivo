@@ -198,25 +198,42 @@ public class MenuService {
                 return;
             }
 
-            System.out.println(String.format("%-4s | %-12s | %-15s | %-15s | %-20s | %-25s | %-10s",
-                    "ID", "STATUS", "ORIGEM", "DESTINO", "SITUAÇÃO OS", "PASSAGEIROS", "VALOR"));
+            System.out.println(String.format(
+                    "%-4s | %-12s | %-15s | %-15s | %-20s | %-25s | %-25s | %-10s",
+                    "ID", "STATUS", "ORIGEM", "DESTINO", "MOTORISTA", "SITUAÇÃO OS", "PASSAGEIROS", "VALOR"
+            ));
+
             System.out.println("---------------------------------------------------------------------------------------------------------------------------------");
 
             for (Transfer t : lista) {
+
                 String nomesPassageiros = t.getPassageiros().stream()
                         .map(Passageiro::getNome)
                         .reduce((a, b) -> a + ", " + b)
                         .orElse("Nenhum");
 
-                // exibe qual OS e motorista estão vinculados ao transfer
-                String situacaoOs = (t.getOrdemServico() != null && t.getOrdemServico().getMotorista() != null)
-                        ? "OS #" + t.getOrdemServico().getId() + " - " + t.getOrdemServico().getMotorista().getNome()
+                // ✅ pega motorista da OS (forma correta no seu sistema)
+                String nomeMotorista = (t.getOrdemServico() != null && t.getOrdemServico().getMotorista() != null)
+                        ? t.getOrdemServico().getMotorista().getNome()
                         : "Não atribuído";
 
-                System.out.println(String.format("%-4d | %-12s | %-15s | %-15s | %-20s | %-25s | R$%-10.2f",
-                        t.getId(), t.getStatus(), t.getOrigem(), t.getDestino(),
-                        situacaoOs, nomesPassageiros, t.getValorBase()));
+                String situacaoOs = (t.getOrdemServico() != null)
+                        ? "OS #" + t.getOrdemServico().getId()
+                        : "Sem OS";
+
+                System.out.println(String.format(
+                        "%-4d | %-12s | %-15s | %-15s | %-20s | %-25s | %-25s | R$%-10.2f",
+                        t.getId(),
+                        t.getStatus(),
+                        t.getOrigem(),
+                        t.getDestino(),
+                        nomeMotorista,
+                        situacaoOs,
+                        nomesPassageiros,
+                        t.getValorBase()
+                ));
             }
+
         } catch (Exception e) {
             System.out.println("\u001B[31mErro ao listar: " + e.getMessage() + "\u001B[0m");
         }
