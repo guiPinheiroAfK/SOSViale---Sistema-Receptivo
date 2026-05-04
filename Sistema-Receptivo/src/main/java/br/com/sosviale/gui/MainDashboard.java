@@ -1,6 +1,8 @@
 package br.com.sosviale.gui;
 
-
+import br.com.sosviale.auth.AuthenticationService;
+import br.com.sosviale.auth.AuthenticationException;
+import br.com.sosviale.auth.ValidationException;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
