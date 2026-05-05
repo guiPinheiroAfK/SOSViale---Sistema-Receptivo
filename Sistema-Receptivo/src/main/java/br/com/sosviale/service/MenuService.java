@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.math.RoundingMode;
 
 public class MenuService {
 
@@ -102,18 +103,31 @@ public class MenuService {
             String origem = lerStringObrigatoria(reader, "Origem (Ex: Aeroporto IGU): ");
             String destino = lerStringObrigatoria(reader, "Destino (Ex: Hotel Cataratas): ");
 
-            // destino não pode ser igual à origem
             if (origem.equalsIgnoreCase(destino)) {
                 System.out.println("\u001B[31m[ERRO]: origem e destino não podem ser iguais.\u001B[0m");
                 return;
             }
 
-            BigDecimal valor = lerBigDecimalValido(reader, "Valor Total do Transfer (R$): ");
+            // moeda e valor
+            System.out.println("Moeda: [1] Real (R$)  [2] Dólar (US$)  [3] Guarani (₲)");
+            String moedaOpc = reader.readLine("Escolha: ").trim();
+
+            Moeda moeda = switch (moedaOpc) {
+                case "2" -> Moeda.USD;
+                case "3" -> Moeda.PYG;
+                default  -> Moeda.BRL;
+            };
+
+            BigDecimal valorInformado = lerBigDecimalValido(reader, "Valor (" + moeda.getSimbolo() + "): ");
+            BigDecimal valorEmReais = CotacaoService.converter(valorInformado, moeda);
+
+            // data e hora — depois do valor
             LocalDateTime dataHora = lerDataHoraValida(reader, "Data e Hora (dd/MM/yyyy HH:mm): ");
 
-            // o transfer nasce sem OS; motorista e veículo são definidos depois
-            Transfer novoTransfer = new Transfer(dataHora, origem, destino, valor);
+            // criação do transfer com valor já em BRL
+            Transfer novoTransfer = new Transfer(dataHora, origem, destino, valorEmReais);
             novoTransfer.setStatus(StatusTransfer.AGENDADO);
+            novoTransfer.setMoedaOrigem(moeda);
 
             // exibe passageiros existentes se solicitado
             String ver2 = reader.readLine("Deseja listar passageiros cadastrados? (s/n): ");
@@ -189,6 +203,21 @@ public class MenuService {
         }
     }
 
+    public class CotacaoService {
+
+        // Cotações fixas de fallback — idealmente viriam de uma API
+        private static final BigDecimal COTACAO_USD = new BigDecimal("5.75");
+        private static final BigDecimal COTACAO_PYG = new BigDecimal("0.0055");
+
+        public static BigDecimal converter(BigDecimal valor, Moeda moeda) {
+            return switch (moeda) {
+                case BRL -> valor;
+                case USD -> valor.multiply(COTACAO_USD).setScale(2, RoundingMode.HALF_UP);
+                case PYG -> valor.multiply(COTACAO_PYG).setScale(2, RoundingMode.HALF_UP);
+            };
+        }
+    }
+
     private void listarTransfers() {
         System.out.println("\n\u001B[36m--- LISTA DE TRANSFERS --- \u001B[0m");
         try {
@@ -198,42 +227,25 @@ public class MenuService {
                 return;
             }
 
-            System.out.println(String.format(
-                    "%-4s | %-12s | %-15s | %-15s | %-20s | %-25s | %-25s | %-10s",
-                    "ID", "STATUS", "ORIGEM", "DESTINO", "MOTORISTA", "SITUAÇÃO OS", "PASSAGEIROS", "VALOR"
-            ));
-
+            System.out.println(String.format("%-4s | %-12s | %-15s | %-15s | %-20s | %-25s | %-10s",
+                    "ID", "STATUS", "ORIGEM", "DESTINO", "SITUAÇÃO OS", "PASSAGEIROS", "VALOR"));
             System.out.println("---------------------------------------------------------------------------------------------------------------------------------");
 
             for (Transfer t : lista) {
-
                 String nomesPassageiros = t.getPassageiros().stream()
                         .map(Passageiro::getNome)
                         .reduce((a, b) -> a + ", " + b)
                         .orElse("Nenhum");
 
-                // ✅ pega motorista da OS (forma correta no seu sistema)
-                String nomeMotorista = (t.getOrdemServico() != null && t.getOrdemServico().getMotorista() != null)
-                        ? t.getOrdemServico().getMotorista().getNome()
+                // exibe qual OS e motorista estão vinculados ao transfer
+                String situacaoOs = (t.getOrdemServico() != null && t.getOrdemServico().getMotorista() != null)
+                        ? "OS #" + t.getOrdemServico().getId() + " - " + t.getOrdemServico().getMotorista().getNome()
                         : "Não atribuído";
 
-                String situacaoOs = (t.getOrdemServico() != null)
-                        ? "OS #" + t.getOrdemServico().getId()
-                        : "Sem OS";
-
-                System.out.println(String.format(
-                        "%-4d | %-12s | %-15s | %-15s | %-20s | %-25s | %-25s | R$%-10.2f",
-                        t.getId(),
-                        t.getStatus(),
-                        t.getOrigem(),
-                        t.getDestino(),
-                        nomeMotorista,
-                        situacaoOs,
-                        nomesPassageiros,
-                        t.getValorBase()
-                ));
+                System.out.println(String.format("%-4d | %-12s | %-15s | %-15s | %-20s | %-25s | R$%-10.2f",
+                        t.getId(), t.getStatus(), t.getOrigem(), t.getDestino(),
+                        situacaoOs, nomesPassageiros, t.getValorBase()));
             }
-
         } catch (Exception e) {
             System.out.println("\u001B[31mErro ao listar: " + e.getMessage() + "\u001B[0m");
         }
