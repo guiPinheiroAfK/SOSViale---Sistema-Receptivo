@@ -28,13 +28,6 @@ public class OrdemServicoMenu {
         this.transferRepo = transferRepo;
     }
 
-    /**
-     * ponto de entrada do menu de ordens de serviço.
-     * [1] abre uma nova OS definindo motorista e veículo
-     * [2] lista OSes e permite montar a rota de uma delas
-     * [3] gera o PDF de uma OS existente
-     * [4] volta ao menu principal
-     */
     public void menuOrdemServico(LineReader reader) {
         boolean noMenuOS = true;
         while (noMenuOS) {
@@ -59,11 +52,7 @@ public class OrdemServicoMenu {
         }
     }
 
-    /**
-     * fluxo da opção [2]:
-     * exibe todas as OSes, solicita o ID desejado e encaminha para
-     * gerenciarTransfersDaOS com a OS já carregada do banco.
-     */
+    //exibe todas as OSes, solicita o ID desejado e encaminha para gerenciarTransfersDaOS com a OS já carregada do banco.
     private void selecionarOSParaMontagem(LineReader reader) throws Exception {
         System.out.println("\n\u001B[36m--- ORDENS DE SERVIÇO CADASTRADAS --- \u001B[0m");
 
@@ -91,7 +80,7 @@ public class OrdemServicoMenu {
         }
         System.out.println("------------------------------------------------------------------------");
 
-        Integer idOs = lerIdValido(reader, "\nDigite o ID da OS que deseja montar: ").intValue();
+        Integer idOs = AuxiliarUtils.lerIdValido(reader, "\nDigite o ID da OS que deseja montar: ").intValue();
 
         OrdemServico osSelecionada;
         try {
@@ -109,15 +98,15 @@ public class OrdemServicoMenu {
         gerenciarTransfersDaOS(reader, osSelecionada);
     }
 
-    /**
-     * abre uma nova OS definindo motorista, veículo e data (hoje).
-     * valida que ambos existem antes de persistir.
-     */
+    //abre uma nova OS definindo motorista, veículo e data (hoje).
+    //valida que ambos existem antes de persistir.
     private void abrirNovaOS(LineReader reader) throws Exception {
         System.out.println("\n\u001B[36m--- ABERTURA DE ORDEM DE SERVIÇO --- \u001B[0m");
 
-        listarMotoristas();
-        Long idMotorista = lerIdValido(reader, "ID do Motorista para esta OS: ");
+        Listagens listagens = new Listagens(passageiroRepo, veiculoRepo, transferRepo, motoristaRepo, pontoColetaRepo,  osRepo);
+
+        listagens.listarMotoristas();
+        Long idMotorista = AuxiliarUtils.lerIdValido(reader, "ID do Motorista para esta OS: ");
         Motorista motorista;
         try {
             motorista = motoristaRepo.buscarPorId(idMotorista);
@@ -131,8 +120,8 @@ public class OrdemServicoMenu {
             return;
         }
 
-        listarVeiculos();
-        Long idVeiculo = lerIdValido(reader, "ID do Veículo: ");
+        listagens.listarVeiculos();
+        Long idVeiculo = AuxiliarUtils.lerIdValido(reader, "ID do Veículo: ");
         Veiculo veiculo;
         try {
             veiculo = veiculoRepo.buscarPorId(idVeiculo);
@@ -160,12 +149,6 @@ public class OrdemServicoMenu {
         }
     }
 
-    /**
-     * loop de montagem de rota para a OS selecionada.
-     * regra 1 (lotação): soma de passageiros não pode exceder a capacidade do veículo.
-     * regra 2 (cronologia): cada transfer adicionado deve ter horário posterior ao anterior,
-     *                       evitando conflitos de agenda do motorista.
-     */
     private void gerenciarTransfersDaOS(LineReader reader, OrdemServico os) throws Exception {
         System.out.println("\n\u001B[33mMontando OS #" + os.getId()
                 + " | Motorista: " + os.getMotorista().getNome()
@@ -201,7 +184,7 @@ public class OrdemServicoMenu {
             String idAdd = reader.readLine("\nDigite o ID do Transfer para adicionar à OS (ou 'fim'): ").trim();
             if (idAdd.equalsIgnoreCase("fim")) break;
 
-            if (!isApenasNumeros(idAdd)) {
+            if (!AuxiliarUtils.isApenasNumeros(idAdd)) {
                 System.out.println("\u001B[31mID inválido! Digite apenas números ou 'fim'.\u001B[0m");
                 continue;
             }
@@ -259,71 +242,4 @@ public class OrdemServicoMenu {
                 + os.getTransfers().size() + " transfer(s).\u001B[0m");
     }
 
-    /**
-     * solicita o ID de uma OS e gera o PDF correspondente via PdfItext.
-     */
-    private void menuGerarPdf(LineReader reader) {
-        System.out.println("\n\u001B[36m--- EXPORTAR OS PARA PDF --- \u001B[0m");
-        try {
-            Long idOs = lerIdValido(reader, "Digite o ID da Ordem de Serviço: ");
-            OrdemServico os = osRepo.buscarPorId(idOs.intValue());
-
-            if (os == null) {
-                System.out.println("\u001B[31mOrdem de Serviço não encontrada!\u001B[0m");
-                return;
-            }
-
-            System.out.println("\u001B[33mGerando documento...\u001B[0m");
-            br.com.sosviale.util.PdfItext.gerarPdfOs(os);
-            System.out.println("\u001B[32m✔ PDF da OS #" + os.getId() + " gerado com sucesso na pasta do projeto!\u001B[0m");
-
-        } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO AO GERAR PDF]: " + e.getMessage() + "\u001B[0m");
-            e.printStackTrace();
-        }
-    }
-
-    // --- métodos auxiliares ---
-
-    private void listarMotoristas() {
-        System.out.println("\n\u001B[36m--- MOTORISTAS CADASTRADOS --- \u001B[0m");
-        List<Motorista> lista = motoristaRepo.listarTodos();
-        if (lista.isEmpty()) {
-            System.out.println("Nenhum motorista cadastrado.");
-            return;
-        }
-        System.out.println(String.format("%-5s | %-25s | %-15s", "ID", "NOME", "CNH"));
-        for (Motorista m : lista) {
-            System.out.println(String.format("%-5d | %-25s | %-15s", m.getId(), m.getNome(), m.getCnh()));
-        }
-    }
-
-    private void listarVeiculos() {
-        System.out.println("\n\u001B[36m--- FROTA DE VEÍCULOS --- \u001B[0m");
-        List<Veiculo> lista = veiculoRepo.listarTodos();
-        if (lista.isEmpty()) {
-            System.out.println("Nenhum veículo cadastrado.");
-            return;
-        }
-        System.out.println(String.format("%-5s | %-20s | %-10s | %-10s", "ID", "MODELO", "PLACA", "CAPACIDADE"));
-        System.out.println("------------------------------------------------------------");
-        for (Veiculo v : lista) {
-            System.out.println(String.format("%-5d | %-20s | %-10s | %-10d",
-                    v.getId(), v.getLabel(), v.getPlaca(), v.getCapacidade()));
-        }
-    }
-
-    // lê um ID numérico positivo; repete o prompt até receber entrada válida
-    private Long lerIdValido(LineReader reader, String mensagem) {
-        while (true) {
-            String idStr = reader.readLine(mensagem).trim();
-            if (isApenasNumeros(idStr) && Long.parseLong(idStr) > 0) return Long.parseLong(idStr);
-            System.out.println("\u001B[31mID inválido! Digite apenas números positivos.\u001B[0m");
-        }
-    }
-
-    // verifica se a string contém apenas dígitos numéricos
-    private boolean isApenasNumeros(String dados) {
-        return dados != null && !dados.isEmpty() && dados.matches("\\d+");
-    }
 }
