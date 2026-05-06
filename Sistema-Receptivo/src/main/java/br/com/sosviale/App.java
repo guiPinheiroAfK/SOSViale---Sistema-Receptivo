@@ -1,8 +1,8 @@
 package br.com.sosviale;
 
 import br.com.sosviale.auth.AuthenticationService;
-import br.com.sosviale.gui.LoginScreen;
-import br.com.sosviale.gui.MainDashboard;
+import br.com.sosviale.view.LoginScreen;
+import br.com.sosviale.view.MainDashboard;
 
 import javax.swing.*;
 

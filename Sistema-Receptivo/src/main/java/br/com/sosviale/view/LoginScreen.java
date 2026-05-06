@@ -1,4 +1,4 @@
-package br.com.sosviale.gui;
+package br.com.sosviale.view;
 
 import br.com.sosviale.auth.AuthenticationException;
 import br.com.sosviale.auth.AuthenticationService;
@@ -7,8 +7,6 @@ import br.com.sosviale.auth.ValidationException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 
 /*
  * Tela de Login do SOS VIALE

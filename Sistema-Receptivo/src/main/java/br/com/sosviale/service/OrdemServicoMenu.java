@@ -4,28 +4,34 @@ import br.com.sosviale.model.Motorista;
 import br.com.sosviale.model.OrdemServico;
 import br.com.sosviale.model.Transfer;
 import br.com.sosviale.model.Veiculo;
-import br.com.sosviale.repository.MotoristaRepository;
-import br.com.sosviale.repository.OrdemServicoRepository;
-import br.com.sosviale.repository.TransferRepository;
-import br.com.sosviale.repository.VeiculoRepository;
+import br.com.sosviale.repository.*;
+import br.com.sosviale.util.AuxiliarUtils;
+import br.com.sosviale.util.Listagens;
+import br.com.sosviale.util.PdfItext;
 import org.jline.reader.LineReader;
 
 import java.util.List;
 
 public class OrdemServicoMenu {
 
-    private final OrdemServicoRepository osRepo;
-    private final MotoristaRepository motoristaRepo;
-    private final VeiculoRepository veiculoRepo;
-    private final TransferRepository transferRepo;
+    // repositórios injetados pelo construtor
+    private PassageiroRepository passageiroRepo;
+    private VeiculoRepository veiculoRepo;
+    private TransferRepository transferRepo;
+    private MotoristaRepository motoristaRepo;
+    private final PontoColetaRepository pontoColetaRepo;
+    private OrdemServicoRepository osRepo;
 
-    // construtor com injeção de dependências
-    public OrdemServicoMenu(OrdemServicoRepository osRepo, MotoristaRepository motoristaRepo,
-                            VeiculoRepository veiculoRepo, TransferRepository transferRepo) {
-        this.osRepo = osRepo;
-        this.motoristaRepo = motoristaRepo;
+    // construtor que recebe os repositórios instanciados pela Main
+    public OrdemServicoMenu(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo,
+                       TransferRepository transferRepo, MotoristaRepository motoristaRepo,
+                       PontoColetaRepository pontoColetaRepo, OrdemServicoRepository osRepo) {
+        this.passageiroRepo = passageiroRepo;
         this.veiculoRepo = veiculoRepo;
         this.transferRepo = transferRepo;
+        this.motoristaRepo = motoristaRepo;
+        this.pontoColetaRepo = pontoColetaRepo;
+        this.osRepo = osRepo;
     }
 
     public void menuOrdemServico(LineReader reader) {
@@ -42,7 +48,10 @@ public class OrdemServicoMenu {
                 switch (op) {
                     case "1" -> abrirNovaOS(reader);
                     case "2" -> selecionarOSParaMontagem(reader);
-                    case "3" -> menuGerarPdf(reader);
+                    case "3" -> {
+                        PdfItext pdfItext = new PdfItext(passageiroRepo, veiculoRepo, transferRepo, motoristaRepo, pontoColetaRepo, osRepo);
+                                                pdfItext.menuGerarPdf(reader);
+                    }
                     case "4" -> noMenuOS = false;
                     default  -> System.out.println("\u001B[31mOpção inválida.\u001B[0m");
                 }
