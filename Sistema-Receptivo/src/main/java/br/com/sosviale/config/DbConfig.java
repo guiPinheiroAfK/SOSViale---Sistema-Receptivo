@@ -1,7 +1,7 @@
 package br.com.sosviale.config;
 
 import org.flywaydb.core.Flyway;
-
+/*
 // utilitária responsável por configurar e executar as migrações do flyway
 public class DbConfig {
     public static void setup() {
@@ -10,4 +10,4 @@ public class DbConfig {
                 .load();
         flyway.migrate();
     }
-}
+}*/

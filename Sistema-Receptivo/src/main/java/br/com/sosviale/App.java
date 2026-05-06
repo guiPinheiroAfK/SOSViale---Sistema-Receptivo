@@ -31,6 +31,8 @@ import javax.swing.*;
 public class App {
 
     public static void main(String[] args) {
+
+        System.out.println("pika");
         SwingUtilities.invokeLater(() -> {
             try {
                 // Cria serviço de autenticação
