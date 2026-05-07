@@ -73,7 +73,7 @@ public class Excluir {
     // Veículo
     public void excluirVeiculo(LineReader reader) {
         try {
-            Long id = AuxiliarUtils.lerIdValido(reader, "ID para excluir: ");
+            Integer id = AuxiliarUtils.lerIdValido(reader, "ID para excluir: ").intValue();
             Veiculo v = veiculoRepo.buscarPorId(id);
             if (v == null) {
                 System.out.println("\u001B[31mVeículo não encontrado.\u001B[0m");

@@ -222,24 +222,7 @@ public class MainDashboard extends JFrame {
     }
 
     private JComponent buildVehiclesPage() {
-        DefaultTableModel model = createTableModel(
-                new String[]{"ID", "Modelo", "Placa", "Capacidade", "Status"},
-                new Object[][]{
-                        {"V-021", "Mercedes Sprinter", "ABC1D23", "15", "DISPONÍVEL"},
-                        {"V-022", "Renault Master", "XYZ4A56", "13", "EM ROTA"}
-                }
-        );
-
-        JPanel form = formPanel("Cadastro de Veículo");
-        addField(form, "Modelo", textField("Modelo"), 0);
-        addField(form, "Placa", textField("ABC1D23"), 1);
-        addField(form, "Capacidade", textField("15"), 2);
-
-        JButton save = primaryButton("Adicionar");
-        save.addActionListener(e -> showMessage("Veículo adicionado (simulado)"));
-        addActions(form, save, outlineButton("Cancelar"));
-
-        return splitPage(form, tablePanel("Frota", model));
+        return new VeiculosPanel();
     }
 
     private JComponent buildOrdersPage() {

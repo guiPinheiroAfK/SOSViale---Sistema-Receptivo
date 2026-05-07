@@ -130,7 +130,7 @@ public class OrdemServicoMenu {
         }
 
         listagens.listarVeiculos();
-        Long idVeiculo = AuxiliarUtils.lerIdValido(reader, "ID do Veículo: ");
+        Integer idVeiculo = AuxiliarUtils.lerIdValido(reader, "ID do Veículo: ").intValue();
         Veiculo veiculo;
         try {
             veiculo = veiculoRepo.buscarPorId(idVeiculo);

@@ -122,7 +122,7 @@ public class Editar {
     // Veículos
     public void editarVeiculo(LineReader reader) {
         try {
-            Long id = AuxiliarUtils.lerIdValido(reader, "ID do veículo: ");
+            Integer id = AuxiliarUtils.lerIdValido(reader, "ID do veículo: ").intValue();
             Veiculo v = veiculoRepo.buscarPorId(id);
             if (v == null) {
                 System.out.println("\u001B[31mVeículo não encontrado.\u001B[0m");
