@@ -1,7 +1,6 @@
 package br.com.sosviale;
 
 import br.com.sosviale.auth.AuthenticationService;
-import br.com.sosviale.config.DbConfig;
 import br.com.sosviale.view.LoginScreen;
 import br.com.sosviale.view.MainDashboard;
 
@@ -32,9 +31,6 @@ import javax.swing.*;
 public class App {
 
     public static void main(String[] args) {
-
-        DbConfig.setup();
-
         SwingUtilities.invokeLater(() -> {
             try {
                 // Cria serviço de autenticação
