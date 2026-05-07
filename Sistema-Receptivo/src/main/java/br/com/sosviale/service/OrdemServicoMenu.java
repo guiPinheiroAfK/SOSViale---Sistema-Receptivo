@@ -115,7 +115,7 @@ public class OrdemServicoMenu {
         Listagens listagens = new Listagens(passageiroRepo, veiculoRepo, transferRepo, motoristaRepo, pontoColetaRepo,  osRepo);
 
         listagens.listarMotoristas();
-        Long idMotorista = AuxiliarUtils.lerIdValido(reader, "ID do Motorista para esta OS: ");
+        Integer idMotorista = AuxiliarUtils.lerIdValido(reader, "ID do Motorista para esta OS: ").intValue();
         Motorista motorista;
         try {
             motorista = motoristaRepo.buscarPorId(idMotorista);

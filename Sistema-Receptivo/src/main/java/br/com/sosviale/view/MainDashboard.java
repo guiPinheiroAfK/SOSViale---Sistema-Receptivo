@@ -187,8 +187,6 @@ public class MainDashboard extends JFrame {
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         actions.setOpaque(false);
-        actions.add(outlineButton("Exportar"));
-        actions.add(primaryButton("+ Novo"));
 
         heading.add(titleStack, BorderLayout.WEST);
         heading.add(actions, BorderLayout.EAST);
@@ -512,11 +510,13 @@ public class MainDashboard extends JFrame {
 
     private void configureLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
             UIManager.put("Button.font", BASE_FONT);
             UIManager.put("Label.font", BASE_FONT);
             UIManager.put("TextField.font", BASE_FONT);
             UIManager.put("ComboBox.font", BASE_FONT);
+            UIManager.put("Button.background", Color.WHITE);
+            UIManager.put("Button.select", new Color(210, 214, 220));
         } catch (Exception ignored) {
         }
     }

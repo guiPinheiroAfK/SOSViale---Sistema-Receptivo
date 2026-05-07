@@ -166,8 +166,8 @@ public class Editar {
     public void editarMotorista(LineReader reader) {
         System.out.println("\n\u001B[34m--- EDITAR MOTORISTA --- \u001B[0m");
         try {
-            Long id = AuxiliarUtils.lerIdValido(reader, "ID do motorista: ");
-            Motorista m = motoristaRepo.buscarPorId(id);
+            Integer idMotorista = AuxiliarUtils.lerIdValido(reader, "ID do Motorista para esta OS: ").intValue();
+            Motorista m = motoristaRepo.buscarPorId(idMotorista);
             if (m == null) {
                 System.out.println("\u001B[31m[ERRO]: motorista não encontrado.\u001B[0m");
                 return;

@@ -95,15 +95,15 @@ public class Excluir {
     public void excluirMotorista(LineReader reader) {
         System.out.println("\n\u001B[31m--- EXCLUIR MOTORISTA --- \u001B[0m");
         try {
-            Long id = AuxiliarUtils.lerIdValido(reader, "ID para excluir: ");
-            Motorista m = motoristaRepo.buscarPorId(id);
+            Integer idMotorista = AuxiliarUtils.lerIdValido(reader, "ID do Motorista para esta OS: ").intValue();
+            Motorista m = motoristaRepo.buscarPorId(idMotorista);
             if (m == null) {
                 System.out.println("Motorista não encontrado.");
                 return;
             }
             String conf = reader.readLine("Excluir " + m.getNome() + "? (s/n): ").trim();
             if (conf.equalsIgnoreCase("s")) {
-                motoristaRepo.excluir(id);
+                motoristaRepo.excluir(idMotorista);
                 System.out.println("\u001B[32m✔ Motorista removido!\u001B[0m");
             } else {
                 System.out.println("Operação cancelada.");
