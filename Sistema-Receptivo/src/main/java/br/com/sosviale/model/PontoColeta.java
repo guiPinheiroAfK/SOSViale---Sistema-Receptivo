@@ -26,10 +26,10 @@ public class PontoColeta {
     private LocalTime horarioPrevisto;
 
     // coordenadas para futura integração com pathfinding
-    @Column(nullable = false)
+    @Column(name = "latitude", columnDefinition = "numeric")
     private Double latitude;
 
-    @Column(nullable = false)
+    @Column(name = "longitude", columnDefinition = "numeric")
     private Double longitude;
 
     // construtor padrão obrigatório pelo JPA

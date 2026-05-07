@@ -13,8 +13,8 @@ CREATE TABLE motoristas (
                             id SERIAL PRIMARY KEY,
                             nome VARCHAR(100) NOT NULL,
                             cnh VARCHAR(20) UNIQUE NOT NULL,
-                            latitude_atual DECIMAL(10,7),   -- posição atual do motorista
-                            longitude_atual DECIMAL(10,7)   -- pode ser NULL até ele atualizar
+                            latitude_atual DOUBLE PRECISION,   -- posição atual do motorista
+                            longitude_atual DOUBLE PRECISION   -- pode ser NULL até ele atualizar
 );
 
 CREATE TABLE veiculos (
@@ -32,6 +32,7 @@ CREATE TABLE transfers (
                            destino VARCHAR(100) NOT NULL,
                            status VARCHAR(20) DEFAULT 'PENDENTE', -- PENDENTE, EM_TRANSITO, CONCLUIDO, CANCELADO
                            valor_base DECIMAL(10,2),
+                           moeda_origem VARCHAR(10),
                            motorista_id INT REFERENCES motoristas(id),
                            veiculo_id INT REFERENCES veiculos(id)
 );
