@@ -102,4 +102,17 @@ public class TransferRepository {
             em.close();
         }
     }
+
+    // conta transfers que ainda não têm OS vinculada
+    public long contarSemOrdemServico() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                            "SELECT COUNT(t) FROM Transfer t WHERE t.ordemServico IS NULL", Long.class)
+                    .getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
+
 }

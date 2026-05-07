@@ -84,4 +84,14 @@ public class PassageiroRepository {
             em.close();
         }
     }
+
+    public long contar() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(p) FROM Passageiro p", Long.class)
+                    .getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
 }

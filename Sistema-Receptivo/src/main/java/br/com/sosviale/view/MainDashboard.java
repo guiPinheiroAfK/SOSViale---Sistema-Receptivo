@@ -196,7 +196,6 @@ public class MainDashboard extends JFrame {
         // Adiciona painéis ao cardPanel
         cardPanel.setBackground(APP_BACKGROUND);
         cardPanel.add(buildDashboardPage(), "dashboard");
-        cardPanel.add(buildTransfersPage(), "transfers");
         cardPanel.add(buildPassengersPage(), "passageiros");
         cardPanel.add(buildDriversPage(), "motoristas");
         cardPanel.add(buildVehiclesPage(), "veiculos");
@@ -213,52 +212,7 @@ public class MainDashboard extends JFrame {
     // ===== PÁGINAS =====
 
     private JComponent buildDashboardPage() {
-        JPanel page = new JPanel(new BorderLayout(14, 14));
-        page.setOpaque(false);
-
-        JPanel metrics = new JPanel(new GridLayout(1, 4, 12, 0));
-        metrics.setOpaque(false);
-        metrics.add(metric("Transfers hoje", "18", "6 pendentes"));
-        metrics.add(metric("Passageiros", "74", "embarques"));
-        metrics.add(metric("Frota disponível", "9/12", "3 em manutenção"));
-        metrics.add(metric("OS abertas", "5", "aguardando motorista"));
-
-        JPanel center = new JPanel(new GridLayout(1, 2, 14, 0));
-        center.setOpaque(false);
-        center.add(tablePanel("Agenda do dia", new String[]{"Hora", "Origem", "Destino", "Status"},
-                new Object[][]{
-                        {"08:30", "Aeroporto IGU", "Hotel Centro", "AGENDADO"},
-                        {"10:15", "Hotel Cataratas", "Marco 3 Fronteiras", "EM ANDAMENTO"},
-                        {"13:00", "Rodoviária", "Hotel Resort", "AGENDADO"}
-                }));
-        center.add(workflowPanel());
-
-        page.add(metrics, BorderLayout.NORTH);
-        page.add(center, BorderLayout.CENTER);
-        return page;
-    }
-
-    private JComponent buildTransfersPage() {
-        DefaultTableModel model = createTableModel(
-                new String[]{"ID", "Data/Hora", "Origem", "Destino", "Status"},
-                new Object[][]{
-                        {"T-1042", "29/04 08:30", "Aeroporto IGU", "Hotel Centro", "AGENDADO"},
-                        {"T-1043", "29/04 10:15", "Hotel Cataratas", "Parque Nacional", "EM ANDAMENTO"}
-                }
-        );
-
-        JPanel form = formPanel("Novo Transfer");
-        addField(form, "Origem", textField("Aeroporto IGU"), 0);
-        addField(form, "Destino", textField("Hotel Centro"), 1);
-        addField(form, "Data/Hora", textField("29/04/2026 08:30"), 2);
-        addField(form, "Valor base", textField("180.00"), 3);
-        addField(form, "Status", combo("AGENDADO", "EM ANDAMENTO", "CONCLUIDO"), 4);
-
-        JButton save = primaryButton("Salvar");
-        save.addActionListener(e -> showMessage("Transfer salvo (simulado)"));
-        addActions(form, save, outlineButton("Limpar"));
-
-        return splitPage(form, tablePanel("Transfers", model));
+        return new DashboardPanel();
     }
 
     private JComponent buildPassengersPage() {
@@ -283,24 +237,7 @@ public class MainDashboard extends JFrame {
     }
 
     private JComponent buildDriversPage() {
-        DefaultTableModel model = createTableModel(
-                new String[]{"ID", "Nome", "CNH", "Status", "Localização"},
-                new Object[][]{
-                        {"M-011", "Roberto Silva", "12345678901", "DISPONÍVEL", "Base"},
-                        {"M-012", "Marcos Lima", "88991234567", "EM ROTA", "Aeroporto IGU"}
-                }
-        );
-
-        JPanel form = formPanel("Cadastro de Motorista");
-        addField(form, "Nome", textField("Nome do motorista"), 0);
-        addField(form, "CNH", textField("11 dígitos"), 1);
-        addField(form, "Status", combo("DISPONÍVEL", "EM ROTA", "FOLGA"), 2);
-
-        JButton save = primaryButton("Adicionar");
-        save.addActionListener(e -> showMessage("Motorista adicionado (simulado)"));
-        addActions(form, save, outlineButton("Cancelar"));
-
-        return splitPage(form, tablePanel("Motoristas", model));
+        return new MotoristasPanel();
     }
 
     private JComponent buildVehiclesPage() {
@@ -374,67 +311,7 @@ public class MainDashboard extends JFrame {
 
     // ===== HELPER COMPONENTS =====
 
-    private JComponent workflowPanel() {
-        JPanel panel = panel("Fluxo Operacional");
-        JPanel content = new JPanel(new GridLayout(5, 1, 0, 8));
-        content.setOpaque(false);
-        content.add(step("1", "Cadastrar passageiro e documentos"));
-        content.add(step("2", "Agendar transfer com origem/destino"));
-        content.add(step("3", "Vincular motorista e veículo em OS"));
-        content.add(step("4", "Acompanhar status durante rota"));
-        content.add(step("5", "Concluir OS e emitir PDF"));
-        panel.add(content, BorderLayout.CENTER);
-        return panel;
-    }
 
-    private JComponent metric(String label, String value, String hint) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(PANEL_BACKGROUND);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(14, 14, 14, 14)
-        ));
-
-        JLabel labelComponent = new JLabel(label);
-        labelComponent.setFont(BASE_FONT);
-        labelComponent.setForeground(MUTED_TEXT);
-
-        JLabel valueComponent = new JLabel(value);
-        valueComponent.setFont(new Font("SansSerif", Font.BOLD, 30));
-        valueComponent.setForeground(TEXT_COLOR);
-
-        JLabel hintComponent = new JLabel(hint);
-        hintComponent.setFont(BASE_FONT);
-        hintComponent.setForeground(MUTED_TEXT);
-
-        panel.add(labelComponent);
-        panel.add(Box.createVerticalStrut(8));
-        panel.add(valueComponent);
-        panel.add(Box.createVerticalStrut(4));
-        panel.add(hintComponent);
-        return panel;
-    }
-
-    private JComponent step(String marker, String text) {
-        JPanel row = new JPanel(new BorderLayout(10, 0));
-        row.setOpaque(false);
-
-        JLabel bullet = new JLabel(marker, SwingConstants.CENTER);
-        bullet.setOpaque(true);
-        bullet.setBackground(new Color(236, 239, 244));
-        bullet.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
-        bullet.setPreferredSize(new Dimension(34, 28));
-        bullet.setFont(new Font("SansSerif", Font.BOLD, 12));
-
-        JLabel content = new JLabel(text);
-        content.setFont(BASE_FONT);
-        content.setForeground(TEXT_COLOR);
-
-        row.add(bullet, BorderLayout.WEST);
-        row.add(content, BorderLayout.CENTER);
-        return row;
-    }
 
     private JComponent splitPage(JComponent left, JComponent right) {
         JPanel page = new JPanel(new BorderLayout(14, 0));

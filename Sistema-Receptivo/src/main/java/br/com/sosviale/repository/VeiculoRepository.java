@@ -81,4 +81,14 @@ public class VeiculoRepository {
             em.close();
         }
     }
+
+    public long contar() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(v) FROM Veiculo v", Long.class)
+                    .getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
 }

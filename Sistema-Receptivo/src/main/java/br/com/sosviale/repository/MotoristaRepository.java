@@ -81,4 +81,15 @@ public class MotoristaRepository {
             em.close();
         }
     }
+
+    public long contar() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(m) FROM Motorista m", Long.class)
+                    .getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
+
 }

@@ -1,0 +1,211 @@
+package br.com.sosviale.view;
+
+import br.com.sosviale.model.Motorista;
+import br.com.sosviale.repository.MotoristaRepository;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.List;
+
+public class MotoristasPanel extends JPanel {
+
+    private static final Color PANEL_BACKGROUND = Color.WHITE;
+    private static final Color BORDER_COLOR = new Color(210, 214, 220);
+    private static final Color TEXT_COLOR = new Color(38, 43, 51);
+    private static final Color MUTED_TEXT = new Color(98, 108, 122);
+    private static final Color PRIMARY_BLUE = new Color(50, 91, 140);
+    private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
+    private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
+
+    private final MotoristaRepository repository = new MotoristaRepository();
+    private DefaultTableModel tableModel;
+    private JTextField nomeField;
+    private JTextField cnhField;
+
+    public MotoristasPanel() {
+        setLayout(new BorderLayout(14, 0));
+        setOpaque(false);
+
+        add(buildForm(), BorderLayout.WEST);
+        add(buildTable(), BorderLayout.CENTER);
+    }
+
+    private JComponent buildForm() {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(PANEL_BACKGROUND);
+        form.setPreferredSize(new Dimension(345, 0));
+        form.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Título
+        JLabel title = new JLabel("Cadastro de Motorista");
+        title.setFont(SECTION_FONT);
+        title.setForeground(TEXT_COLOR);
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 14, 0);
+        form.add(title, gbc);
+
+        // Nome
+        JLabel nomeLabel = new JLabel("Nome completo:");
+        nomeLabel.setFont(BASE_FONT);
+        nomeLabel.setForeground(MUTED_TEXT);
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        form.add(nomeLabel, gbc);
+
+        nomeField = new JTextField();
+        nomeField.setFont(BASE_FONT);
+        nomeField.setPreferredSize(new Dimension(0, 34));
+        nomeField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        gbc.gridy = 2;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        form.add(nomeField, gbc);
+
+        // CNH
+        JLabel cnhLabel = new JLabel("CNH:");
+        cnhLabel.setFont(BASE_FONT);
+        cnhLabel.setForeground(MUTED_TEXT);
+        gbc.gridy = 3;
+        gbc.insets = new Insets(10, 0, 4, 0);
+        form.add(cnhLabel, gbc);
+
+        cnhField = new JTextField();
+        cnhField.setFont(BASE_FONT);
+        cnhField.setPreferredSize(new Dimension(0, 34));
+        cnhField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        form.add(cnhField, gbc);
+
+        // Botões
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        actions.setOpaque(false);
+
+        JButton salvar = new JButton("Adicionar");
+        salvar.setBackground(PRIMARY_BLUE);
+        salvar.setForeground(Color.WHITE);
+        salvar.setFocusPainted(false);
+        salvar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PRIMARY_BLUE),
+                new EmptyBorder(8, 14, 8, 14)
+        ));
+        salvar.setFont(new Font("SansSerif", Font.BOLD, 12));
+        salvar.addActionListener(e -> salvarMotorista());
+
+        JButton limpar = new JButton("Limpar");
+        limpar.setBackground(PANEL_BACKGROUND);
+        limpar.setForeground(TEXT_COLOR);
+        limpar.setFocusPainted(false);
+        limpar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(8, 14, 8, 14)
+        ));
+        limpar.setFont(BASE_FONT);
+        limpar.addActionListener(e -> limparForm());
+
+        actions.add(salvar);
+        actions.add(limpar);
+
+        gbc.gridy = 99;
+        gbc.weighty = 1;
+        gbc.anchor = GridBagConstraints.SOUTHWEST;
+        gbc.insets = new Insets(18, 0, 0, 0);
+        form.add(actions, gbc);
+
+        return form;
+    }
+
+    private JComponent buildTable() {
+        JPanel panel = new JPanel(new BorderLayout(0, 12));
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+
+        JLabel title = new JLabel("Motoristas cadastrados");
+        title.setFont(SECTION_FONT);
+        title.setForeground(TEXT_COLOR);
+        panel.add(title, BorderLayout.NORTH);
+
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "CNH"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable table = new JTable(tableModel);
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(28);
+        table.setShowGrid(true);
+        table.setGridColor(new Color(230, 232, 236));
+        table.getTableHeader().setReorderingAllowed(false);
+        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
+        table.setFont(BASE_FONT);
+
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setBorder(new EmptyBorder(0, 8, 0, 8));
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
+
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+
+        carregarMotoristas();
+        return panel;
+    }
+
+    private void salvarMotorista() {
+        String nome = nomeField.getText().trim();
+        String cnh = cnhField.getText().trim();
+
+        if (nome.isEmpty() || cnh.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Preencha todos os campos!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            repository.salvar(new Motorista(nome, cnh));
+            limparForm();
+            carregarMotoristas();
+            JOptionPane.showMessageDialog(this, "Motorista cadastrado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao cadastrar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void carregarMotoristas() {
+        tableModel.setRowCount(0);
+        try {
+            List<Motorista> motoristas = repository.listarTodos();
+            for (Motorista m : motoristas) {
+                tableModel.addRow(new Object[]{m.getId(), m.getNome(), m.getCnh()});
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void limparForm() {
+        nomeField.setText("");
+        cnhField.setText("");
+        nomeField.requestFocus();
+    }
+}
