@@ -16,7 +16,7 @@ import java.util.Map;
  * MainDashboard - Interface principal do SOS VIALE
  * Integrada com autenticação JWT e design moderno
  */
-public class MainDashboard extends JFrame {
+public class ProtipoMainDashboard extends JFrame {
 
     private static final Color APP_BACKGROUND = new Color(244, 245, 247);
     private static final Color PANEL_BACKGROUND = Color.WHITE;
@@ -37,7 +37,7 @@ public class MainDashboard extends JFrame {
     private final JLabel userLabel = new JLabel();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
 
-    public MainDashboard(AuthenticationService authService) {
+    public ProtipoMainDashboard(AuthenticationService authService) {
         this.authService = authService;
         configureLookAndFeel();
 
