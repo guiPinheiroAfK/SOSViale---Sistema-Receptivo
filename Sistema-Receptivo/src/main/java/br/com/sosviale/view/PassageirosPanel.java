@@ -1,7 +1,7 @@
 package br.com.sosviale.view;
 
-import br.com.sosviale.model.Motorista;
-import br.com.sosviale.repository.MotoristaRepository;
+import br.com.sosviale.model.Passageiro;
+import br.com.sosviale.repository.PassageiroRepository;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,7 +10,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class MotoristasPanel extends JPanel {
+public class PassageirosPanel extends JPanel {
 
     private static final Color PANEL_BACKGROUND = Color.WHITE;
     private static final Color BORDER_COLOR = new Color(210, 214, 220);
@@ -21,16 +21,17 @@ public class MotoristasPanel extends JPanel {
     private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
 
-    private final MotoristaRepository repository = new MotoristaRepository();
+    private final PassageiroRepository repository = new PassageiroRepository();
     private DefaultTableModel tableModel;
     private JTable table;
     private JTextField nomeField;
-    private JTextField cnhField;
+    private JTextField documentoField;
+    private JTextField nacionalidadeField;
     private JButton salvarButton;
     private JButton excluirButton;
     private Integer idSelecionado = null;
 
-    public MotoristasPanel() {
+    public PassageirosPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -51,13 +52,14 @@ public class MotoristasPanel extends JPanel {
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel title = new JLabel("Cadastro de Motorista");
+        JLabel title = new JLabel("Cadastro de Passageiro");
         title.setFont(SECTION_FONT);
         title.setForeground(TEXT_COLOR);
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 14, 0);
         form.add(title, gbc);
 
+        // Nome
         JLabel nomeLabel = new JLabel("Nome completo:");
         nomeLabel.setFont(BASE_FONT);
         nomeLabel.setForeground(MUTED_TEXT);
@@ -76,24 +78,45 @@ public class MotoristasPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(nomeField, gbc);
 
-        JLabel cnhLabel = new JLabel("CNH:");
-        cnhLabel.setFont(BASE_FONT);
-        cnhLabel.setForeground(MUTED_TEXT);
+        // Documento
+        JLabel documentoLabel = new JLabel("Documento (RG/Passaporte):");
+        documentoLabel.setFont(BASE_FONT);
+        documentoLabel.setForeground(MUTED_TEXT);
         gbc.gridy = 3;
         gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(cnhLabel, gbc);
+        form.add(documentoLabel, gbc);
 
-        cnhField = new JTextField();
-        cnhField.setFont(BASE_FONT);
-        cnhField.setPreferredSize(new Dimension(0, 34));
-        cnhField.setBorder(BorderFactory.createCompoundBorder(
+        documentoField = new JTextField();
+        documentoField.setFont(BASE_FONT);
+        documentoField.setPreferredSize(new Dimension(0, 34));
+        documentoField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR),
                 new EmptyBorder(0, 8, 0, 8)
         ));
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(cnhField, gbc);
+        form.add(documentoField, gbc);
 
+        // Nacionalidade
+        JLabel nacionalidadeLabel = new JLabel("Nacionalidade:");
+        nacionalidadeLabel.setFont(BASE_FONT);
+        nacionalidadeLabel.setForeground(MUTED_TEXT);
+        gbc.gridy = 5;
+        gbc.insets = new Insets(10, 0, 4, 0);
+        form.add(nacionalidadeLabel, gbc);
+
+        nacionalidadeField = new JTextField("Brasileira");
+        nacionalidadeField.setFont(BASE_FONT);
+        nacionalidadeField.setPreferredSize(new Dimension(0, 34));
+        nacionalidadeField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        gbc.gridy = 6;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        form.add(nacionalidadeField, gbc);
+
+        // Botões
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
@@ -120,7 +143,7 @@ public class MotoristasPanel extends JPanel {
         ));
         excluirButton.setFont(new Font("SansSerif", Font.BOLD, 12));
         excluirButton.setVisible(false);
-        excluirButton.addActionListener(e -> excluirMotorista());
+        excluirButton.addActionListener(e -> excluirPassageiro());
 
         JButton limpar = new JButton("Limpar");
         limpar.setBackground(PANEL_BACKGROUND);
@@ -155,12 +178,12 @@ public class MotoristasPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Motoristas cadastrados");
+        JLabel title = new JLabel("Passageiros cadastrados");
         title.setFont(SECTION_FONT);
         title.setForeground(TEXT_COLOR);
         panel.add(title, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "CNH"}, 0) {
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "Documento", "Nacionalidade"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -188,53 +211,57 @@ public class MotoristasPanel extends JPanel {
                 int row = table.getSelectedRow();
                 idSelecionado = (Integer) tableModel.getValueAt(row, 0);
                 nomeField.setText((String) tableModel.getValueAt(row, 1));
-                cnhField.setText((String) tableModel.getValueAt(row, 2));
+                documentoField.setText((String) tableModel.getValueAt(row, 2));
+                nacionalidadeField.setText((String) tableModel.getValueAt(row, 3));
                 salvarButton.setText("Salvar alteração");
                 excluirButton.setVisible(true);
             }
         });
 
-        JLabel dica = new JLabel("💡 Clique em um motorista para editar ou excluir.");
+        JLabel dica = new JLabel("💡 Clique em um passageiro para editar ou excluir.");
         dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
         dica.setForeground(MUTED_TEXT);
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         panel.add(dica, BorderLayout.SOUTH);
-        carregarMotoristas();
+        carregarPassageiros();
         return panel;
     }
 
     private void salvarOuAtualizar() {
         String nome = nomeField.getText().trim();
-        String cnh = cnhField.getText().trim();
+        String documento = documentoField.getText().trim();
+        String nacionalidade = nacionalidadeField.getText().trim();
 
-        if (nome.isEmpty() || cnh.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Preencha todos os campos!", "Aviso", JOptionPane.WARNING_MESSAGE);
+        if (nome.isEmpty() || documento.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Preencha nome e documento!", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
+        if (nacionalidade.isEmpty()) nacionalidade = "Brasileira";
+
         try {
             if (idSelecionado == null) {
-                repository.salvar(new Motorista(nome, cnh));
-                JOptionPane.showMessageDialog(this, "Motorista cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                repository.salvar(new Passageiro(nome, documento, nacionalidade));
+                JOptionPane.showMessageDialog(this, "Passageiro cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                Motorista m = new Motorista(nome, cnh);
-                m.setId(idSelecionado);
-                repository.atualizar(m);
-                JOptionPane.showMessageDialog(this, "Motorista atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                Passageiro p = new Passageiro(nome, documento, nacionalidade);
+                p.setId(idSelecionado);
+                repository.atualizar(p);
+                JOptionPane.showMessageDialog(this, "Passageiro atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
-            carregarMotoristas();
+            carregarPassageiros();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void excluirMotorista() {
+    private void excluirPassageiro() {
         if (idSelecionado == null) return;
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja excluir este motorista?",
+                "Tem certeza que deseja excluir este passageiro?",
                 "Confirmar exclusão",
                 JOptionPane.YES_NO_OPTION);
 
@@ -242,20 +269,20 @@ public class MotoristasPanel extends JPanel {
             try {
                 repository.excluir(idSelecionado);
                 limparForm();
-                carregarMotoristas();
-                JOptionPane.showMessageDialog(this, "Motorista excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                carregarPassageiros();
+                JOptionPane.showMessageDialog(this, "Passageiro excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    private void carregarMotoristas() {
+    private void carregarPassageiros() {
         tableModel.setRowCount(0);
         try {
-            List<Motorista> motoristas = repository.listarTodos();
-            for (Motorista m : motoristas) {
-                tableModel.addRow(new Object[]{m.getId(), m.getNome(), m.getCnh()});
+            List<Passageiro> passageiros = repository.listarTodos();
+            for (Passageiro p : passageiros) {
+                tableModel.addRow(new Object[]{p.getId(), p.getNome(), p.getDocumento(), p.getNacionalidade()});
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -265,7 +292,8 @@ public class MotoristasPanel extends JPanel {
     private void limparForm() {
         idSelecionado = null;
         nomeField.setText("");
-        cnhField.setText("");
+        documentoField.setText("");
+        nacionalidadeField.setText("Brasileira");
         salvarButton.setText("Adicionar");
         excluirButton.setVisible(false);
         table.clearSelection();

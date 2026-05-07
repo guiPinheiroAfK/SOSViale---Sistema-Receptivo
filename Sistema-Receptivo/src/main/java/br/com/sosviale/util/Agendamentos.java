@@ -94,7 +94,7 @@ public class Agendamentos {
                         System.out.println("\u001B[31mID inválido! Digite apenas números.\u001B[0m");
                         continue;
                     }
-                    Passageiro p = passageiroRepo.buscarPorId(Long.parseLong(pIdStr));
+                    Passageiro p = passageiroRepo.buscarPorId(Integer.parseInt(pIdStr));
                     if (p == null) {
                         System.out.println("\u001B[31mPassageiro não encontrado.\u001B[0m");
                     } else if (novoTransfer.getPassageiros().contains(p)) {

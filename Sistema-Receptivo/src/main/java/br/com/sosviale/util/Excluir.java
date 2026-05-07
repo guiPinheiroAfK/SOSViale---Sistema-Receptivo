@@ -52,7 +52,7 @@ public class Excluir {
     public void excluirPassageiro(LineReader reader) {
         System.out.println("\n\u001B[31m--- EXCLUIR PASSAGEIRO --- \u001B[0m");
         try {
-            Long id = AuxiliarUtils.lerIdValido(reader, "ID do passageiro para excluir: ");
+            Integer id = AuxiliarUtils.lerIdValido(reader, "ID do passageiro para excluir: ").intValue();
             Passageiro p = passageiroRepo.buscarPorId(id);
             if (p == null) {
                 System.out.println("Passageiro não encontrado!");

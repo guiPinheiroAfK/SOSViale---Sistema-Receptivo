@@ -214,24 +214,7 @@ public class MainDashboard extends JFrame {
     }
 
     private JComponent buildPassengersPage() {
-        DefaultTableModel model = createTableModel(
-                new String[]{"ID", "Nome", "Documento", "Nacionalidade"},
-                new Object[][]{
-                        {"P-001", "Ana Martins", "BR123456", "Brasileira"},
-                        {"P-002", "Carlos Gomez", "PY998812", "Paraguaia"}
-                }
-        );
-
-        JPanel form = formPanel("Cadastro de Passageiro");
-        addField(form, "Nome", textField("Nome completo"), 0);
-        addField(form, "Documento", textField("RG/Passaporte"), 1);
-        addField(form, "Nacionalidade", textField("Brasileira"), 2);
-
-        JButton save = primaryButton("Adicionar");
-        save.addActionListener(e -> showMessage("Passageiro adicionado (simulado)"));
-        addActions(form, save, outlineButton("Cancelar"));
-
-        return splitPage(form, tablePanel("Passageiros", model));
+        return new PassageirosPanel();
     }
 
     private JComponent buildDriversPage() {
