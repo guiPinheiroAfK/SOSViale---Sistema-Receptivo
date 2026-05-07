@@ -253,7 +253,7 @@ public class LoginScreen extends JFrame {
                     return;
                 }
 
-                authService.registerUser(username, password, name, adminPassword);
+                authService.registrarUsuario(name, username, password, adminPassword);
                 JOptionPane.showMessageDialog(
                         LoginScreen.this,
                         "Conta criada com sucesso!\nAgora faça login.",

@@ -12,6 +12,7 @@
         <class>br.com.sosviale.model.Veiculo</class>
         <class>br.com.sosviale.model.Transfer</class>
         <class>br.com.sosviale.model.PontoColeta</class>
+        <class>br.com.sosviale.model.User</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5600/sos_viale_db"/>
@@ -23,9 +24,9 @@
             <property name="hibernate.show_sql" value="false"/>
             <property name="hibernate.format_sql" value="true"/>
 
-            <property name="hibernate.hbm2ddl.auto" value="update"/>  <!-- dps temos que alterar o "update" para "validate"
-                                                                           e criar as validações (ou talvez casting para os
-                                                                           doubles/numerics (V1 e V2 do flyway)             -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+
+
         </properties>
     </persistence-unit>
 </persistence>
