@@ -1,9 +1,9 @@
-package br.com.sosviale.util.pathfinding;
+package br.com.sosviale.service.pathfinding;
 
 import java.util.Collections;
 import java.util.List;
 
-/**
+/*
  * Resultado imutável produzido pelo {@link RouteOptimizer}.
  *
  * Contém:
@@ -14,13 +14,13 @@ import java.util.List;
  */
 public final class RouteResult {
 
-    /** Ordem de visita otimizada pelo algoritmo. */
+    /* Ordem de visita otimizada pelo algoritmo. */
     private final List<Coordenada> rotaOtimizada;
 
-    /** Soma das distâncias entre cada par consecutivo na rota (km). */
+    /* Soma das distâncias entre cada par consecutivo na rota (km). */
     private final double distanciaTotalKm;
 
-    /**
+    /*
      * Descrição passo-a-passo das decisões do algoritmo.
      * Útil para debug e para exibição ao administrador.
      *
@@ -32,7 +32,7 @@ public final class RouteResult {
      */
     private final List<String> logDecisoes;
 
-    /** Motor de distância utilizado nesta otimização. */
+    /* Motor de distância utilizado nesta otimização. */
     private final ModoCalculo modoCalculo;
 
     public RouteResult(List<Coordenada> rotaOtimizada,
@@ -50,7 +50,7 @@ public final class RouteResult {
     public List<String>     getLogDecisoes()     { return logDecisoes;      }
     public ModoCalculo      getModoCalculo()     { return modoCalculo;      }
 
-    /**
+    /*
      * Resumo em texto simples para exibição rápida em logs ou console.
      */
     public String resumo() {

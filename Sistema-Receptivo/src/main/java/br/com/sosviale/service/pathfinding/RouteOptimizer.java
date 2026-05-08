@@ -1,10 +1,10 @@
-package br.com.sosviale.util.pathfinding;
+package br.com.sosviale.service.pathfinding;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-/**
+/*
  * Implementa o algoritmo de otimização de rota por Nearest Neighbor (Vizinho Mais Próximo).
  *
  * ─── Como funciona ────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ public final class RouteOptimizer {
 
     private RouteOptimizer() {}
 
-    /**
+    /*
      * Otimiza a ordem de visita dos pontos usando o motor de distância informado.
      *
      * @param pontos          lista de pontos a visitar (em qualquer ordem)
@@ -99,7 +99,7 @@ public final class RouteOptimizer {
     // Helpers privados
     // -------------------------------------------------------------------------
 
-    /**
+    /*
      * Varre a lista de pontos não visitados e retorna o mais próximo do ponto atual.
      */
     private static Coordenada encontrarMaisProximo(Coordenada atual,

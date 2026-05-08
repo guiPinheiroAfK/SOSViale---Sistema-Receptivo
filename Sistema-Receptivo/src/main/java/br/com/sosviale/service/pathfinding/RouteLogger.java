@@ -1,4 +1,4 @@
-package br.com.sosviale.util.pathfinding;
+package br.com.sosviale.service.pathfinding;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
 
-/**
+/*
  * Grava o resultado de cada execução do PathFinding em um arquivo de log rotativo.
  *
  * ─── Formato do arquivo ───────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ public final class RouteLogger {
     // API pública
     // -------------------------------------------------------------------------
 
-    /**
+    /*
      * Grava o resultado de uma otimização no arquivo de log do dia.
      *
      * @param osId    ID da Ordem de Serviço otimizada (para rastreabilidade)

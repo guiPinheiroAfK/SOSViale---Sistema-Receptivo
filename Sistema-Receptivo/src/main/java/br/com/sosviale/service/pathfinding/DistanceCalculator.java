@@ -1,4 +1,4 @@
-package br.com.sosviale.util.pathfinding;
+package br.com.sosviale.service.pathfinding;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.logging.Logger;
 
-/**
+/*
  * Calcula a distância entre dois pontos geográficos.
  *
  * Dois motores disponíveis:
@@ -29,13 +29,13 @@ public final class DistanceCalculator {
 
     private static final Logger LOG = Logger.getLogger(DistanceCalculator.class.getName());
 
-    /** Raio médio da Terra em km (WGS-84). */
+    /* Raio médio da Terra em km (WGS-84). */
     private static final double EARTH_RADIUS_KM = 6371.0;
 
-    /** Timeout de 4 segundos para chamadas OSRM — evita travar o algoritmo. */
+    /* Timeout de 4 segundos para chamadas OSRM — evita travar o algoritmo. */
     private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(4);
 
-    /** URL base da API pública OSRM. Pode ser substituída por instância self-hosted. */
+    /* URL base da API pública OSRM. Pode ser substituída por instância self-hosted. */
     private static final String OSRM_BASE_URL =
             "https://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=false";
 
@@ -51,7 +51,7 @@ public final class DistanceCalculator {
     // API pública
     // -------------------------------------------------------------------------
 
-    /**
+    /*
      * Calcula a distância em km usando Haversine (linha reta).
      * Sempre disponível, sem requisitos de rede.
      */
@@ -68,7 +68,7 @@ public final class DistanceCalculator {
         return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    /**
+    /*
      * Calcula a distância real de estrada em km via API OSRM.
      *
      * Se a API falhar (sem rede, timeout, resposta inválida), registra o erro

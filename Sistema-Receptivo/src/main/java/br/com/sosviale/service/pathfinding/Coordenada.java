@@ -1,4 +1,4 @@
-package br.com.sosviale.util.pathfinding;
+package br.com.sosviale.service.pathfinding;
 
 import br.com.sosviale.model.PontoColeta;
 

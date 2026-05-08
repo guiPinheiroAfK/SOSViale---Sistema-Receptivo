@@ -1,4 +1,4 @@
-package br.com.sosviale.util.pathfinding;
+package br.com.sosviale.service.pathfinding;
 
 import br.com.sosviale.model.*;
 import br.com.sosviale.service.PathFinding;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
+/*
  * Teste manual do PathFinding com localizações reais de Foz do Iguaçu.
  *
  * ─── Como executar ────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ public class PathFindingTest {
     // CENÁRIO 1 — Problema clássico do retorno desnecessário
     // =========================================================================
 
-    /**
+    /*
      * Demonstra o problema principal que motivou o PathFinding:
      *
      *   Ordem original (ruim):
@@ -160,7 +160,7 @@ public class PathFindingTest {
     // CENÁRIO 2 — Quatro hotéis dispersos pela cidade
     // =========================================================================
 
-    /**
+    /*
      * Quatro pontos de coleta espalhados em Foz do Iguaçu.
      * Destino: Marco das Três Fronteiras (ID 2), no extremo oeste.
      *
@@ -201,7 +201,7 @@ public class PathFindingTest {
     // CENÁRIO 3 — Modo GPS: posição real do motorista como ponto de partida
     // =========================================================================
 
-    /**
+    /*
      * O motorista está no Centro (perto do Hotel Bella Italia e do Marco).
      * Com GPS ativo, o algoritmo deve começar pelo ponto mais próximo do Centro,
      * não pelo primeiro ponto da lista.
@@ -250,7 +250,7 @@ public class PathFindingTest {
     // CENÁRIO 4 — Ponto único (trivial)
     // =========================================================================
 
-    /**
+    /*
      * Verifica o comportamento com apenas um ponto de coleta.
      * Não há o que otimizar — o algoritmo deve retornar o único ponto sem erro.
      */
@@ -278,7 +278,7 @@ public class PathFindingTest {
     // Helpers de construção de objetos em memória
     // =========================================================================
 
-    /**
+    /*
      * Monta uma OrdemServico em memória com motorista, veículo e um transfer
      * contendo todos os pontos de coleta fornecidos.
      */
@@ -317,7 +317,7 @@ public class PathFindingTest {
         return os;
     }
 
-    /** Cria um PontoColeta com coordenadas reais já preenchidas. */
+    /* Cria um PontoColeta com coordenadas reais já preenchidas. */
     private static PontoColeta ponto(int ordem, String nome,
                                       double lat, double lon,
                                       LocalTime horario) {
@@ -331,7 +331,7 @@ public class PathFindingTest {
         return pc;
     }
 
-    /**
+    /*
      * Extrai coordenadas de uma OS diretamente (usado no cenário GPS,
      * que chama o RouteOptimizer diretamente sem passar pela fachada PathFinding).
      */
