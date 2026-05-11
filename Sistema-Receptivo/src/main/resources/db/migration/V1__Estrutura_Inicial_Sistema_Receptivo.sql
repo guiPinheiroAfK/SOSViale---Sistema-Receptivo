@@ -4,7 +4,8 @@ SET search_path TO public;
 CREATE TABLE passageiros (
                              id SERIAL PRIMARY KEY,
                              nome VARCHAR(100) NOT NULL,
-                             documento VARCHAR(20) NOT NULL, -- RG ou Passaporte para fronteira
+                             tipo_documento VARCHAR(20) NOT NULL,
+                             documento VARCHAR(20) NOT NULL,
                              nacionalidade VARCHAR(50) DEFAULT 'Brasileira'
 );
 

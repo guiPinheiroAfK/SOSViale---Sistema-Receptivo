@@ -1,6 +1,7 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.model.Passageiro;
+import br.com.sosviale.model.TipoDocumento;
 import br.com.sosviale.service.PassageiroService;
 
 import javax.swing.*;
@@ -26,6 +27,7 @@ public class PassageirosPanel extends JPanel {
     private JTable table;
     private JTextField nomeField;
     private JTextField documentoField;
+    private JComboBox<TipoDocumento> tipoDocumentoCombo;
     private JTextField nacionalidadeField;
     private JButton salvarButton;
     private JButton excluirButton;
@@ -77,10 +79,27 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(nomeField, gbc);
 
-        JLabel documentoLabel = new JLabel("Documento (RG/Passaporte):");
+        // NOVO: Label para o Tipo de Documento
+        JLabel tipoLabel = new JLabel("Tipo de Documento:");
+        tipoLabel.setFont(BASE_FONT);
+        tipoLabel.setForeground(MUTED_TEXT);
+        gbc.gridy = 3;
+        gbc.insets = new Insets(10, 0, 4, 0);
+        form.add(tipoLabel, gbc);
+
+        // NOVO: ComboBox preenchido com o Enum
+        tipoDocumentoCombo = new JComboBox<>(TipoDocumento.values());
+        tipoDocumentoCombo.setFont(BASE_FONT);
+        tipoDocumentoCombo.setBackground(Color.WHITE);
+        tipoDocumentoCombo.setPreferredSize(new Dimension(0, 34));
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        form.add(tipoDocumentoCombo, gbc);
+
+        JLabel documentoLabel = new JLabel("Número do Documento:");
         documentoLabel.setFont(BASE_FONT);
         documentoLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 3;
+        gbc.gridy = 5;
         gbc.insets = new Insets(10, 0, 4, 0);
         form.add(documentoLabel, gbc);
 
@@ -91,14 +110,14 @@ public class PassageirosPanel extends JPanel {
                 BorderFactory.createLineBorder(BORDER_COLOR),
                 new EmptyBorder(0, 8, 0, 8)
         ));
-        gbc.gridy = 4;
+        gbc.gridy = 6;
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(documentoField, gbc);
 
         JLabel nacionalidadeLabel = new JLabel("Nacionalidade:");
         nacionalidadeLabel.setFont(BASE_FONT);
         nacionalidadeLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 5;
+        gbc.gridy = 7;
         gbc.insets = new Insets(10, 0, 4, 0);
         form.add(nacionalidadeLabel, gbc);
 
@@ -109,7 +128,7 @@ public class PassageirosPanel extends JPanel {
                 BorderFactory.createLineBorder(BORDER_COLOR),
                 new EmptyBorder(0, 8, 0, 8)
         ));
-        gbc.gridy = 6;
+        gbc.gridy = 8;
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(nacionalidadeField, gbc);
 
@@ -179,7 +198,8 @@ public class PassageirosPanel extends JPanel {
         title.setForeground(TEXT_COLOR);
         panel.add(title, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "Documento", "Nacionalidade"}, 0) {
+        // ATUALIZADO: Adicionada a coluna "Tipo"
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "Tipo", "Documento", "Nacionalidade"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -207,8 +227,9 @@ public class PassageirosPanel extends JPanel {
                 int row = table.getSelectedRow();
                 idSelecionado = (Integer) tableModel.getValueAt(row, 0);
                 nomeField.setText((String) tableModel.getValueAt(row, 1));
-                documentoField.setText((String) tableModel.getValueAt(row, 2));
-                nacionalidadeField.setText((String) tableModel.getValueAt(row, 3));
+                tipoDocumentoCombo.setSelectedItem(tableModel.getValueAt(row, 2));
+                documentoField.setText((String) tableModel.getValueAt(row, 3));
+                nacionalidadeField.setText((String) tableModel.getValueAt(row, 4));
                 salvarButton.setText("Salvar alteração");
                 excluirButton.setVisible(true);
             }
@@ -228,24 +249,22 @@ public class PassageirosPanel extends JPanel {
         String nome = nomeField.getText().trim();
         String documento = documentoField.getText().trim();
         String nacionalidade = nacionalidadeField.getText().trim();
-
-        if (nome.isEmpty() || documento.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Preencha nome e documento!", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        TipoDocumento tipo = (TipoDocumento) tipoDocumentoCombo.getSelectedItem();
 
         try {
             if (idSelecionado == null) {
-                service.salvar(nome, documento, nacionalidade);
+                service.salvar(nome, documento, tipo, nacionalidade);
                 JOptionPane.showMessageDialog(this, "Passageiro cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                service.atualizar(idSelecionado, nome, documento, nacionalidade);
+                service.atualizar(idSelecionado, nome, documento, tipo, nacionalidade);
                 JOptionPane.showMessageDialog(this, "Passageiro atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
             carregarPassageiros();
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Aviso", JOptionPane.WARNING_MESSAGE);
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro crítico: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -274,7 +293,13 @@ public class PassageirosPanel extends JPanel {
         try {
             List<Passageiro> passageiros = service.listarTodos();
             for (Passageiro p : passageiros) {
-                tableModel.addRow(new Object[]{p.getId(), p.getNome(), p.getDocumento(), p.getNacionalidade()});
+                tableModel.addRow(new Object[]{
+                        p.getId(),
+                        p.getNome(),
+                        p.getTipoDocumento(),
+                        p.getDocumento(),
+                        p.getNacionalidade()
+                });
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -285,6 +310,7 @@ public class PassageirosPanel extends JPanel {
         idSelecionado = null;
         nomeField.setText("");
         documentoField.setText("");
+        tipoDocumentoCombo.setSelectedIndex(0);
         nacionalidadeField.setText("Brasileira");
         salvarButton.setText("Adicionar");
         excluirButton.setVisible(false);
