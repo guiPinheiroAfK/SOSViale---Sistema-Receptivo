@@ -1,7 +1,7 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.model.Motorista;
-import br.com.sosviale.repository.MotoristaRepository;
+import br.com.sosviale.service.MotoristaService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,7 +21,7 @@ public class MotoristasPanel extends JPanel {
     private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
 
-    private final MotoristaRepository repository = new MotoristaRepository();
+    private final MotoristaService service = new MotoristaService();
     private DefaultTableModel tableModel;
     private JTable table;
     private JTextField nomeField;
@@ -215,12 +215,10 @@ public class MotoristasPanel extends JPanel {
 
         try {
             if (idSelecionado == null) {
-                repository.salvar(new Motorista(nome, cnh));
+                service.salvar(nome, cnh);
                 JOptionPane.showMessageDialog(this, "Motorista cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                Motorista m = new Motorista(nome, cnh);
-                m.setId(idSelecionado);
-                repository.atualizar(m);
+                service.atualizar(idSelecionado, nome, cnh);
                 JOptionPane.showMessageDialog(this, "Motorista atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
@@ -240,7 +238,7 @@ public class MotoristasPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                repository.excluir(idSelecionado);
+                service.excluir(idSelecionado);
                 limparForm();
                 carregarMotoristas();
                 JOptionPane.showMessageDialog(this, "Motorista excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -253,7 +251,7 @@ public class MotoristasPanel extends JPanel {
     private void carregarMotoristas() {
         tableModel.setRowCount(0);
         try {
-            List<Motorista> motoristas = repository.listarTodos();
+            List<Motorista> motoristas = service.listarTodos();
             for (Motorista m : motoristas) {
                 tableModel.addRow(new Object[]{m.getId(), m.getNome(), m.getCnh()});
             }

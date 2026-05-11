@@ -1,7 +1,7 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.model.Passageiro;
-import br.com.sosviale.repository.PassageiroRepository;
+import br.com.sosviale.service.PassageiroService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,7 +21,7 @@ public class PassageirosPanel extends JPanel {
     private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
 
-    private final PassageiroRepository repository = new PassageiroRepository();
+    private final PassageiroService service = new PassageiroService();
     private DefaultTableModel tableModel;
     private JTable table;
     private JTextField nomeField;
@@ -59,7 +59,6 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 14, 0);
         form.add(title, gbc);
 
-        // Nome
         JLabel nomeLabel = new JLabel("Nome completo:");
         nomeLabel.setFont(BASE_FONT);
         nomeLabel.setForeground(MUTED_TEXT);
@@ -78,7 +77,6 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(nomeField, gbc);
 
-        // Documento
         JLabel documentoLabel = new JLabel("Documento (RG/Passaporte):");
         documentoLabel.setFont(BASE_FONT);
         documentoLabel.setForeground(MUTED_TEXT);
@@ -97,7 +95,6 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(documentoField, gbc);
 
-        // Nacionalidade
         JLabel nacionalidadeLabel = new JLabel("Nacionalidade:");
         nacionalidadeLabel.setFont(BASE_FONT);
         nacionalidadeLabel.setForeground(MUTED_TEXT);
@@ -116,7 +113,6 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(nacionalidadeField, gbc);
 
-        // Botões
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
@@ -238,16 +234,12 @@ public class PassageirosPanel extends JPanel {
             return;
         }
 
-        if (nacionalidade.isEmpty()) nacionalidade = "Brasileira";
-
         try {
             if (idSelecionado == null) {
-                repository.salvar(new Passageiro(nome, documento, nacionalidade));
+                service.salvar(nome, documento, nacionalidade);
                 JOptionPane.showMessageDialog(this, "Passageiro cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                Passageiro p = new Passageiro(nome, documento, nacionalidade);
-                p.setId(idSelecionado);
-                repository.atualizar(p);
+                service.atualizar(idSelecionado, nome, documento, nacionalidade);
                 JOptionPane.showMessageDialog(this, "Passageiro atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
@@ -267,7 +259,7 @@ public class PassageirosPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                repository.excluir(idSelecionado);
+                service.excluir(idSelecionado);
                 limparForm();
                 carregarPassageiros();
                 JOptionPane.showMessageDialog(this, "Passageiro excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -280,7 +272,7 @@ public class PassageirosPanel extends JPanel {
     private void carregarPassageiros() {
         tableModel.setRowCount(0);
         try {
-            List<Passageiro> passageiros = repository.listarTodos();
+            List<Passageiro> passageiros = service.listarTodos();
             for (Passageiro p : passageiros) {
                 tableModel.addRow(new Object[]{p.getId(), p.getNome(), p.getDocumento(), p.getNacionalidade()});
             }
