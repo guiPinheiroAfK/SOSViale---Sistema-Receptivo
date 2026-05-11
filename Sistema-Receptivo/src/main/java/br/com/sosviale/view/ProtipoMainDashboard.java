@@ -226,24 +226,7 @@ public class ProtipoMainDashboard extends JFrame {
     }
 
     private JComponent buildOrdersPage() {
-        JPanel form = formPanel("Gerar Ordem de Serviço");
-        addField(form, "Data", textField(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))), 0);
-        addField(form, "Motorista", combo("Roberto Silva", "Marcos Lima"), 1);
-        addField(form, "Veículo", combo("Mercedes Sprinter - ABC1D23", "Renault Master - XYZ4A56"), 2);
-        addField(form, "Status", combo("ABERTA", "EM ROTA", "CONCLUÍDA"), 3);
-
-        JButton generate = primaryButton("Gerar OS");
-        generate.addActionListener(e -> showMessage("OS gerada (simulada)"));
-        addActions(form, generate, outlineButton("Visualizar"));
-
-        JPanel table = new JPanel(new BorderLayout());
-        table.add(tablePanel("Transfers sem OS", new String[]{"ID", "Data", "Rota", "Passageiros"},
-                new Object[][]{
-                        {"T-1042", "29/04", "Aeroporto > Hotel", "4"},
-                        {"T-1044", "30/04", "Hotel > Aeroporto", "2"}
-                }), BorderLayout.CENTER);
-
-        return splitPage(form, table);
+        return new OrdensPanel();
     }
 
     private JComponent buildAdminPage() {
