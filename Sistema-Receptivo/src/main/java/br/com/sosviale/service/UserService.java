@@ -27,7 +27,7 @@ public class UserService {
             throw new ValidationException("Usuário já existe");
 
         User novoUser = new User(nome, usuario, senha, false);
-        novoUser.setPerfil(perfil != null ? perfil : Perfil.ATENDENTE);
+        novoUser.setPerfil(perfil != null ? perfil : Perfil.GERENTE);
         repository.salvar(novoUser);
     }
 
@@ -74,7 +74,7 @@ public class UserService {
             case "MOTORISTAS":
             case "VEICULOS":
                 // Regra: Apenas Gerente (e Admin) acessam. Atendente e Motorista ficam bloqueados.
-                if (perfil == Perfil.ATENDENTE || perfil == Perfil.MOTORISTA) {
+                if (perfil == Perfil.MOTORISTA) {
                     bloqueado = true;
                 }
                 break;

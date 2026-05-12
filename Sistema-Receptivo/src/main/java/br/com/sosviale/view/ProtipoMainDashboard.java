@@ -14,9 +14,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/*
- * MainDashboard - Interface principal do SOS VIALE
- */
+//MainDashboard - Interface principal do SOS VIALE
+
 public class ProtipoMainDashboard extends JFrame implements LanguageManager.LanguageChangeListener {
 
     private static final Color APP_BACKGROUND = new Color(244, 245, 247);
@@ -38,7 +37,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
     private final JLabel userLabel = new JLabel();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
 
-    // Componentes que serão atualizados quando o idioma muda
+    // componentes que estão sendo atualizados quando o idioma muda
     private JLabel productLabel;
     private JTextField searchField;
     private JButton logoutButton;
@@ -58,7 +57,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         setContentPane(buildShell());
         setLocationRelativeTo(null);
 
-        // Registrar como listener de mudanças de idioma
+        // registra como listener de mudanças de idioma
         LanguageManager.getInstance().addLanguageChangeListener(this);
 
         selectPage("dashboard", "menu.dashboard", "menu.dashboard.subtitle");
@@ -101,7 +100,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         userLabel.setForeground(MUTED_TEXT);
         right.add(userLabel);
 
-        // Adicionar seletor de idioma
+        // seletor de idioma
         JPanel languagePanel = createLanguageSelector();
         right.add(languagePanel);
 
@@ -139,7 +138,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         languageCombo.setBackground(PANEL_BACKGROUND);
         languageCombo.setPreferredSize(new Dimension(120, 28));
 
-        // Definir seleção inicial baseado no idioma atual
+        // para definir seleção inicial baseado no idioma atual
         languageCombo.setSelectedIndex(LanguageManager.getInstance().getCurrentLanguage().ordinal());
 
         languageCombo.addActionListener(e -> {
@@ -201,7 +200,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         String label = LanguageManager.getInstance().translate(labelKey);
         String subtitle = LanguageManager.getInstance().translate(subtitleKey);
 
-        // Armazenar para atualização posterior
+        // armazena para atualização posterior
         navLabels.put(key, labelKey);
         navSubtitles.put(key, subtitleKey);
 
@@ -252,7 +251,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         heading.add(titleStack, BorderLayout.WEST);
         heading.add(actions, BorderLayout.EAST);
 
-        // Adiciona painéis ao cardPanel
+        // adiciona painéis ao cardPanel
         cardPanel.setBackground(APP_BACKGROUND);
         cardPanel.add(buildDashboardPage(), "dashboard");
         cardPanel.add(buildPassengersPage(), "passageiros");
