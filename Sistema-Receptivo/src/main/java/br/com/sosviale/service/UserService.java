@@ -40,4 +40,61 @@ public class UserService {
     public List<User> listarTodos() {
         return repository.listarTodos();
     }
+
+    public void verificarPermissao(User usuarioLogado, String modulo) throws ValidationException {
+        if (usuarioLogado == null) {
+            throw new ValidationException("Sessão inválida. Por favor, faça login novamente.");
+        }
+
+        // 1. Painel Inicial: Acesso livre para TODOS os perfis
+        if ("dashboard".equalsIgnoreCase(modulo)) {
+            return;
+        }
+
+        Perfil perfil = usuarioLogado.getPerfil();
+
+        // 2. Administrador: Acesso global irrestrito
+        if (perfil == Perfil.ADMIN) {
+            return;
+        }
+
+        boolean bloqueado = false;
+
+        // 3. Aplicação das suas regras exatas por módulo
+        switch (modulo.toUpperCase()) {
+            case "TRANSFERS":
+            case "PASSAGEIROS":
+            case "ORDENS":
+                // Regra: Atendente e Gerente acessam. Motorista fica bloqueado.
+                if (perfil == Perfil.MOTORISTA) {
+                    bloqueado = true;
+                }
+                break;
+
+            case "MOTORISTAS":
+            case "VEICULOS":
+                // Regra: Apenas Gerente (e Admin) acessam. Atendente e Motorista ficam bloqueados.
+                if (perfil == Perfil.ATENDENTE || perfil == Perfil.MOTORISTA) {
+                    bloqueado = true;
+                }
+                break;
+
+            case "ADMIN":
+            case "USUARIOS":
+                // Regra: Apenas Admin acessa a gestão de usuários.
+                if (perfil != Perfil.ADMIN) {
+                    bloqueado = true;
+                }
+                break;
+
+            default:
+                // Segurança: Se for um módulo não mapeado, bloqueia por padrão.
+                bloqueado = true;
+        }
+
+        if (bloqueado) {
+            throw new ValidationException("Acesso negado. Você não tem permissão para acessar este módulo.");
+        }
+    }
+
 }

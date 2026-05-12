@@ -128,17 +128,6 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(20, 20, 40, 20);
         panel.add(buttonPanel, gbc);
 
-        JLabel infoLabel = new JLabel("<html><center>Teste rápido:<br>Usuário: admin | Senha: admin123</center></html>");
-        infoLabel.setFont(new Font("SansSerif", Font.ITALIC, 10));
-        infoLabel.setForeground(new Color(98, 108, 122));
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0, 20, 20, 20);
-        panel.add(infoLabel, gbc);
-
-        gbc.gridy = 5;
-        gbc.weighty = 1.0;
-        panel.add(Box.createVerticalStrut(0), gbc);
-
         return panel;
     }
 
