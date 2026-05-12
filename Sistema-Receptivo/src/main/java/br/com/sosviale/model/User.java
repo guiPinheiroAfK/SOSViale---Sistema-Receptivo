@@ -27,6 +27,10 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date criadoEm;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private Perfil perfil = Perfil.ATENDENTE;
+
     public User() {}
 
     @PrePersist
@@ -59,6 +63,9 @@ public class User {
 
     public Date getCriadoEm() { return criadoEm; }
     public void setCriadoEm(Date criadoEm) { this.criadoEm = criadoEm; }
+
+    public Perfil getPerfil() { return perfil; }
+    public void setPerfil(Perfil perfil) { this.perfil = perfil; }
 
     @Override
     public String toString() {

@@ -4,8 +4,9 @@ CREATE TABLE usuarios (
     usuario   VARCHAR(50)  NOT NULL UNIQUE,
     senha     VARCHAR(255) NOT NULL,
     is_admin  BOOLEAN      NOT NULL DEFAULT FALSE,
+    perfil    VARCHAR(20)  NOT NULL DEFAULT 'ATENDENTE',
     criado_em TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO usuarios (nome, usuario, senha, is_admin)
-VALUES ('Administrador', 'admin', 'admin123', TRUE);
+INSERT INTO usuarios (nome, usuario, senha, is_admin, perfil)
+VALUES ('Administrador', 'admin', 'admin123', TRUE, 'ADMIN');

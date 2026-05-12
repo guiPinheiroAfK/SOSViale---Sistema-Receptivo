@@ -1,5 +1,6 @@
 package br.com.sosviale.auth;
 
+import br.com.sosviale.model.Perfil;
 import br.com.sosviale.model.User;
 import br.com.sosviale.repository.UserRepository;
 
@@ -8,9 +9,6 @@ public class AuthenticationService {
     private final UserRepository userRepository = new UserRepository();
     private User currentUser;
 
-    /*
-     * Realiza login do usuário
-     */
     public void login(String usuario, String senha) throws AuthenticationException {
         if (usuario == null || senha == null || usuario.trim().isEmpty()) {
             throw new AuthenticationException("Usuário e senha são obrigatórios");
@@ -25,19 +23,14 @@ public class AuthenticationService {
         this.currentUser = user;
     }
 
-    /*
-     * Registra novo usuário (requer senha do admin)
-     */
-    public void registrarUsuario(String nome, String usuario, String senha, String senhaAdmin)
+    public void registrarUsuario(String nome, String usuario, String senha, String senhaAdmin, Perfil perfil)
             throws AuthenticationException, ValidationException {
 
-        // Valida senha do admin
         User admin = userRepository.buscarAdmin();
         if (admin == null || !admin.getSenha().equals(senhaAdmin)) {
             throw new AuthenticationException("Senha do administrador incorreta");
         }
 
-        // Validações
         if (usuario == null || usuario.trim().isEmpty()) {
             throw new ValidationException("Usuário não pode estar vazio");
         }
@@ -48,7 +41,9 @@ public class AuthenticationService {
             throw new ValidationException("Usuário já existe");
         }
 
-        userRepository.salvar(new User(nome, usuario, senha, false));
+        User novoUser = new User(nome, usuario, senha, false);
+        novoUser.setPerfil(perfil != null ? perfil : Perfil.ATENDENTE);
+        userRepository.salvar(novoUser);
     }
 
     public boolean isAuthenticated() {
@@ -61,6 +56,10 @@ public class AuthenticationService {
 
     public boolean isAdmin() {
         return currentUser != null && currentUser.isAdmin();
+    }
+
+    public Perfil getPerfil() {
+        return currentUser != null ? currentUser.getPerfil() : null;
     }
 
     public void logout() {
