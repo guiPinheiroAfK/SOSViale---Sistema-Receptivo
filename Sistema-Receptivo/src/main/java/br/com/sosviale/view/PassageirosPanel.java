@@ -8,10 +8,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.util.List;
 
@@ -65,7 +61,6 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 14, 0);
         form.add(title, gbc);
 
-        // Nome
         JLabel nomeLabel = new JLabel("Nome completo:");
         nomeLabel.setFont(BASE_FONT);
         nomeLabel.setForeground(MUTED_TEXT);
@@ -84,7 +79,7 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(nomeField, gbc);
 
-        // Tipo de Documento
+        // NOVO: Label para o Tipo de Documento
         JLabel tipoLabel = new JLabel("Tipo de Documento:");
         tipoLabel.setFont(BASE_FONT);
         tipoLabel.setForeground(MUTED_TEXT);
@@ -92,15 +87,15 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(10, 0, 4, 0);
         form.add(tipoLabel, gbc);
 
+        // NOVO: ComboBox preenchido com o Enum
         tipoDocumentoCombo = new JComboBox<>(TipoDocumento.values());
         tipoDocumentoCombo.setFont(BASE_FONT);
-        tipoDocumentoCombo.setBackground(PANEL_BACKGROUND);
-        tipoDocumentoCombo.setOpaque(true);
+        tipoDocumentoCombo.setBackground(Color.WHITE);
+        tipoDocumentoCombo.setPreferredSize(new Dimension(0, 34));
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(tipoDocumentoCombo, gbc);
 
-        // Documento
         JLabel documentoLabel = new JLabel("Número do Documento:");
         documentoLabel.setFont(BASE_FONT);
         documentoLabel.setForeground(MUTED_TEXT);
@@ -115,24 +110,10 @@ public class PassageirosPanel extends JPanel {
                 BorderFactory.createLineBorder(BORDER_COLOR),
                 new EmptyBorder(0, 8, 0, 8)
         ));
-        AbstractDocument doc = (AbstractDocument) documentoField.getDocument();
-        doc.setDocumentFilter(new DocumentFilter() {
-            @Override
-            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
-                    throws BadLocationException {
-                int currentLength = fb.getDocument().getLength();
-                if ((currentLength + text.length() - length) <= 15) {
-                    super.replace(fb, offset, length, text, attrs);
-                } else {
-                    Toolkit.getDefaultToolkit().beep();
-                }
-            }
-        });
         gbc.gridy = 6;
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(documentoField, gbc);
 
-        // Nacionalidade
         JLabel nacionalidadeLabel = new JLabel("Nacionalidade:");
         nacionalidadeLabel.setFont(BASE_FONT);
         nacionalidadeLabel.setForeground(MUTED_TEXT);
@@ -151,7 +132,6 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(nacionalidadeField, gbc);
 
-        // Botões
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
@@ -218,8 +198,8 @@ public class PassageirosPanel extends JPanel {
         title.setForeground(TEXT_COLOR);
         panel.add(title, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(
-                new String[]{"ID", "Nome", "Tipo", "Documento", "Nacionalidade"}, 0) {
+        // ATUALIZADO: Adicionada a coluna "Tipo"
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "Tipo", "Documento", "Nacionalidade"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -271,11 +251,6 @@ public class PassageirosPanel extends JPanel {
         String nacionalidade = nacionalidadeField.getText().trim();
         TipoDocumento tipo = (TipoDocumento) tipoDocumentoCombo.getSelectedItem();
 
-        if (nome.isEmpty() || documento.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Preencha nome e documento!", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
         try {
             if (idSelecionado == null) {
                 service.salvar(nome, documento, tipo, nacionalidade);
@@ -289,7 +264,7 @@ public class PassageirosPanel extends JPanel {
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Aviso", JOptionPane.WARNING_MESSAGE);
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro crítico: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -316,11 +291,14 @@ public class PassageirosPanel extends JPanel {
     private void carregarPassageiros() {
         tableModel.setRowCount(0);
         try {
-            List<Passageiro> lista = service.listarTodos();
-            for (Passageiro p : lista) {
+            List<Passageiro> passageiros = service.listarTodos();
+            for (Passageiro p : passageiros) {
                 tableModel.addRow(new Object[]{
-                        p.getId(), p.getNome(), p.getTipoDocumento(),
-                        p.getDocumento(), p.getNacionalidade()
+                        p.getId(),
+                        p.getNome(),
+                        p.getTipoDocumento(),
+                        p.getDocumento(),
+                        p.getNacionalidade()
                 });
             }
         } catch (Exception e) {

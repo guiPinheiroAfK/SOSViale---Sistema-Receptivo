@@ -3,13 +3,16 @@ package br.com.sosviale.view;
 import br.com.sosviale.auth.AuthenticationException;
 import br.com.sosviale.auth.AuthenticationService;
 import br.com.sosviale.auth.ValidationException;
-import br.com.sosviale.model.Perfil;
-import br.com.sosviale.service.UserService;
+import br.com.sosviale.i18n.LanguageManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+/*
+ * Tela de Login do SOS VIALE
+ * Integrada com AuthenticationService
+ */
 public class LoginScreen extends JFrame {
 
     private static final Color PRIMARY_BLUE = new Color(50, 91, 140);
@@ -20,7 +23,6 @@ public class LoginScreen extends JFrame {
     private static final Font LABEL_FONT = new Font("SansSerif", Font.BOLD, 12);
 
     private final AuthenticationService authService;
-    private final UserService userService = new UserService();
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
@@ -41,6 +43,7 @@ public class LoginScreen extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
 
+        // Painel com CardLayout para trocar entre Login e Registro
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
         mainPanel.setBackground(BACKGROUND);
@@ -52,6 +55,9 @@ public class LoginScreen extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Cria painel de login
+     */
     private JPanel createLoginPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(BACKGROUND);
@@ -60,6 +66,7 @@ public class LoginScreen extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
+        // Logo/Título
         JLabel titleLabel = new JLabel("SOS VIALE");
         titleLabel.setFont(TITLE_FONT);
         titleLabel.setForeground(PRIMARY_BLUE);
@@ -76,8 +83,10 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(0, 20, 40, 20);
         panel.add(subtitleLabel, gbc);
 
+        // Card de Login
         JPanel loginCard = createCard();
 
+        // Username
         JLabel usernameLabel = new JLabel("Usuário:");
         usernameLabel.setFont(LABEL_FONT);
         usernameLabel.setForeground(new Color(38, 43, 51));
@@ -87,6 +96,7 @@ public class LoginScreen extends JFrame {
         usernameField.setText("admin");
         loginCard.add(usernameField);
 
+        // Password
         JLabel passwordLabel = new JLabel("Senha:");
         passwordLabel.setFont(LABEL_FONT);
         passwordLabel.setForeground(new Color(38, 43, 51));
@@ -100,9 +110,11 @@ public class LoginScreen extends JFrame {
                 BorderFactory.createLineBorder(new Color(210, 214, 220)),
                 new EmptyBorder(8, 8, 8, 8)
         ));
+
         passwordField.addActionListener(e -> performLogin());
         loginCard.add(passwordField);
 
+        // Erro
         errorLabel = new JLabel();
         errorLabel.setForeground(new Color(200, 50, 50));
         errorLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
@@ -113,6 +125,7 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(20, 20, 20, 20);
         panel.add(loginCard, gbc);
 
+        // Botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -128,9 +141,26 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(20, 20, 40, 20);
         panel.add(buttonPanel, gbc);
 
+        // Info para teste
+        JLabel infoLabel = new JLabel("<html><center>Teste rápido:<br>Usuário: admin | Senha: admin123<br>" +
+                "Clique em 'Criar conta' com senha: admin123</center></html>");
+        infoLabel.setFont(new Font("SansSerif", Font.ITALIC, 10));
+        infoLabel.setForeground(new Color(98, 108, 122));
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 20, 20, 20);
+        panel.add(infoLabel, gbc);
+
+        // Espaço vazio no final
+        gbc.gridy = 5;
+        gbc.weighty = 1.0;
+        panel.add(Box.createVerticalStrut(0), gbc);
+
         return panel;
     }
 
+    /**
+     * Cria painel de registro
+     */
     private JPanel createRegisterPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(BACKGROUND);
@@ -139,6 +169,7 @@ public class LoginScreen extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
+        // Título
         JLabel titleLabel = new JLabel("Criar Conta");
         titleLabel.setFont(TITLE_FONT);
         titleLabel.setForeground(PRIMARY_BLUE);
@@ -147,8 +178,10 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(40, 20, 20, 20);
         panel.add(titleLabel, gbc);
 
+        // Card de Registro
         JPanel registerCard = createCard();
 
+        // Nome
         JLabel nameLabel = new JLabel("Nome completo:");
         nameLabel.setFont(LABEL_FONT);
         registerCard.add(nameLabel);
@@ -156,6 +189,7 @@ public class LoginScreen extends JFrame {
         JTextField nameField = createTextField();
         registerCard.add(nameField);
 
+        // Username
         JLabel usernameLabel = new JLabel("Usuário:");
         usernameLabel.setFont(LABEL_FONT);
         registerCard.add(usernameLabel);
@@ -163,6 +197,7 @@ public class LoginScreen extends JFrame {
         JTextField regUsernameField = createTextField();
         registerCard.add(regUsernameField);
 
+        // Password
         JLabel passwordLabel = new JLabel("Senha:");
         passwordLabel.setFont(LABEL_FONT);
         registerCard.add(passwordLabel);
@@ -176,17 +211,7 @@ public class LoginScreen extends JFrame {
         ));
         registerCard.add(regPasswordField);
 
-        JLabel perfilLabel = new JLabel("Perfil:");
-        perfilLabel.setFont(LABEL_FONT);
-        registerCard.add(perfilLabel);
-
-        JComboBox<Perfil> perfilCombo = new JComboBox<>(new Perfil[]{
-                Perfil.ATENDENTE, Perfil.GERENTE, Perfil.MOTORISTA
-        });
-        perfilCombo.setFont(TEXT_FONT);
-        perfilCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
-        registerCard.add(perfilCombo);
-
+        // Admin Password
         JLabel adminPasswordLabel = new JLabel("Senha do Admin:");
         adminPasswordLabel.setFont(LABEL_FONT);
         adminPasswordLabel.setForeground(new Color(200, 50, 50));
@@ -201,6 +226,7 @@ public class LoginScreen extends JFrame {
         ));
         registerCard.add(adminPasswordField);
 
+        // Erro
         JLabel registerErrorLabel = new JLabel();
         registerErrorLabel.setForeground(new Color(200, 50, 50));
         registerErrorLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
@@ -211,6 +237,7 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(20, 20, 20, 20);
         panel.add(registerCard, gbc);
 
+        // Botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -221,14 +248,13 @@ public class LoginScreen extends JFrame {
                 String username = regUsernameField.getText().trim();
                 String password = new String(regPasswordField.getPassword()).trim();
                 String adminPassword = new String(adminPasswordField.getPassword()).trim();
-                Perfil perfil = (Perfil) perfilCombo.getSelectedItem();
 
                 if (name.isEmpty() || username.isEmpty() || password.isEmpty()) {
                     registerErrorLabel.setText("Preencha todos os campos");
                     return;
                 }
 
-                userService.registrar(name, username, password, adminPassword, perfil);
+                authService.registrarUsuario(name, username, password, adminPassword);
                 JOptionPane.showMessageDialog(
                         LoginScreen.this,
                         "Conta criada com sucesso!\nAgora faça login.",
@@ -240,7 +266,6 @@ public class LoginScreen extends JFrame {
                 regUsernameField.setText("");
                 regPasswordField.setText("");
                 adminPasswordField.setText("");
-                registerErrorLabel.setText("");
             } catch (AuthenticationException | ValidationException ex) {
                 registerErrorLabel.setText(ex.getMessage());
             }
@@ -262,6 +287,7 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(20, 20, 40, 20);
         panel.add(buttonPanel, gbc);
 
+        // Espaço vazio no final
         gbc.gridy = 3;
         gbc.weighty = 1.0;
         panel.add(Box.createVerticalStrut(0), gbc);
@@ -269,6 +295,9 @@ public class LoginScreen extends JFrame {
         return panel;
     }
 
+    /**
+     * Realiza login
+     */
     private void performLogin() {
         String username = usernameField.getText().trim();
         String password = new String(passwordField.getPassword()).trim();
@@ -280,8 +309,10 @@ public class LoginScreen extends JFrame {
 
         try {
             authService.login(username, password);
+            // Login bem-sucedido - notifica listener
             SwingUtilities.invokeLater(() -> {
                 dispose();
+                // Dispara evento para abrir MainDashboard
                 if (loginCallback != null) {
                     loginCallback.onLoginSuccess(username);
                 }
@@ -292,6 +323,8 @@ public class LoginScreen extends JFrame {
             passwordField.requestFocus();
         }
     }
+
+    // ===== Helper Methods =====
 
     private JPanel createCard() {
         JPanel card = new JPanel();
@@ -322,7 +355,6 @@ public class LoginScreen extends JFrame {
         button.setBackground(PRIMARY_BLUE);
         button.setForeground(WHITE);
         button.setFocusPainted(false);
-        button.setOpaque(true);
         button.setBorder(BorderFactory.createEmptyBorder(10, 24, 10, 24));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
@@ -334,12 +366,14 @@ public class LoginScreen extends JFrame {
         button.setBackground(BACKGROUND);
         button.setForeground(PRIMARY_BLUE);
         button.setFocusPainted(false);
-        button.setOpaque(true);
         button.setBorder(BorderFactory.createLineBorder(PRIMARY_BLUE, 1));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
     }
 
+    /*
+     * Callback para quando login é bem-sucedido
+     */
     public interface LoginCallback {
         void onLoginSuccess(String username);
     }
