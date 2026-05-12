@@ -194,6 +194,7 @@ public class ProtipoMainDashboard extends JFrame {
         // Adiciona painéis ao cardPanel
         cardPanel.setBackground(APP_BACKGROUND);
         cardPanel.add(buildDashboardPage(), "dashboard");
+        cardPanel.add(new TransfersPanel(), "transfers");
         cardPanel.add(buildPassengersPage(), "passageiros");
         cardPanel.add(buildDriversPage(), "motoristas");
         cardPanel.add(buildVehiclesPage(), "veiculos");
@@ -212,6 +213,8 @@ public class ProtipoMainDashboard extends JFrame {
     private JComponent buildDashboardPage() {
         return new DashboardPanel();
     }
+
+    private JComponent buildTransfersPage() { return new TransfersPanel(); }
 
     private JComponent buildPassengersPage() {
         return new PassageirosPanel();
