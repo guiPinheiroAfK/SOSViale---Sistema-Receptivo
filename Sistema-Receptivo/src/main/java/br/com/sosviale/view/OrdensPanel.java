@@ -97,7 +97,7 @@ public class OrdensPanel extends JPanel {
         btnMontarRota.addActionListener(e -> selecionarOSParaMontagem());
 
         JButton btnGerarPdf = new JButton("Gerar PDF da OS");
-        btnGerarPdf.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chamar emissão de PDF..."));
+        btnGerarPdf.addActionListener(e -> gerarPdfDaOsSelecionada());
 
         actions.add(btnMontarRota);
         actions.add(btnGerarPdf);
@@ -216,4 +216,29 @@ public class OrdensPanel extends JPanel {
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
+
+    private void gerarPdfDaOsSelecionada() {
+        int selectedRow = osTable.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione uma OS na tabela primeiro.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Pega o ID da linha selecionada
+        Integer idOs = (Integer) osTableModel.getValueAt(selectedRow, 0);
+
+        // Busca a OS completa do banco usando o seu Service
+        OrdemServico os = osService.buscarPorId(idOs);
+
+        if (os != null) {
+            try {
+                // Chama a classe utilitária e pega o caminho onde foi salvo
+                String caminhoSalvo = br.com.sosviale.util.PdfItext.gerarPdfOs(os);
+                JOptionPane.showMessageDialog(this, "PDF gerado com sucesso!\nSalvo em: " + caminhoSalvo, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Erro ao gerar PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
 }
