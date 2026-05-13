@@ -11,7 +11,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-/**
+/*
  * Tela de Login do SOS VIALE.
  * Gerencia a autenticação e o registro de novos usuários com suporte a i18n.
  */
@@ -39,16 +39,17 @@ public class LoginScreen extends JFrame {
         initializeUI();
     }
 
-    /**
+    /*
      * Inicializa a interface principal e o sistema de troca de telas (CardLayout).
      */
     private void initializeUI() {
         setTitle("SOS VIALE - Login");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(450, 600);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(450, 550);
         setLocationRelativeTo(null);
         setResizable(false);
 
+        // Painel com CardLayout para trocar entre Login e Registro
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
         mainPanel.setBackground(BACKGROUND);
@@ -60,7 +61,7 @@ public class LoginScreen extends JFrame {
         setVisible(true);
     }
 
-    /**
+    /*
      * Cria o painel de login com campos pré-preenchidos para facilitar testes.
      */
     private JPanel createLoginPanel() {
@@ -71,6 +72,7 @@ public class LoginScreen extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
+        // logo/título
         JLabel titleLabel = new JLabel("SOS VIALE");
         titleLabel.setFont(TITLE_FONT);
         titleLabel.setForeground(PRIMARY_BLUE);
@@ -87,6 +89,7 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(0, 20, 40, 20);
         panel.add(subtitleLabel, gbc);
 
+        // Card de Login
         JPanel loginCard = createCard();
 
         JLabel usernameLabel = new JLabel("Usuário:");
@@ -114,6 +117,7 @@ public class LoginScreen extends JFrame {
         passwordField.addActionListener(e -> performLogin());
         loginCard.add(passwordField);
 
+        // Erro
         errorLabel = new JLabel();
         errorLabel.setForeground(new Color(200, 50, 50));
         errorLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
@@ -124,6 +128,7 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(20, 20, 20, 20);
         panel.add(loginCard, gbc);
 
+        // Botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -142,7 +147,7 @@ public class LoginScreen extends JFrame {
         return panel;
     }
 
-    /**
+    /*
      * Cria o painel de registro de novos usuários.
      */
     private JPanel createRegisterPanel() {
