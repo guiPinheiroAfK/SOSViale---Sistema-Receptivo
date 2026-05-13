@@ -22,7 +22,6 @@ public class DocumentoValidator {
     private static boolean validarCPF(String cpf) {
         // Bloqueia se não tiver 11 dígitos ou se for sequência repetida
         if (!cpf.matches("\\d{11}") || cpf.matches("(\\d)\\1{10}")) return false;
-
         try {
             int d1 = 0, d2 = 0, p1 = 10, p2 = 11;
 
@@ -42,7 +41,7 @@ public class DocumentoValidator {
     }
 
     private static boolean validarRG(String rg) {
-        // Aceita de 7 a 9 caracteres, bloqueia repetidos e permite 'X' no final
+        // Aceita de 7 a 9 caracteres, bloqueia repetidos e permite 'X' no final;
         if (rg.length() < 7 || rg.length() > 9) return false;
         if (rg.matches("(\\w)\\1{6,8}")) return false;
         return rg.matches("\\d+[0-9X]?");

@@ -165,12 +165,13 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         nav.add(menuLabel);
         nav.add(Box.createVerticalStrut(10));
 
-        addNavButton(nav, "dashboard", "menu.dashboard", "menu.dashboard.subtitle");
-        addNavButton(nav, "transfers", "menu.transfers", "menu.transfers.subtitle");
-        addNavButton(nav, "passageiros", "menu.passengers", "menu.passengers.subtitle");
-        addNavButton(nav, "motoristas", "menu.drivers", "menu.drivers.subtitle");
-        addNavButton(nav, "veiculos", "menu.vehicles", "menu.vehicles.subtitle");
-        addNavButton(nav, "ordens", "menu.orders", "menu.orders.subtitle");
+        addNavButton(nav, "dashboard",      "menu.dashboard",       "menu.dashboard.subtitle");
+        addNavButton(nav, "transfers",      "menu.transfers",       "menu.transfers.subtitle");
+        addNavButton(nav, "passageiros",    "menu.passengers",      "menu.passengers.subtitle");
+        addNavButton(nav, "motoristas",     "menu.drivers",         "menu.drivers.subtitle");
+        addNavButton(nav, "veiculos",       "menu.vehicles",        "menu.vehicles.subtitle");
+        addNavButton(nav, "ordens",         "menu.orders",          "menu.orders.subtitle");
+        addNavButton(nav, "pontosColeta",   "menu.pontosColeta",    "menu.pontosColeta.subtitle");
 
         if (authService.isAdmin()) {
             nav.add(Box.createVerticalStrut(14));
@@ -217,7 +218,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         button.setFont(BASE_FONT);
         button.addActionListener(event -> {
             String cleanedLabel = LanguageManager.getInstance().translate(labelKey)
-                    .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim();
+                    .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊📍]", "").trim();
             String cleanedSubtitle = LanguageManager.getInstance().translate(subtitleKey);
             selectPage(key, labelKey, subtitleKey);
         });
@@ -253,11 +254,13 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
 
         // adiciona painéis ao cardPanel
         cardPanel.setBackground(APP_BACKGROUND);
-        cardPanel.add(buildDashboardPage(), "dashboard");
-        cardPanel.add(buildPassengersPage(), "passageiros");
-        cardPanel.add(buildDriversPage(), "motoristas");
-        cardPanel.add(buildVehiclesPage(), "veiculos");
-        cardPanel.add(buildOrdersPage(), "ordens");
+        cardPanel.add(buildDashboardPage(),       "dashboard");
+        cardPanel.add(buildPassengersPage(),      "passageiros");
+        cardPanel.add(buildDriversPage(),         "motoristas");
+        cardPanel.add(buildVehiclesPage(),        "veiculos");
+        cardPanel.add(buildOrdersPage(),          "ordens");
+        cardPanel.add(buildTransferPage(),        "transfers");
+        cardPanel.add(buildPontosColetaPage(),    "pontosColeta");
         if (authService.isAdmin()) {
             cardPanel.add(buildAdminPage(), "admin");
         }
@@ -287,6 +290,14 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
 
     private JComponent buildOrdersPage() {
         return new OrdensPanel();
+    }
+
+    private JComponent buildPontosColetaPage() {
+        return new PontosColetaPanel();
+    }
+
+    private JComponent buildTransferPage() {
+        return new TransfersPanel();
     }
 
     private JComponent buildAdminPage() {
@@ -488,7 +499,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
 
     private void selectPage(String key, String titleKey, String subtitleKey) {
         String title = LanguageManager.getInstance().translate(titleKey)
-                .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim();
+                .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊📍]", "").trim();
         String subtitle = LanguageManager.getInstance().translate(subtitleKey);
 
         pageTitle.setText(title);
@@ -546,7 +557,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
             String subtitleKey = navSubtitles.get(currentNavKey);
             if (titleKey != null && subtitleKey != null) {
                 String title = LanguageManager.getInstance().translate(titleKey)
-                        .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim();
+                        .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊📍]", "").trim();
                 String subtitle = LanguageManager.getInstance().translate(subtitleKey);
                 pageTitle.setText(title);
                 pageSubtitle.setText(subtitle);

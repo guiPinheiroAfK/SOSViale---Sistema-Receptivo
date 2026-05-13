@@ -294,8 +294,11 @@ public class PathFindingTest {
         veiculo.setPlaca("ABC1D23");
         veiculo.setCapacidade(15);
 
+        LocalDateTime agendamento = LocalDateTime.now().plusHours(2);
+
         Transfer transfer = new Transfer(
-                LocalDateTime.now().plusHours(2),
+                agendamento.toLocalDate(),           // Extrai a Data (LocalDate)
+                agendamento.toLocalTime(),           // Extrai a Hora (LocalTime)
                 "Ponto de Partida (Base)",
                 nomeDestino,
                 new BigDecimal("250.00")

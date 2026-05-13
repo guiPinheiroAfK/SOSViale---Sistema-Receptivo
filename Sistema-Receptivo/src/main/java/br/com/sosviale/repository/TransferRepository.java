@@ -5,10 +5,12 @@ import br.com.sosviale.model.Transfer;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-// DAO responsável pelas operações de persistência da entidade Transfer
+/*
+ * DAO responsável pelas operações de persistência da entidade Transfer.
+ * Atualizado para refletir a separação de data e hora.
+ */
 public class TransferRepository {
 
-    // persiste um novo transfer no banco
     public void salvar(Transfer transfer) {
         if (transfer == null) throw new IllegalArgumentException("transfer não pode ser nulo.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -27,18 +29,20 @@ public class TransferRepository {
         }
     }
 
-    // retorna todos os transfers cadastrados
+    /*
+     * Retorna todos os transfers ordenados por data e depois por hora.
+     */
     public List<Transfer> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery("SELECT t FROM Transfer t ORDER BY t.dataHora ASC", Transfer.class)
+            // Atualizado: agora ordena primeiro pela data e depois pela hora
+            return em.createQuery("SELECT t FROM Transfer t ORDER BY t.dataTransfer ASC, t.horaTransfer ASC", Transfer.class)
                     .getResultList();
         } finally {
             em.close();
         }
     }
 
-    // atualiza os dados de um transfer existente (origem, destino, valor, status, etc.)
     public void atualizar(Transfer transfer) {
         if (transfer == null || transfer.getId() == null)
             throw new IllegalArgumentException("transfer inválido para atualização.");
@@ -55,8 +59,8 @@ public class TransferRepository {
         }
     }
 
-    // remove um transfer pelo ID; ignorado silenciosamente se não existir
-    public void excluir(Long id) {
+    // Ajustado para Integer para coincidir com a Entidade
+    public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -74,8 +78,7 @@ public class TransferRepository {
         }
     }
 
-    // conta o total de passageiros em transfers agendados para um determinado veículo
-    public int contarPassageirosPorVeiculo(Long veiculoId) {
+    public int contarPassageirosPorVeiculo(Integer veiculoId) {
         if (veiculoId == null || veiculoId <= 0)
             throw new IllegalArgumentException("ID de veículo inválido.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -92,8 +95,7 @@ public class TransferRepository {
         }
     }
 
-    // busca um transfer pelo ID; retorna null se não encontrado
-    public Transfer buscarPorId(Long id) {
+    public Transfer buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -103,7 +105,6 @@ public class TransferRepository {
         }
     }
 
-    // conta transfers que ainda não têm OS vinculada
     public long contarSemOrdemServico() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -114,5 +115,4 @@ public class TransferRepository {
             em.close();
         }
     }
-
 }
