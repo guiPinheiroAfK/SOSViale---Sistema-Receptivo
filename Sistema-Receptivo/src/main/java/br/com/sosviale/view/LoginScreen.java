@@ -337,9 +337,8 @@ public class LoginScreen extends JFrame {
         return button;
     }
 
-    /**
-     * Interface de callback para sucesso no login.
-     */
+    // Interface de callback para sucesso no login.
+
     public interface LoginCallback {
         void onLoginSuccess(String username);
     }

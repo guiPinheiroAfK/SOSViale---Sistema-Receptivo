@@ -49,4 +49,9 @@ public class Passageiro {
 
     public String getNacionalidade() { return nacionalidade; }
     public void setNacionalidade(String nacionalidade) { this.nacionalidade = nacionalidade; }
+
+    @Override
+    public String toString() {
+        return this.nome;
+    }
 }

@@ -5,10 +5,8 @@ import br.com.sosviale.model.Transfer;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-/*
- * DAO responsável pelas operações de persistência da entidade Transfer.
- * Atualizado para refletir a separação de data e hora.
- */
+// DAO responsável pelas operações de persistência da entidade Transfer.
+
 public class TransferRepository {
 
     public void salvar(Transfer transfer) {
@@ -29,9 +27,8 @@ public class TransferRepository {
         }
     }
 
-    /*
-     * Retorna todos os transfers ordenados por data e depois por hora.
-     */
+    // retorna todos os transfers ordenados por data e depois por hora.
+
     public List<Transfer> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -59,7 +56,6 @@ public class TransferRepository {
         }
     }
 
-    // Ajustado para Integer para coincidir com a Entidade
     public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();

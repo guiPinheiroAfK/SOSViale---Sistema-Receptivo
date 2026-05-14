@@ -1,6 +1,7 @@
 package br.com.sosviale.model;
 
 import br.com.sosviale.service.StatusTransfer;
+import jakarta.persistence.Transient;
 import br.com.sosviale.service.Moeda;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -12,6 +13,12 @@ import java.util.List;
 @Entity
 @Table(name = "transfers")
 public class Transfer {
+
+    @Transient
+    private boolean notificado = false;
+
+    public boolean isNotificado() { return notificado; }
+    public void setNotificado(boolean notificado) { this.notificado = notificado; }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

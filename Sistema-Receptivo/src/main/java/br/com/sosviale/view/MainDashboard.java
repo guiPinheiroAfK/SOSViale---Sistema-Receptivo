@@ -3,6 +3,8 @@ package br.com.sosviale.view;
 import br.com.sosviale.auth.AuthenticationService;
 import br.com.sosviale.i18n.LanguageManager;
 
+import br.com.sosviale.service.TransferService;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -42,7 +44,7 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
     private final Map<String, String> navLabels    = new LinkedHashMap<>();
     private final Map<String, String> navSubtitles = new LinkedHashMap<>();
 
-    public MainDashboard(AuthenticationService authService) {
+    public MainDashboard(AuthenticationService authService, TransferService transferService) {
         this.authService = authService;
         configureLookAndFeel();
         setTitle("SOS VIALE - Sistema Receptivo");
@@ -51,6 +53,9 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         setContentPane(buildShell());
         setLocationRelativeTo(null);
         LanguageManager.getInstance().addLanguageChangeListener(this);
+
+        //NotificationService notificationService = new NotificationService(transferService);
+        //notificationService.startMonitoring();
 
         selectPage("dashboard", "📊 Painel Inicial", "menu.dashboard.subtitle");
     }
@@ -305,7 +310,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
             dispose();
             SwingUtilities.invokeLater(() -> {
                 LoginScreen ls = new LoginScreen(authService);
-                ls.setLoginCallback(u -> new MainDashboard(authService).setVisible(true));
+                TransferService transferService = new TransferService();
+                ls.setLoginCallback(u -> new MainDashboard(authService, transferService).setVisible(true));
                 ls.setVisible(true);
             });
         }

@@ -55,7 +55,7 @@ public class OrdemServicoService {
         }
     }
 
-    /**
+    /*
      * Otimiza a rota da Ordem de Serviço, gera as paradas agrupadas e salva no banco.
      *
      * @param osId ID da Ordem de Serviço
