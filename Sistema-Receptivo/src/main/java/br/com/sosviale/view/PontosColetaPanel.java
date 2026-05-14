@@ -13,20 +13,12 @@ import java.awt.*;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
+/*
  * Painel de gerenciamento de Pontos de Coleta.
  *
- * <p>Exibe todos os pontos de coleta cadastrados, permitindo criar, editar
+ * exibe todos os pontos de coleta cadastrados, permitindo criar, editar
  * e excluir registros vinculados a transfers. Integra-se ao módulo de navegação
  * principal ({@link ProtipoMainDashboard}) como item de menu independente.
- *
- * <p><b>Responsabilidades:</b>
- * <ul>
- *   <li>Listar pontos de coleta com transfer de origem, local, hora e coordenadas.</li>
- *   <li>Cadastrar novos pontos vinculados a um transfer existente.</li>
- *   <li>Editar local, horário e coordenadas de pontos existentes.</li>
- *   <li>Excluir pontos de coleta com confirmação do usuário.</li>
- * </ul>
  */
 public class PontosColetaPanel extends JPanel {
 
@@ -48,7 +40,7 @@ public class PontosColetaPanel extends JPanel {
     private final PontoColetaService pcService      = new PontoColetaService();
     private final TransferService    transferService = new TransferService();
 
-    // ─── Componentes ──────────────────────────────────────────────────────────
+    // Componentes
     private DefaultTableModel tableModel;
     private JTable            table;
     private JTextField        fieldLocal;
@@ -58,13 +50,12 @@ public class PontosColetaPanel extends JPanel {
     private JTextField        fieldLng;
     private JComboBox<TransferItem> comboTransfers;
 
-    // ─── Estado ───────────────────────────────────────────────────────────────
-    /** ID do ponto em edição; null = modo criação. */
+    // ─── Estado
+    /* ID do ponto em edição; null = modo criação. */
     private Long editandoId = null;
 
-    // =========================================================================
+
     // Construção
-    // =========================================================================
 
     public PontosColetaPanel() {
         setLayout(new BorderLayout(14, 0));
@@ -239,7 +230,6 @@ public class PontosColetaPanel extends JPanel {
                             pc.getId(),
                             "#" + t.getId() + " — " + t.getOrigem(),
                             pc.getLocalColeta(),
-                            pc.getOrdemParada(),
                             pc.getHorarioPrevisto() != null ? pc.getHorarioPrevisto().toString() : "—",
                             pc.getLatitude()  != null ? String.format("%.4f", pc.getLatitude())  : "—",
                             pc.getLongitude() != null ? String.format("%.4f", pc.getLongitude()) : "—"
@@ -279,7 +269,6 @@ public class PontosColetaPanel extends JPanel {
 
             pc.setTransfer(transferSelecionado.transfer);
             pc.setLocalColeta(local);
-            pc.setOrdemParada(Integer.parseInt(ordemStr));
             pc.setHorarioPrevisto(parseHorario(fieldHorario.getText().trim()));
             pc.setLatitude(parseDouble(fieldLat.getText().trim()));
             pc.setLongitude(parseDouble(fieldLng.getText().trim()));
@@ -341,7 +330,6 @@ public class PontosColetaPanel extends JPanel {
             if (pc == null) return;
 
             fieldLocal.setText(pc.getLocalColeta());
-            fieldOrdem.setText(String.valueOf(pc.getOrdemParada()));
             fieldHorario.setText(pc.getHorarioPrevisto() != null ? pc.getHorarioPrevisto().toString() : "");
             fieldLat.setText(pc.getLatitude()  != null ? String.valueOf(pc.getLatitude())  : "");
             fieldLng.setText(pc.getLongitude() != null ? String.valueOf(pc.getLongitude()) : "");

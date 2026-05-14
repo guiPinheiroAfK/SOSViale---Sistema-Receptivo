@@ -128,7 +128,7 @@ public class LoginScreen extends JFrame {
         gbc.insets = new Insets(20, 20, 20, 20);
         panel.add(loginCard, gbc);
 
-        // Botões
+        // botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -158,6 +158,7 @@ public class LoginScreen extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
+        // título
         JLabel titleLabel = new JLabel("Criar Conta");
         titleLabel.setFont(TITLE_FONT);
         titleLabel.setForeground(PRIMARY_BLUE);
@@ -219,6 +220,7 @@ public class LoginScreen extends JFrame {
         ));
         registerCard.add(adminPasswordField);
 
+        // Erro
         JLabel registerErrorLabel = new JLabel();
         registerErrorLabel.setForeground(new Color(200, 50, 50));
         registerErrorLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
@@ -228,7 +230,7 @@ public class LoginScreen extends JFrame {
         gbc.gridy = 1;
         gbc.insets = new Insets(20, 20, 20, 20);
         panel.add(registerCard, gbc);
-
+        // botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -256,7 +258,14 @@ public class LoginScreen extends JFrame {
         buttonPanel.add(registerSubmitButton);
 
         JButton backButton = createSecondaryButton("Voltar");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "login"));
+        backButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "login");
+            nameField.setText("");
+            regUsernameField.setText("");
+            regPasswordField.setText("");
+            adminPasswordField.setText("");
+            registerErrorLabel.setText("");
+        });
         buttonPanel.add(backButton);
 
         gbc.gridy = 2;
@@ -266,7 +275,7 @@ public class LoginScreen extends JFrame {
         return panel;
     }
 
-    /**
+    /*
      * Realiza a tentativa de login utilizando o AuthenticationService.
      */
     private void performLogin() {
@@ -293,7 +302,7 @@ public class LoginScreen extends JFrame {
         }
     }
 
-    // ===== Métodos de Construção de Componentes UI =====
+    //  Métodos de Construção de Componentes UI
 
     private JPanel createCard() {
         JPanel card = new JPanel();
@@ -342,7 +351,7 @@ public class LoginScreen extends JFrame {
         return button;
     }
 
-    /**
+    /*
      * Interface de callback para sucesso no login.
      */
     public interface LoginCallback {

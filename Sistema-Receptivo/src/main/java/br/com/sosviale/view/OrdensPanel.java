@@ -18,19 +18,18 @@ import java.util.concurrent.ExecutionException;
 /**
  * Painel de gerenciamento de Ordens de Serviço.
  *
- * <p>Permite criar, listar e montar rotas para as OS. A partir desta versão,
+ * Permite criar, listar e montar rotas para as OS. A partir desta versão,
  * integra a resolução de rotas por pathfinding diretamente no fluxo de montagem
- * de OS, usando {@link PathFindingUtil} para otimizar a sequência de pontos de
+ * de OS, usando PathFindingUtil para otimizar a sequência de pontos de
  * coleta dos transfers associados.
  *
- * <h2>Fluxo de otimização de rota</h2>
- * <ol>
- *   <li>Usuário seleciona uma OS na tabela.</li>
- *   <li>Clica em "Otimizar Rota" (modo básico) ou "Otimizar com GPS" (modo estrada).</li>
- *   <li>O pathfinding executa em background (SwingWorker) sem travar a UI.</li>
- *   <li>O resultado é exibido em um diálogo com log de decisões e distância total.</li>
- *   <li>O usuário pode aplicar a ordem otimizada no banco ou descartar.</li>
- * </ol>
+ * Fluxo de otimização de rota
+ *
+ * Usuário seleciona uma OS na tabela.
+ * Clica em "Otimizar Rota" (modo básico) ou "Otimizar com GPS" (modo estrada).
+ * O pathfinding executa em background (SwingWorker) sem travar a UI.
+ * O resultado é exibido em um diálogo com log de decisões e distância total.
+ * O usuário pode aplicar a ordem otimizada no banco ou descartar.
  */
 public class OrdensPanel extends JPanel {
 
@@ -77,6 +76,7 @@ public class OrdensPanel extends JPanel {
         title.setFont(new Font("SansSerif", Font.BOLD, 16));
         form.add(title, gbc);
 
+        // inputs
         comboMotoristas = new JComboBox<>();
         comboVeiculos   = new JComboBox<>();
 
@@ -85,6 +85,7 @@ public class OrdensPanel extends JPanel {
         gbc.gridy++; form.add(new JLabel("Veiculo:"), gbc);
         gbc.gridy++; form.add(comboVeiculos, gbc);
 
+        // Botão Salvar
         JButton btnAbrirOS = new JButton("Gerar OS");
         btnAbrirOS.setBackground(PRIMARY_BLUE);
         btnAbrirOS.setForeground(Color.WHITE);
@@ -160,16 +161,8 @@ public class OrdensPanel extends JPanel {
         }
     }
 
-    // =========================================================================
-    // Task 2: Pathfinding integrado ao contexto de OrdemServico
-    // =========================================================================
+    // Pathfinding integrado ao contexto de OrdemServico
 
-    /**
-     * Ponto de entrada do pathfinding a partir da UI.
-     * Valida a selecao, carrega a OS do banco e delega para um SwingWorker.
-     *
-     * @param usarGps true = modo GPS+OSRM; false = modo Haversine basico
-     */
     private void executarPathfinding(boolean usarGps) {
         int selectedRow = osTable.getSelectedRow();
         if (selectedRow < 0) {
@@ -199,7 +192,7 @@ public class OrdensPanel extends JPanel {
         rodarPathfindingEmBackground(os, usarGps);
     }
 
-    /**
+    /*
      * Executa o pathfinding em background via SwingWorker, sem bloquear o EDT.
      * Exibe progresso durante o calculo e apresenta o resultado ao concluir.
      */
@@ -251,7 +244,7 @@ public class OrdensPanel extends JPanel {
         worker.execute();
     }
 
-    /**
+    /*
      * Exibe o resultado do pathfinding: log de decisoes, distancia total e
      * botao para aplicar a ordem otimizada no banco via PathFindingUtil.
      */
@@ -324,15 +317,13 @@ public class OrdensPanel extends JPanel {
         dialog.setVisible(true);
     }
 
-    // =========================================================================
     // Montagem de rota (existente - preservado sem alteracao)
-    // =========================================================================
 
     private void abrirNovaOS() {
         try {
             OrdemServico os = new OrdemServico();
             os.setDataServico(LocalDate.now());
-            // os.setMotorista(motoristaBuscado);
+            //os.setMotorista(motoristaBuscado);
             // os.setVeiculo(veiculoBuscado);
             // osService.salvar(os);
             JOptionPane.showMessageDialog(this, "OS Criada com Sucesso!");
@@ -355,6 +346,7 @@ public class OrdensPanel extends JPanel {
 
         Integer idOs = (Integer) osTableModel.getValueAt(selectedRow, 0);
         OrdemServico osSelecionada = osService.buscarPorId(idOs);
+
         if (osSelecionada != null) abrirDialogoMontagem(osSelecionada);
     }
 

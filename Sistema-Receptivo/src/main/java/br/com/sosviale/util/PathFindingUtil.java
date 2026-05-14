@@ -1,9 +1,6 @@
 package br.com.sosviale.util;
 
-import br.com.sosviale.model.Motorista;
-import br.com.sosviale.model.OrdemServico;
-import br.com.sosviale.model.PontoColeta;
-import br.com.sosviale.model.Transfer;
+import br.com.sosviale.model.*;
 import br.com.sosviale.repository.MotoristaRepository;
 import br.com.sosviale.repository.PontoColetaRepository;
 import br.com.sosviale.service.pathfinding.Coordenada;
@@ -13,7 +10,9 @@ import br.com.sosviale.service.pathfinding.RouteOptimizer;
 import br.com.sosviale.service.pathfinding.RouteResult;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /*
@@ -122,66 +121,6 @@ public final class PathFindingUtil {
     }
 
     /*
-     * Aplica a ordem otimizada de volta nos {@link PontoColeta}s no banco de dados.
-     *
-     * <p>Renumera o campo {@code ordemParada} de cada ponto a partir de 1, refletindo
-     * a sequência calculada pelo algoritmo. Erros individuais são logados mas não
-     * interrompem o processamento dos demais pontos.
-     *
-     * @param resultado resultado retornado por {@link #otimizar} ou {@link #otimizarComGps}
-     * @param pcRepo    repositório de pontos de coleta (responsabilidade do chamador)
-     */
-    public static void aplicarOrdemOtimizada(RouteResult resultado, PontoColetaRepository pcRepo) {
-        if (resultado == null || resultado.getRotaOtimizada().isEmpty()) {
-            LOG.warning("PathFindingUtil | Nenhuma rota otimizada para aplicar.");
-            return;
-        }
-
-        List<Coordenada> rota = resultado.getRotaOtimizada();
-        int aplicados = 0;
-
-        for (int i = 0; i < rota.size(); i++) {
-            Coordenada c = rota.get(i);
-            if (c.getPontoColeta() != null) {
-                PontoColeta pc = c.getPontoColeta();
-                pc.setOrdemParada(i + 1);
-                try {
-                    pcRepo.atualizar(pc);
-                    aplicados++;
-                } catch (Exception e) {
-                    LOG.severe("PathFindingUtil | Erro ao atualizar PontoColeta #" + pc.getId()
-                            + ": " + e.getMessage());
-                }
-            }
-        }
-
-        LOG.info("PathFindingUtil | Ordem aplicada: " + aplicados + "/" + rota.size() + " pontos renumerados.");
-    }
-
-    // =========================================================================
-    // Helpers privados — isolados neste util, sem vazar para outras camadas
-    // =========================================================================
-
-    /*
-     * Coleta todos os PontosColeta de todos os Transfers da OS e os converte em Coordenadas.
-     * Pontos sem coordenadas passam por geocodificação automática via Nominatim.
-     */
-    private static List<Coordenada> coletarCoordenadas(OrdemServico os) {
-        List<Coordenada> coordenadas = new ArrayList<>();
-
-        for (Transfer transfer : os.getTransfers()) {
-            for (PontoColeta pc : transfer.getPontosColeta()) {
-                Coordenada c = resolverCoordenada(pc);
-                if (c != null) {
-                    coordenadas.add(c);
-                }
-            }
-        }
-
-        return coordenadas;
-    }
-
-    /*
      * Converte um {@link PontoColeta} em {@link Coordenada}.
      *
      * <p>Se as coordenadas forem inválidas (null ou zeradas), tenta geocodificação
@@ -260,5 +199,106 @@ public final class PathFindingUtil {
                 List.of("[AVISO] " + motivo),
                 RouteResult.ModoCalculo.HAVERSINE
         );
+    }
+
+    /*
+     * Converte o resultado do algoritmo em uma lista de Paradas da OS.
+     * Agrupa as paradas que caem no mesmo local físico para não gerar duplicações.
+     */
+    public static List<ParadaOS> gerarParadasOS(RouteResult resultado, OrdemServico os) {
+        List<ParadaOS> paradas = new ArrayList<>();
+
+        // Usamos um Map para agrupar as coordenadas pelo Nome do Local
+        Map<String, List<Coordenada>> locaisAgrupados = new LinkedHashMap<>();
+
+        for (Coordenada c : resultado.getRotaOtimizada()) {
+            // Ignora a posição atual do motorista (ele não é um embarque)
+            if (c.isPontoDePartida()) continue;
+
+            String chaveLocal = c.getNome();
+            if (!locaisAgrupados.containsKey(chaveLocal)) {
+                locaisAgrupados.put(chaveLocal, new ArrayList<>());
+            }
+            locaisAgrupados.get(chaveLocal).add(c);
+        }
+
+        // Criar as Paradas físicas agrupadas
+        int ordem = 1;
+        for (String nomeLocal : locaisAgrupados.keySet()) {
+            List<Coordenada> coordenadasDoLocal = locaisAgrupados.get(nomeLocal);
+
+            ParadaOS parada = new ParadaOS();
+            parada.setOrdemServico(os);
+            parada.setOrdemParada(ordem);
+            parada.setLocalParada(nomeLocal);
+            parada.setAcao("EMBARQUE"); // Padrão
+            parada.setStatusParada("PENDENTE");
+            parada.setLatitude(coordenadasDoLocal.get(0).getLatitude());
+            parada.setLongitude(coordenadasDoLocal.get(0).getLongitude());
+
+            // Vincula todos os transfers que pertencem a este local
+            for (Coordenada coord : coordenadasDoLocal) {
+                if (coord.getTransfer() != null) {
+                    parada.getTransfers().add(coord.getTransfer());
+                }
+            }
+
+            paradas.add(parada);
+            ordem++;
+        }
+
+        return paradas;
+    }
+
+    // =========================================================================
+    // Helpers privados atualizados
+    // =========================================================================
+
+    private static List<Coordenada> coletarCoordenadas(OrdemServico os) {
+        List<Coordenada> coordenadas = new ArrayList<>();
+        for (Transfer transfer : os.getTransfers()) {
+            for (PontoColeta pc : transfer.getPontosColeta()) {
+                Coordenada c = resolverCoordenada(pc, transfer); // Passando o transfer agora
+                if (c != null) {
+                    coordenadas.add(c);
+                }
+            }
+        }
+        return coordenadas;
+    }
+
+    private static Coordenada resolverCoordenada(PontoColeta pc, Transfer transfer) {
+        boolean coordenadasValidas =
+                pc.getLatitude()  != null && pc.getLongitude() != null
+                        && (Math.abs(pc.getLatitude())  > 0.0001
+                        ||  Math.abs(pc.getLongitude()) > 0.0001);
+
+        if (coordenadasValidas) {
+            // Adicionado o transfer no construtor
+            return new Coordenada(pc.getLatitude(), pc.getLongitude(), pc.getLocalColeta(), pc, transfer);
+        }
+
+        LOG.info("PathFindingUtil | Tentando geocodificação para: " + pc.getLocalColeta());
+
+        try {
+            Coordenada geocodificada = GeocodingService.resolver(
+                    pc.getLocalColeta() + ", Foz do Iguaçu, Brasil"
+            );
+
+            try { Thread.sleep(1000); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+
+            pc.setLatitude(geocodificada.getLatitude());
+            pc.setLongitude(geocodificada.getLongitude());
+
+            // Adicionado o transfer no construtor
+            return new Coordenada(pc.getLatitude(), pc.getLongitude(), pc.getLocalColeta(), pc, transfer);
+
+        } catch (GeocodingService.GeocodingException e) {
+            LOG.warning("PathFindingUtil | Falha geocodificação: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static void aplicarOrdemOtimizada(RouteResult resultado, PontoColetaRepository pcRepo) {
     }
 }

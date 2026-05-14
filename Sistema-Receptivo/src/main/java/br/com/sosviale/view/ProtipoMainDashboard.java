@@ -270,7 +270,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         return main;
     }
 
-    // ===== PÁGINAS =====
+    // PÁGINAS
 
     private JComponent buildDashboardPage() {
         return new DashboardPanel();
@@ -327,9 +327,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         return page;
     }
 
-    // ===== HELPER COMPONENTS =====
-
-
+    // HELPER COMPONENTS
 
     private JComponent splitPage(JComponent left, JComponent right) {
         JPanel page = new JPanel(new BorderLayout(14, 0));
@@ -575,10 +573,18 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            lm.removeLanguageChangeListener(this);
             authService.logout();
-            dispose();
-            new LoginScreen(authService).setVisible(true);
+            dispose(); // Fecha apenas o Dashboard
+
+            // Reabre o LoginScreen
+            SwingUtilities.invokeLater(() -> {
+                LoginScreen newLoginScreen = new LoginScreen(authService);
+                newLoginScreen.setLoginCallback(username -> {
+                    ProtipoMainDashboard newDashboard = new ProtipoMainDashboard(authService);
+                    newDashboard.setVisible(true);
+                });
+                newLoginScreen.setVisible(true);
+            });
         }
     }
 

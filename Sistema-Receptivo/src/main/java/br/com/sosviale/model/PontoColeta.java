@@ -18,10 +18,6 @@ public class PontoColeta {
     @Column(name = "local_coleta", nullable = false, length = 100)
     private String localColeta;
 
-    // define a sequência de paradas dentro do transfer
-    @Column(name = "ordem_parada", nullable = false)
-    private Integer ordemParada;
-
     @Column(name = "horario_previsto")
     private LocalTime horarioPrevisto;
 
@@ -40,7 +36,6 @@ public class PontoColeta {
     public PontoColeta(Transfer transfer, String localColeta, Integer ordemParada, LocalTime horarioPrevisto) {
         this.transfer = transfer;
         this.localColeta = localColeta;
-        this.ordemParada = ordemParada;
         this.horarioPrevisto = horarioPrevisto;
     }
 
@@ -54,9 +49,6 @@ public class PontoColeta {
     public String getLocalColeta() { return localColeta; }
     public void setLocalColeta(String localColeta) { this.localColeta = localColeta; }
 
-    public Integer getOrdemParada() { return ordemParada; }
-    public void setOrdemParada(Integer ordemParada) { this.ordemParada = ordemParada; }
-
     public LocalTime getHorarioPrevisto() { return horarioPrevisto; }
     public void setHorarioPrevisto(LocalTime horarioPrevisto) { this.horarioPrevisto = horarioPrevisto; }
 
@@ -65,4 +57,11 @@ public class PontoColeta {
 
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
+
+    public void setOrdemParada(int ordem) {
+    }
+
+    public Object getOrdemParada() {
+        return null;
+    }
 }

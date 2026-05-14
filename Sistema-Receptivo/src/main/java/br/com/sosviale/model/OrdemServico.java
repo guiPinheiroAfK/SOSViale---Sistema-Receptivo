@@ -30,8 +30,21 @@ public class OrdemServico {
 
     // transfers já vêm ordenados por horário para facilitar a exibição da rota
     @OneToMany(mappedBy = "ordemServico", fetch = FetchType.EAGER)
-    @OrderBy("dataHora ASC")
+    @OrderBy("horaTransfer ASC")
     private List<Transfer> transfers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("ordemParada ASC")
+    private List<ParadaOS> paradasRota = new ArrayList<>();
+
+    // Não esqueça de gerar os métodos na parte de baixo da classe:
+    public List<ParadaOS> getParadasRota() {
+        return paradasRota;
+    }
+
+    public void setParadasRota(List<ParadaOS> paradasRota) {
+        this.paradasRota = paradasRota;
+    }
 
     // getters e setters
     public Integer getId() { return id; }
