@@ -12,7 +12,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class MontarRotaPanel extends JPanel {
+public class ServicosPanel extends JPanel {
 
     private static final Color PANEL_BACKGROUND = Color.WHITE;
     private static final Color BORDER_COLOR     = new Color(210, 214, 220);
@@ -20,43 +20,46 @@ public class MontarRotaPanel extends JPanel {
     private static final Color MUTED_TEXT       = new Color(98, 108, 122);
     private static final Color PRIMARY_BLUE     = new Color(50, 91, 140);
     private static final Color SUCCESS_GREEN    = new Color(34, 139, 34);
+    private static final Color DANGER_RED       = new Color(200, 50, 50);
+    private static final Color WARNING_ORANGE   = new Color(210, 120, 0);
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 15);
 
     private final OrdemServicoService osService      = new OrdemServicoService();
     private final TransferService     transferService = new TransferService();
 
-    // Tabela de OS abertas
+    // Tabela de OS com transfers
     private DefaultTableModel osTableModel;
     private JTable            osTable;
 
-    // Tabela de transfers disponíveis
+    // Tabela de transfers da OS selecionada
     private DefaultTableModel transferTableModel;
     private JTable            transferTable;
 
     // OS atualmente selecionada
     private OrdemServico osSelecionada = null;
 
-    // Detalhes da OS selecionada
+    // Painel de detalhes
     private JLabel labelMotorista;
     private JLabel labelVeiculo;
-    private JLabel labelCapacidade;
+    private JLabel labelData;
+    private JLabel labelStatus;
 
-    public MontarRotaPanel() {
+    public ServicosPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
 
-        add(buildOsPanel(),        BorderLayout.WEST);
-        add(buildTransfersPanel(), BorderLayout.CENTER);
+        add(buildOsPanel(),       BorderLayout.WEST);
+        add(buildServicosPanel(), BorderLayout.CENTER);
 
         carregarOS();
     }
 
     // -------------------------------------------------------
-    // Painel esquerdo — OS abertas + detalhes da selecionada
+    // Painel esquerdo — lista de OS com transfers vinculados
     // -------------------------------------------------------
     private JPanel buildOsPanel() {
-        JPanel panel = new JPanel(new BorderLayout(0, 14));
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(PANEL_BACKGROUND);
         panel.setPreferredSize(new Dimension(340, 0));
         panel.setBorder(BorderFactory.createCompoundBorder(
@@ -64,13 +67,13 @@ public class MontarRotaPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Ordens de Serviço Abertas");
+        JLabel title = new JLabel("Ordens de Serviço");
         title.setFont(SECTION_FONT);
         title.setForeground(TEXT_COLOR);
         panel.add(title, BorderLayout.NORTH);
 
         osTableModel = new DefaultTableModel(
-                new String[]{"ID", "Data", "Motorista", "Veículo"}, 0) {
+                new String[]{"ID", "Data", "Motorista", "Veículo", "Status"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         osTable = new JTable(osTableModel);
@@ -85,42 +88,56 @@ public class MontarRotaPanel extends JPanel {
 
         panel.add(new JScrollPane(osTable), BorderLayout.CENTER);
 
-        // Detalhes da OS selecionada
-        JPanel detalhes = new JPanel(new GridLayout(3, 2, 8, 6));
-        detalhes.setBackground(new Color(244, 245, 247));
-        detalhes.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
-
-        labelMotorista = infoLabel("—");
-        labelVeiculo   = infoLabel("—");
-        labelCapacidade = infoLabel("—");
-
-        detalhes.add(mutedLabel("Motorista:"));   detalhes.add(labelMotorista);
-        detalhes.add(mutedLabel("Veículo:"));     detalhes.add(labelVeiculo);
-        detalhes.add(mutedLabel("Capacidade:"));  detalhes.add(labelCapacidade);
-
-        JPanel south = new JPanel(new BorderLayout(0, 8));
-        south.setOpaque(false);
-        south.add(detalhes, BorderLayout.CENTER);
-
         JButton btnAtualizar = styledButton("Atualizar", PRIMARY_BLUE);
         btnAtualizar.addActionListener(e -> carregarOS());
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        btnPanel.setOpaque(false);
-        btnPanel.add(btnAtualizar);
-        south.add(btnPanel, BorderLayout.SOUTH);
-
-        panel.add(south, BorderLayout.SOUTH);
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        bottom.setOpaque(false);
+        bottom.add(btnAtualizar);
+        panel.add(bottom, BorderLayout.SOUTH);
 
         return panel;
     }
 
     // -------------------------------------------------------
-    // Painel direito — transfers disponíveis
+    // Painel direito — detalhes da OS + transfers com status
     // -------------------------------------------------------
-    private JPanel buildTransfersPanel() {
+    private JPanel buildServicosPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 14));
+        panel.setOpaque(false);
+
+        panel.add(buildDetalhesOS(),   BorderLayout.NORTH);
+        panel.add(buildTransfers(),    BorderLayout.CENTER);
+        panel.add(buildAcoesStatus(),  BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel buildDetalhesOS() {
+        JPanel panel = new JPanel(new GridLayout(2, 4, 14, 6));
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+
+        labelMotorista = infoLabel("—");
+        labelVeiculo   = infoLabel("—");
+        labelData      = infoLabel("—");
+        labelStatus    = infoLabel("—");
+
+        panel.add(mutedLabel("Motorista:"));
+        panel.add(mutedLabel("Veículo:"));
+        panel.add(mutedLabel("Data:"));
+        panel.add(mutedLabel("Status OS:"));
+        panel.add(labelMotorista);
+        panel.add(labelVeiculo);
+        panel.add(labelData);
+        panel.add(labelStatus);
+
+        return panel;
+    }
+
+    private JPanel buildTransfers() {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(PANEL_BACKGROUND);
         panel.setBorder(BorderFactory.createCompoundBorder(
@@ -128,26 +145,13 @@ public class MontarRotaPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        // Header com título e contador
-        JPanel header = new JPanel(new BorderLayout());
-        header.setOpaque(false);
-        JLabel title = new JLabel("Transfers Disponíveis");
+        JLabel title = new JLabel("Transfers do Serviço");
         title.setFont(SECTION_FONT);
         title.setForeground(TEXT_COLOR);
-        JLabel subtitle = new JLabel("Transfers sem OS atribuída");
-        subtitle.setFont(BASE_FONT);
-        subtitle.setForeground(MUTED_TEXT);
-        JPanel titleStack = new JPanel();
-        titleStack.setLayout(new BoxLayout(titleStack, BoxLayout.Y_AXIS));
-        titleStack.setOpaque(false);
-        titleStack.add(title);
-        titleStack.add(Box.createVerticalStrut(2));
-        titleStack.add(subtitle);
-        header.add(titleStack, BorderLayout.WEST);
-        panel.add(header, BorderLayout.NORTH);
+        panel.add(title, BorderLayout.NORTH);
 
         transferTableModel = new DefaultTableModel(
-                new String[]{"ID", "Data", "Hora", "Origem", "Destino", "Passageiros"}, 0) {
+                new String[]{"ID", "Data", "Hora", "Origem", "Destino", "Passageiros", "Status"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         transferTable = new JTable(transferTableModel);
@@ -156,21 +160,24 @@ public class MontarRotaPanel extends JPanel {
         transferTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         panel.add(new JScrollPane(transferTable), BorderLayout.CENTER);
+        return panel;
+    }
 
-        // Botão de adicionar + aviso
-        JPanel bottom = new JPanel(new BorderLayout(0, 6));
-        bottom.setOpaque(false);
+    private JPanel buildAcoesStatus() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        panel.setOpaque(false);
 
-        JLabel aviso = new JLabel("Após vincular, acesse a página Serviços para acompanhar.");
-        aviso.setFont(new Font("SansSerif", Font.ITALIC, 12));
-        aviso.setForeground(MUTED_TEXT);
+        JButton btnExecucao  = styledButton("▶  Em Execução",  WARNING_ORANGE);
+        JButton btnConcluido = styledButton("✔  Concluído",    SUCCESS_GREEN);
+        JButton btnCancelado = styledButton("✖  Cancelado",    DANGER_RED);
 
-        JButton btnAdicionar = styledButton("▼  Vincular Transfer à OS selecionada", SUCCESS_GREEN);
-        btnAdicionar.addActionListener(e -> adicionarTransferNaOS());
+        btnExecucao.addActionListener(e  -> atualizarStatus(StatusTransfer.EM_EXECUCAO));
+        btnConcluido.addActionListener(e -> atualizarStatus(StatusTransfer.CONCLUIDO));
+        btnCancelado.addActionListener(e -> atualizarStatus(StatusTransfer.CANCELADO));
 
-        bottom.add(aviso,        BorderLayout.NORTH);
-        bottom.add(btnAdicionar, BorderLayout.SOUTH);
-        panel.add(bottom, BorderLayout.SOUTH);
+        panel.add(btnExecucao);
+        panel.add(btnConcluido);
+        panel.add(btnCancelado);
 
         return panel;
     }
@@ -182,15 +189,18 @@ public class MontarRotaPanel extends JPanel {
         osTableModel.setRowCount(0);
         List<OrdemServico> lista = osService.listarTodos();
         for (OrdemServico os : lista) {
-            if ("ABERTA".equals(os.getStatus())) {
+            // Só mostra OS que têm transfers vinculados
+            if (!os.getTransfers().isEmpty()) {
                 String motorista = os.getMotorista() != null ? os.getMotorista().getNome() : "N/D";
                 String veiculo   = os.getVeiculo()   != null ? os.getVeiculo().getPlaca()  : "N/D";
-                osTableModel.addRow(new Object[]{os.getId(), os.getDataServico(), motorista, veiculo});
+                osTableModel.addRow(new Object[]{
+                        os.getId(), os.getDataServico(), motorista, veiculo, os.getStatus()
+                });
             }
         }
         osSelecionada = null;
+        transferTableModel.setRowCount(0);
         resetarDetalhes();
-        carregarTransfersDisponiveis();
     }
 
     private void selecionarOS() {
@@ -201,51 +211,50 @@ public class MontarRotaPanel extends JPanel {
         osSelecionada = osService.buscarPorId(idOs);
 
         atualizarDetalhes();
+        carregarTransfers();
     }
 
     private void atualizarDetalhes() {
         if (osSelecionada == null) { resetarDetalhes(); return; }
+
         labelMotorista.setText(osSelecionada.getMotorista() != null
                 ? osSelecionada.getMotorista().getNome() : "N/D");
         labelVeiculo.setText(osSelecionada.getVeiculo() != null
-                ? osSelecionada.getVeiculo().getLabel() : "N/D");
-
-        int ocupado    = osSelecionada.getTransfers().stream()
-                .mapToInt(t -> t.getPassageiros().size()).sum();
-        int capacidade = osSelecionada.getVeiculo() != null
-                ? osSelecionada.getVeiculo().getCapacidade() : 0;
-        labelCapacidade.setText(ocupado + "/" + capacidade + " pax");
-        labelCapacidade.setForeground(ocupado >= capacidade && capacidade > 0
-                ? new Color(200, 50, 50) : SUCCESS_GREEN);
+                ? osSelecionada.getVeiculo().getLabel() + " — " + osSelecionada.getVeiculo().getPlaca()
+                + " (" + osSelecionada.getVeiculo().getCapacidade() + " pax)" : "N/D");
+        labelData.setText(osSelecionada.getDataServico() != null
+                ? osSelecionada.getDataServico().toString() : "N/D");
+        labelStatus.setText(osSelecionada.getStatus());
     }
 
     private void resetarDetalhes() {
         labelMotorista.setText("—");
         labelVeiculo.setText("—");
-        labelCapacidade.setText("—");
+        labelData.setText("—");
+        labelStatus.setText("—");
     }
 
-    private void carregarTransfersDisponiveis() {
+    private void carregarTransfers() {
         transferTableModel.setRowCount(0);
-        List<Transfer> todos = transferService.listarTodos();
-        for (Transfer t : todos) {
-            if (t.getOrdemServico() == null) {
-                String passageiros = t.getPassageiros().isEmpty() ? "Nenhum"
-                        : String.join(", ", t.getPassageiros().stream()
-                        .map(p -> p.getNome()).toList());
-                transferTableModel.addRow(new Object[]{
-                        t.getId(),
-                        t.getDataTransfer(),
-                        t.getHoraTransfer(),
-                        t.getOrigem(),
-                        t.getDestino(),
-                        passageiros
-                });
-            }
+        if (osSelecionada == null) return;
+
+        for (Transfer t : osSelecionada.getTransfers()) {
+            String passageiros = t.getPassageiros().isEmpty() ? "Nenhum"
+                    : String.join(", ", t.getPassageiros().stream()
+                    .map(p -> p.getNome()).toList());
+            transferTableModel.addRow(new Object[]{
+                    t.getId(),
+                    t.getDataTransfer(),
+                    t.getHoraTransfer(),
+                    t.getOrigem(),
+                    t.getDestino(),
+                    passageiros,
+                    t.getStatus().getDescricao()
+            });
         }
     }
 
-    private void adicionarTransferNaOS() {
+    private void atualizarStatus(StatusTransfer novoStatus) {
         if (osSelecionada == null) {
             JOptionPane.showMessageDialog(this, "Selecione uma OS primeiro.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
@@ -253,39 +262,28 @@ public class MontarRotaPanel extends JPanel {
 
         int row = transferTable.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione um transfer para vincular.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um transfer para atualizar.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         Integer tId = (Integer) transferTableModel.getValueAt(row, 0);
         Transfer t  = transferService.buscarPorId(tId);
 
-        // Validação de capacidade
-        int totalAtual = osSelecionada.getTransfers().stream()
-                .mapToInt(tr -> tr.getPassageiros().size()).sum();
-        int totalNovo  = totalAtual + t.getPassageiros().size();
-
-        if (osSelecionada.getVeiculo() != null && totalNovo > osSelecionada.getVeiculo().getCapacidade()) {
+        // Validação de fluxo: não pode voltar status
+        if (t.getStatus() == StatusTransfer.CONCLUIDO || t.getStatus() == StatusTransfer.CANCELADO) {
             JOptionPane.showMessageDialog(this,
-                    "Capacidade excedida! Limite do veículo: "
-                            + osSelecionada.getVeiculo().getCapacidade() + " pax.",
-                    "Capacidade Excedida", JOptionPane.WARNING_MESSAGE);
+                    "Este transfer já está " + t.getStatus().getDescricao() + " e não pode ser alterado.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Vincula e salva
-        t.setOrdemServico(osSelecionada);
-        t.setStatus(StatusTransfer.NA_OS);
+        t.setStatus(novoStatus);
         transferService.atualizar(t);
-        osSelecionada.getTransfers().add(t);
-
-        // Atualiza
-        carregarTransfersDisponiveis();
-        atualizarDetalhes();
+        carregarTransfers();
 
         JOptionPane.showMessageDialog(this,
-                "Serviço criado! Abra a página Serviços para visualizar.",
-                "Vinculado com sucesso", JOptionPane.INFORMATION_MESSAGE);
+                "Status atualizado para: " + novoStatus.getDescricao(),
+                "Sucesso", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // -------------------------------------------------------
