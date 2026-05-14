@@ -12,7 +12,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class MontarRotaPanel extends JPanel {
+public class AtribuirOS_TransferPanel extends JPanel {
 
     private static final Color PANEL_BACKGROUND = Color.WHITE;
     private static final Color BORDER_COLOR     = new Color(210, 214, 220);
@@ -42,7 +42,7 @@ public class MontarRotaPanel extends JPanel {
     private JLabel labelVeiculo;
     private JLabel labelCapacidade;
 
-    public MontarRotaPanel() {
+    public AtribuirOS_TransferPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
 

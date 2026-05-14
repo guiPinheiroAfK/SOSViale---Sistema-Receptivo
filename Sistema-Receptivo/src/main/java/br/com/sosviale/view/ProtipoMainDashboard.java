@@ -47,11 +47,12 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         configureLookAndFeel();
         setTitle("SOS VIALE - Sistema Receptivo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1200, 750));
+        setMinimumSize(new Dimension(1250, 750));
         setContentPane(buildShell());
         setLocationRelativeTo(null);
         LanguageManager.getInstance().addLanguageChangeListener(this);
-        selectPage("dashboard", "menu.dashboard", "menu.dashboard.subtitle");
+
+        selectPage("dashboard", "📊 Painel Inicial", "menu.dashboard.subtitle");
     }
 
     private JComponent buildShell() {
@@ -133,7 +134,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
     private JComponent buildNavigation() {
         JPanel nav = new JPanel();
         nav.setLayout(new BoxLayout(nav, BoxLayout.Y_AXIS));
-        nav.setPreferredSize(new Dimension(225, 0));
+        nav.setPreferredSize(new Dimension(245, 0));
         nav.setBackground(new Color(233, 236, 241));
         nav.setBorder(new EmptyBorder(18, 14, 18, 14));
 
@@ -141,21 +142,21 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         nav.add(sectionLabel("GERENTE"));
         nav.add(Box.createVerticalStrut(10));
 
-        addNavButton(nav, "dashboard",    "menu.dashboard",    "menu.dashboard.subtitle");
-        addNavButton(nav, "passageiros",  "menu.passengers",   "menu.passengers.subtitle");
-        addNavButton(nav, "pontosColeta", "menu.pontosColeta", "menu.pontosColeta.subtitle");
-        addNavButton(nav, "transfers",    "menu.transfers",    "menu.transfers.subtitle");
-        addNavButton(nav, "ordens",       "menu.orders",       "menu.orders.subtitle");
-        addNavButton(nav, "montarRota",   "menu.montarRota",   "menu.montarRota.subtitle");
-        addNavButton(nav, "motoristas",   "menu.drivers",      "menu.drivers.subtitle");
-        addNavButton(nav, "veiculos",     "menu.vehicles",     "menu.vehicles.subtitle");
+        addNavButton(nav, "dashboard",    "📊 Painel Inicial",    "menu.dashboard.subtitle");
+        addNavButton(nav, "passageiros",  "👥 Passageiros",      "menu.passengers.subtitle");
+        addNavButton(nav, "pontosColeta", "📍 Pontos de Coleta", "menu.pontosColeta.subtitle");
+        addNavButton(nav, "transfers",    "📋 Transfers",        "menu.transfers.subtitle");
+        addNavButton(nav, "ordens",       "📦 Ordens de Serviço", "menu.orders.subtitle");
+        addNavButton(nav, "montarRota",   "📝 Atribuir OS a Transfer", "menu.montarRota.subtitle");
+        addNavButton(nav, "motoristas",   "🧑‍✈️ Motoristas",      "menu.drivers.subtitle");
+        addNavButton(nav, "veiculos",     "🚐 Veículos",        "menu.vehicles.subtitle");
 
         // ── MOTORISTA ─────────────────────────────────────
         nav.add(Box.createVerticalStrut(14));
         nav.add(sectionLabel("MOTORISTA"));
         nav.add(Box.createVerticalStrut(10));
 
-        addNavButton(nav, "servicos", "menu.servicos", "menu.servicos.subtitle");
+        addNavButton(nav, "servicos",     "🛠️ Serviços",         "menu.servicos.subtitle");
 
         // ── ADMIN ─────────────────────────────────────────
         if (authService.isAdmin()) {
@@ -163,7 +164,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
             adminLabel = sectionLabel("ADMIN");
             nav.add(adminLabel);
             nav.add(Box.createVerticalStrut(10));
-            addNavButton(nav, "admin", "menu.users", "menu.users.subtitle");
+            addNavButton(nav, "admin", "⚙️ Usuários", "menu.users.subtitle");
         }
 
         nav.add(Box.createVerticalGlue());
@@ -179,7 +180,6 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         return nav;
     }
 
-    // Label de seção vermelho igual ao ADMIN
     private JLabel sectionLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(SECTION_RED);
@@ -188,12 +188,11 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         return label;
     }
 
-    private void addNavButton(JPanel nav, String key, String labelKey, String subtitleKey) {
-        navLabels.put(key, labelKey);
+    private void addNavButton(JPanel nav, String key, String labelText, String subtitleKey) {
+        navLabels.put(key, labelText);
         navSubtitles.put(key, subtitleKey);
 
-        String label = LanguageManager.getInstance().translate(labelKey);
-        JButton button = new JButton(label);
+        JButton button = new JButton(labelText);
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         button.setFocusPainted(false);
@@ -204,7 +203,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         button.setBackground(PANEL_BACKGROUND);
         button.setForeground(TEXT_COLOR);
         button.setFont(BASE_FONT);
-        button.addActionListener(e -> selectPage(key, labelKey, subtitleKey));
+        button.addActionListener(e -> selectPage(key, labelText, subtitleKey));
 
         navButtons.put(key, button);
         nav.add(button);
@@ -237,10 +236,10 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         cardPanel.add(new PontosColetaPanel(), "pontosColeta");
         cardPanel.add(new TransfersPanel(),    "transfers");
         cardPanel.add(new OrdensPanel(),       "ordens");
-        cardPanel.add(new MontarRotaPanel(),   "montarRota");
+        cardPanel.add(new AtribuirOS_TransferPanel(), "montarRota");
         cardPanel.add(new MotoristasPanel(),   "motoristas");
         cardPanel.add(new VeiculosPanel(),     "veiculos");
-        cardPanel.add(new ServicosPanel(),     "servicos");   // ✅ novo
+        cardPanel.add(new ServicosPanel(),     "servicos");
 
         if (authService.isAdmin()) {
             cardPanel.add(buildAdminPage(), "admin");
@@ -271,13 +270,15 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         return page;
     }
 
-    private void selectPage(String key, String titleKey, String subtitleKey) {
-        String title    = LanguageManager.getInstance().translate(titleKey)
-                .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊📍]", "").trim();
+    private void selectPage(String key, String titleText, String subtitleKey) {
+        // Limpa os emojis do título para o header
+        String cleanTitle = titleText.replaceAll("[🛠️📊👥📍📋📦📝🧑‍✈️🚐⚙️]", "").trim();
         String subtitle = LanguageManager.getInstance().translate(subtitleKey);
-        pageTitle.setText(title);
+
+        pageTitle.setText(cleanTitle);
         pageSubtitle.setText(subtitle);
         cardLayout.show(cardPanel, key);
+
         navButtons.forEach((navKey, button) -> {
             boolean active = navKey.equals(key);
             button.setBackground(active ? ACTIVE_NAV : PANEL_BACKGROUND);
@@ -291,22 +292,6 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         searchField.setText(" " + LanguageManager.getInstance().translate("app.search.placeholder"));
         logoutButton.setText(LanguageManager.getInstance().translate("button.logout"));
         versionLabel.setText(LanguageManager.getInstance().translate("version"));
-        for (Map.Entry<String, JButton> entry : navButtons.entrySet()) {
-            String lk = navLabels.get(entry.getKey());
-            if (lk != null) entry.getValue().setText(LanguageManager.getInstance().translate(lk));
-        }
-        for (String key : navButtons.keySet()) {
-            if (navButtons.get(key).getBackground().equals(ACTIVE_NAV)) {
-                String tk = navLabels.get(key);
-                String sk = navSubtitles.get(key);
-                if (tk != null && sk != null) {
-                    pageTitle.setText(LanguageManager.getInstance().translate(tk)
-                            .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊📍]", "").trim());
-                    pageSubtitle.setText(LanguageManager.getInstance().translate(sk));
-                }
-                break;
-            }
-        }
     }
 
     private void performLogout() {
@@ -326,7 +311,6 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         }
     }
 
-    // ── Helpers ──────────────────────────────────────────────
     private JPanel panel(String title) {
         JPanel p = new JPanel(new BorderLayout(0, 12));
         p.setBackground(PANEL_BACKGROUND);
