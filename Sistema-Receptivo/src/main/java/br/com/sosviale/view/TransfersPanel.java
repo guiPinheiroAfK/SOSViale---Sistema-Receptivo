@@ -1,5 +1,6 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.service.StatusTransfer;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.model.Transfer;
@@ -232,6 +233,7 @@ public class TransfersPanel extends JPanel {
             t.setDestino(pDestino.getLocalColeta());
             t.setDataTransfer(LocalDate.parse(dataField.getText(), DATE_FORMATTER));
             t.setHoraTransfer(LocalTime.parse(horaField.getText(), TIME_FORMATTER));
+            t.setStatus(StatusTransfer.AGUARDANDO_OS); // ← adicionar essa linha
 
             if (idSelecionado == null) service.cadastrar(t);
             else { t.setId(idSelecionado); service.atualizar(t); }

@@ -31,7 +31,7 @@ public class Transfer {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
-    private StatusTransfer status = StatusTransfer.NA_OS;
+    private StatusTransfer status = StatusTransfer.AGUARDANDO_OS;
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;

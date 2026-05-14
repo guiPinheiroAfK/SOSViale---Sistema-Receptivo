@@ -20,8 +20,8 @@ INSERT INTO pontos_coleta (local_coleta, latitude, longitude) VALUES
 
 -- 4. TRANSFERS
 INSERT INTO transfers (data_transfer, hora_transfer, origem, destino, status, valor_base, moeda_origem) VALUES
-                                                                                                            (CURRENT_DATE + 1, '10:00:00', 'Aeroporto Internacional IGU', 'Hotel Bourbon Cataratas', 'PENDENTE', 120.00, 'BRL'),
-                                                                                                            (CURRENT_DATE + 1, '14:00:00', 'Hotel Bourbon Cataratas', 'Parque Nacional (Cataratas)', 'PENDENTE', 80.00, 'BRL');
+    (CURRENT_DATE + 1, '10:00:00', 'Aeroporto Internacional IGU', 'Hotel Bourbon Cataratas', 'AGUARDANDO_OS', 120.00, 'BRL'),
+    (CURRENT_DATE + 1, '14:00:00', 'Hotel Bourbon Cataratas', 'Parque Nacional (Cataratas)', 'AGUARDANDO_OS', 80.00, 'BRL');
 
 -- 5. ORDENS DE SERVIÇO
 INSERT INTO ordens_servico (data_servico, motorista_id, veiculo_id, status) VALUES
