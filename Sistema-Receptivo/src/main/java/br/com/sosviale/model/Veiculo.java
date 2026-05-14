@@ -55,4 +55,10 @@ public class Veiculo {
 
     public String getMarca() { return marca; }
     public void setMarca(String marca) { this.marca = marca; }
+
+    @Override
+    public String toString() {
+        return id + " - " + label + " (" + capacidade + " pax)";
+    }
+
 }

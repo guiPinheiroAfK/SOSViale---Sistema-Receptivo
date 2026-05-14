@@ -40,7 +40,7 @@ public class Transfer {
     @Column(name = "moeda_origem", length = 5, nullable = false)
     private Moeda moedaOrigem = Moeda.BRL;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "transfer_passageiro",
             joinColumns = @JoinColumn(name = "transfer_id"),

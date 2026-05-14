@@ -54,6 +54,7 @@ public class TransfersPanel extends JPanel {
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        carregarTransfers();
     }
 
     private JComponent buildForm() {

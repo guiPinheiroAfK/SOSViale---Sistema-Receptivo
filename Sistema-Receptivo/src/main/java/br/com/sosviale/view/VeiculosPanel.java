@@ -41,6 +41,7 @@ public class VeiculosPanel extends JPanel {
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        carregarVeiculos();
     }
 
     private JComponent buildForm() {

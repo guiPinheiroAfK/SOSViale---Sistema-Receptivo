@@ -36,6 +36,7 @@ public class MotoristasPanel extends JPanel {
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        carregarMotoristas();
     }
 
     private JComponent buildForm() {
