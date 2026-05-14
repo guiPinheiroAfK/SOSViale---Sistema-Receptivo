@@ -11,10 +11,6 @@ public class PontoColeta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "transfer_id")
-    private Transfer transfer;
-
     @Column(name = "local_coleta", nullable = false, length = 100)
     private String localColeta;
 
@@ -33,8 +29,7 @@ public class PontoColeta {
     }
 
     // construtor auxiliar sem coordenadas (preenchidas depois ou via geocodificação)
-    public PontoColeta(Transfer transfer, String localColeta, Integer ordemParada, LocalTime horarioPrevisto) {
-        this.transfer = transfer;
+    public PontoColeta(String localColeta, Integer ordemParada, LocalTime horarioPrevisto) {
         this.localColeta = localColeta;
         this.horarioPrevisto = horarioPrevisto;
     }
@@ -42,9 +37,6 @@ public class PontoColeta {
     // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
-
-    public Transfer getTransfer() { return transfer; }
-    public void setTransfer(Transfer transfer) { this.transfer = transfer; }
 
     public String getLocalColeta() { return localColeta; }
     public void setLocalColeta(String localColeta) { this.localColeta = localColeta; }

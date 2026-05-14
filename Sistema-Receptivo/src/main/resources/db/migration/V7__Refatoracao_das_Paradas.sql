@@ -1,0 +1,1 @@
+ALTER TABLE pontos_coleta ALTER COLUMN ordem_parada DROP NOT NULL;

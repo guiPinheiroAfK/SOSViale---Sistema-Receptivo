@@ -1,28 +1,25 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.model.PontoColeta;
-import br.com.sosviale.model.Transfer;
 import br.com.sosviale.service.PontoColetaService;
-import br.com.sosviale.service.TransferService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.LocalTime;
 import java.util.List;
 
 /*
  * Painel de gerenciamento de Pontos de Coleta.
  *
- * exibe todos os pontos de coleta cadastrados, permitindo criar, editar
- * e excluir registros vinculados a transfers. Integra-se ao módulo de navegação
- * principal ({@link ProtipoMainDashboard}) como item de menu independente.
+ * Agora atua como um CATÁLOGO DE ENDEREÇOS.
+ * Cadastra locais genéricos (Hotéis, Aeroportos, Pontos Turísticos) que
+ * serão utilizados posteriormente como Origem/Destino nos Transfers.
  */
 public class PontosColetaPanel extends JPanel {
 
-    // ─── Constantes visuais (espelho do padrão do dashboard) ─────────────────
+    // ─── Constantes visuais ─────────────────────────────────────────────────
     private static final Color PANEL_BG      = Color.WHITE;
     private static final Color BORDER_COLOR  = new Color(210, 214, 220);
     private static final Color PRIMARY_BLUE  = new Color(50, 91, 140);
@@ -33,30 +30,24 @@ public class PontosColetaPanel extends JPanel {
 
     // ─── Colunas da tabela ────────────────────────────────────────────────────
     private static final String[] COLUNAS = {
-            "ID", "Transfer", "Local de Coleta", "Ordem", "Horário", "Lat", "Lng"
+            "ID", "Local de Coleta", "Lat", "Lng"
     };
 
     // ─── Serviços ─────────────────────────────────────────────────────────────
-    private final PontoColetaService pcService      = new PontoColetaService();
-    private final TransferService    transferService = new TransferService();
+    private final PontoColetaService pcService = new PontoColetaService();
 
     // Componentes
     private DefaultTableModel tableModel;
     private JTable            table;
     private JTextField        fieldLocal;
-    private JTextField        fieldOrdem;
-    private JTextField        fieldHorario;
     private JTextField        fieldLat;
     private JTextField        fieldLng;
-    private JComboBox<TransferItem> comboTransfers;
 
     // ─── Estado
     /* ID do ponto em edição; null = modo criação. */
     private Long editandoId = null;
 
-
     // Construção
-
     public PontosColetaPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
@@ -64,7 +55,6 @@ public class PontosColetaPanel extends JPanel {
         add(buildFormPanel(), BorderLayout.WEST);
         add(buildTablePanel(), BorderLayout.CENTER);
 
-        carregarTransfers();
         atualizarTabela();
     }
 
@@ -88,38 +78,22 @@ public class PontosColetaPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(0, 0, 12, 0);
 
-        JLabel title = new JLabel("Ponto de Coleta");
+        JLabel title = new JLabel("Cadastro de Local");
         title.setFont(new Font("SansSerif", Font.BOLD, 16));
         form.add(title, gbc);
 
-        // Transfer (ComboBox)
-        comboTransfers = new JComboBox<>();
-        comboTransfers.setFont(BASE_FONT);
-        gbc.gridy++; form.add(label("Transfer vinculado:"), gbc);
-        gbc.gridy++; form.add(comboTransfers, gbc);
-
         // Local de coleta
-        fieldLocal = field("Ex: Aeroporto Internacional de Foz");
-        gbc.gridy++; form.add(label("Local de Coleta:"), gbc);
+        fieldLocal = field("Ex: Hotel Bourbon");
+        gbc.gridy++; form.add(label("Nome do Local:"), gbc);
         gbc.gridy++; form.add(fieldLocal, gbc);
 
-        // Ordem da parada
-        fieldOrdem = field("Ex: 1");
-        gbc.gridy++; form.add(label("Ordem da Parada:"), gbc);
-        gbc.gridy++; form.add(fieldOrdem, gbc);
-
-        // Horário previsto
-        fieldHorario = field("HH:mm — opcional");
-        gbc.gridy++; form.add(label("Horário Previsto (HH:mm):"), gbc);
-        gbc.gridy++; form.add(fieldHorario, gbc);
-
         // Latitude
-        fieldLat = field("Ex: -25.5925 — opcional");
+        fieldLat = field("Ex: -25.5925 (Opcional)");
         gbc.gridy++; form.add(label("Latitude:"), gbc);
         gbc.gridy++; form.add(fieldLat, gbc);
 
         // Longitude
-        fieldLng = field("Ex: -54.4880 — opcional");
+        fieldLng = field("Ex: -54.4880 (Opcional)");
         gbc.gridy++; form.add(label("Longitude:"), gbc);
         gbc.gridy++; form.add(fieldLng, gbc);
 
@@ -130,7 +104,7 @@ public class PontosColetaPanel extends JPanel {
         JButton btnSalvar = styledButton("Salvar", PRIMARY_BLUE);
         btnSalvar.addActionListener(e -> salvar());
 
-        JButton btnLimpar = styledButton("Novo", MUTED_TEXT);
+        JButton btnLimpar = styledButton("Limpar", MUTED_TEXT);
         btnLimpar.addActionListener(e -> limparFormulario());
 
         botoes.add(btnSalvar);
@@ -163,12 +137,16 @@ public class PontosColetaPanel extends JPanel {
         table.getTableHeader().setFont(BOLD_FONT);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Centraliza colunas numéricas
+        // Centraliza colunas ID, Lat e Lng
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
-        for (int i : new int[]{0, 3, 5, 6}) {
-            table.getColumnModel().getColumn(i).setCellRenderer(center);
-        }
+        table.getColumnModel().getColumn(0).setCellRenderer(center);
+        table.getColumnModel().getColumn(2).setCellRenderer(center);
+        table.getColumnModel().getColumn(3).setCellRenderer(center);
+
+        // Ajusta a largura das colunas
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(300);
 
         // Clique na linha preenche o formulário para edição
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -204,81 +182,52 @@ public class PontosColetaPanel extends JPanel {
     // Lógica de dados
     // =========================================================================
 
-    private void carregarTransfers() {
-        comboTransfers.removeAllItems();
-        try {
-            List<Transfer> transfers = transferService.listarTodos();
-            for (Transfer t : transfers) {
-                comboTransfers.addItem(new TransferItem(t));
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar transfers: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
     private void atualizarTabela() {
         tableModel.setRowCount(0);
         try {
-            // Carrega pontos de todos os transfers visíveis
-            List<Transfer> transfers = transferService.listarTodos();
-            for (Transfer t : transfers) {
-                List<PontoColeta> pontos = pcService.buscarPorTransfer(t.getId().intValue());
-                for (PontoColeta pc : pontos) {
-                    tableModel.addRow(new Object[]{
-                            pc.getId(),
-                            "#" + t.getId() + " — " + t.getOrigem(),
-                            pc.getLocalColeta(),
-                            pc.getHorarioPrevisto() != null ? pc.getHorarioPrevisto().toString() : "—",
-                            pc.getLatitude()  != null ? String.format("%.4f", pc.getLatitude())  : "—",
-                            pc.getLongitude() != null ? String.format("%.4f", pc.getLongitude()) : "—"
-                    });
-                }
+            // Puxa todos os locais cadastrados (independente de transfer)
+            List<PontoColeta> pontos = pcService.listarTodos();
+            for (PontoColeta pc : pontos) {
+                tableModel.addRow(new Object[]{
+                        pc.getId(),
+                        pc.getLocalColeta(),
+                        pc.getLatitude()  != null ? String.format("%.4f", pc.getLatitude())  : "—",
+                        pc.getLongitude() != null ? String.format("%.4f", pc.getLongitude()) : "—"
+                });
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar pontos de coleta: " + e.getMessage(),
+                    "Erro ao carregar locais: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void salvar() {
-        TransferItem transferSelecionado = (TransferItem) comboTransfers.getSelectedItem();
-        if (transferSelecionado == null) {
-            JOptionPane.showMessageDialog(this, "Selecione um transfer.", "Validação", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
         String local = fieldLocal.getText().trim();
-        String ordemStr = fieldOrdem.getText().trim();
 
         if (local.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Local de coleta é obrigatório.", "Validação", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (ordemStr.isEmpty() || !ordemStr.matches("\\d+")) {
-            JOptionPane.showMessageDialog(this, "Ordem da parada deve ser um número inteiro.", "Validação", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Nome do local é obrigatório.", "Validação", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
-            PontoColeta pc = editandoId != null
-                    ? pcService.buscarPorId(editandoId)
-                    : new PontoColeta();
+            PontoColeta pc;
+            if (editandoId != null) {
+                pc = pcService.buscarPorId(editandoId);
+            } else {
+                pc = new PontoColeta();
+            }
 
-            pc.setTransfer(transferSelecionado.transfer);
             pc.setLocalColeta(local);
-            pc.setHorarioPrevisto(parseHorario(fieldHorario.getText().trim()));
             pc.setLatitude(parseDouble(fieldLat.getText().trim()));
             pc.setLongitude(parseDouble(fieldLng.getText().trim()));
 
             if (editandoId != null) {
                 pcService.atualizar(pc);
-                JOptionPane.showMessageDialog(this, "Ponto de coleta atualizado com sucesso!");
+                JOptionPane.showMessageDialog(this, "Local atualizado com sucesso!");
             } else {
                 pcService.cadastrar(pc);
-                JOptionPane.showMessageDialog(this, "Ponto de coleta cadastrado com sucesso!");
+                JOptionPane.showMessageDialog(this, "Local cadastrado com sucesso!");
             }
 
             limparFormulario();
@@ -294,23 +243,25 @@ public class PontosColetaPanel extends JPanel {
     private void excluir() {
         int row = table.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione um ponto de coleta na tabela.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um local na tabela.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Long id = (Long) tableModel.getValueAt(row, 0);
-        String local = (String) tableModel.getValueAt(row, 2);
+        // Pega o ID da tabela (que é exibido como Integer)
+        Integer id = (Integer) tableModel.getValueAt(row, 0);
+        String local = (String) tableModel.getValueAt(row, 1);
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Excluir o ponto \"" + local + "\"?",
+                "Excluir o local \"" + local + "\"?",
                 "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                pcService.excluir(id);
+                // Passa o ID convertido para Long caso seu Service espere isso
+                pcService.excluir(id.longValue());
                 limparFormulario();
                 atualizarTabela();
-                JOptionPane.showMessageDialog(this, "Ponto excluído.");
+                JOptionPane.showMessageDialog(this, "Local excluído.");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
                         "Erro ao excluir: " + ex.getMessage(),
@@ -323,30 +274,21 @@ public class PontosColetaPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0) return;
 
-        editandoId = ((Number) tableModel.getValueAt(row, 0)).longValue();
+        // Pega o ID da tabela
+        Integer idInt = (Integer) tableModel.getValueAt(row, 0);
+        editandoId = idInt.longValue();
 
         try {
             PontoColeta pc = pcService.buscarPorId(editandoId);
             if (pc == null) return;
 
             fieldLocal.setText(pc.getLocalColeta());
-            fieldHorario.setText(pc.getHorarioPrevisto() != null ? pc.getHorarioPrevisto().toString() : "");
             fieldLat.setText(pc.getLatitude()  != null ? String.valueOf(pc.getLatitude())  : "");
             fieldLng.setText(pc.getLongitude() != null ? String.valueOf(pc.getLongitude()) : "");
 
-            // Seleciona o transfer correto no combo
-            if (pc.getTransfer() != null) {
-                for (int i = 0; i < comboTransfers.getItemCount(); i++) {
-                    TransferItem item = comboTransfers.getItemAt(i);
-                    if (item.transfer.getId().equals(pc.getTransfer().getId())) {
-                        comboTransfers.setSelectedIndex(i);
-                        break;
-                    }
-                }
-            }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar ponto: " + ex.getMessage(),
+                    "Erro ao carregar local: " + ex.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -354,26 +296,14 @@ public class PontosColetaPanel extends JPanel {
     private void limparFormulario() {
         editandoId = null;
         fieldLocal.setText("");
-        fieldOrdem.setText("");
-        fieldHorario.setText("");
         fieldLat.setText("");
         fieldLng.setText("");
-        if (comboTransfers.getItemCount() > 0) comboTransfers.setSelectedIndex(0);
         table.clearSelection();
     }
 
     // =========================================================================
-    // Helpers de parsing (sem exceção não-tratada ao chegar na UI)
+    // Helpers de parsing
     // =========================================================================
-
-    private LocalTime parseHorario(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try {
-            return LocalTime.parse(raw);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     private Double parseDouble(String raw) {
         if (raw == null || raw.isBlank()) return null;
@@ -414,24 +344,5 @@ public class PontosColetaPanel extends JPanel {
         btn.setFocusPainted(false);
         btn.setBorder(new EmptyBorder(7, 14, 7, 14));
         return btn;
-    }
-
-    // =========================================================================
-    // Wrapper para exibição de Transfer no JComboBox
-    // =========================================================================
-
-    /** Encapsula um Transfer com toString legível para o JComboBox. */
-    private static final class TransferItem {
-        final Transfer transfer;
-
-        TransferItem(Transfer transfer) {
-            this.transfer = transfer;
-        }
-
-        @Override
-        public String toString() {
-            return "#" + transfer.getId() + " — " + transfer.getOrigem()
-                    + " → " + transfer.getDestino();
-        }
     }
 }

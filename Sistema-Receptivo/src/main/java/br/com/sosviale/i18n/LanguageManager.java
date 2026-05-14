@@ -65,6 +65,8 @@ public class LanguageManager {
         pt.put("menu.orders.subtitle", "Montagem de OS");
         pt.put("menu.users", "⚙️ Usuários");
         pt.put("menu.users.subtitle", "Gestão de usuários do sistema");
+        pt.put("menu.pontosColeta", "📍 Pontos de Coleta");
+        pt.put("menu.pontosColeta.subtitle", "Gerenciar pontos de parada por transfer");
         pt.put("dialog.confirm.logout", "Tem certeza que deseja sair?");
         pt.put("dialog.confirm.title", "Confirmação");
         pt.put("dialog.info.title", "SOS VIALE");
@@ -234,6 +236,8 @@ public class LanguageManager {
         en.put("menu.orders.subtitle", "Service order assembly");
         en.put("menu.users", "⚙️ Users");
         en.put("menu.users.subtitle", "System user management");
+        en.put("menu.pontosColeta", "📍 Collection Points");
+        en.put("menu.pontosColeta.subtitle", "Manage stop points per transfer");
         en.put("dialog.confirm.logout", "Are you sure you want to logout?");
         en.put("dialog.confirm.title", "Confirmation");
         en.put("dialog.info.title", "SOS VIALE");
@@ -403,6 +407,8 @@ public class LanguageManager {
         es.put("menu.orders.subtitle", "Montaje de órdenes");
         es.put("menu.users", "⚙️ Usuarios");
         es.put("menu.users.subtitle", "Gestión de usuarios del sistema");
+        es.put("menu.pontosColeta", "📍 Puntos de Recogida");
+        es.put("menu.pontosColeta.subtitle", "Gestionar puntos de parada por transferencia");
         es.put("dialog.confirm.logout", "¿Está seguro de que desea cerrar sesión?");
         es.put("dialog.confirm.title", "Confirmación");
         es.put("dialog.info.title", "SOS VIALE");

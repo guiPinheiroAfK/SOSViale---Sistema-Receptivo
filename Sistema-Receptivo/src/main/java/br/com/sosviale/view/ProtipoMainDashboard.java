@@ -215,7 +215,9 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
         ));
         button.setBackground(PANEL_BACKGROUND);
         button.setForeground(TEXT_COLOR);
+
         button.setFont(BASE_FONT);
+
         button.addActionListener(event -> {
             String cleanedLabel = LanguageManager.getInstance().translate(labelKey)
                     .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊📍]", "").trim();

@@ -108,9 +108,14 @@ public class OrdensPanel extends JPanel {
         btnOtimizarGps.setToolTipText("Usa GPS do motorista e distâncias reais (OSRM). Requer internet.");
         btnOtimizarGps.addActionListener(e -> executarPathfinding(true));
 
+        JButton btnVerRota = styledButton("Ver Rota do Motorista", new Color(105, 105, 105)); // Um tom de cinza escuro
+        btnVerRota.setToolTipText("Exibe a ordem exata de paradas e passageiros agrupados nesta OS.");
+        btnVerRota.addActionListener(e -> abrirDialogoRota());
+
         actions.add(btnMontarRota);
         actions.add(btnOtimizarRota);
         actions.add(btnOtimizarGps);
+        actions.add(btnVerRota);
 
         panel.add(actions, BorderLayout.SOUTH);
         return panel;
@@ -188,6 +193,28 @@ public class OrdensPanel extends JPanel {
         };
 
         worker.execute();
+    }
+
+    private void abrirDialogoRota() {
+        int selectedRow = osTable.getSelectedRow();
+
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione uma OS na tabela para ver a rota.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Integer idOs = (Integer) osTableModel.getValueAt(selectedRow, 0);
+        OrdemServico osSelecionada = osService.buscarPorId(idOs);
+
+        // Verifica se a lista de paradas da OS está vazia ou nula
+        if (osSelecionada.getParadasRota() == null || osSelecionada.getParadasRota().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Esta OS ainda não possui uma rota gerada. Clique em 'Otimizar Rota' primeiro.",
+                    "Rota Vazia", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        mostrarDialogoParadas(osSelecionada);
     }
 
     // ====================================================================================
@@ -287,4 +314,57 @@ public class OrdensPanel extends JPanel {
         btn.setBorder(new EmptyBorder(6, 12, 6, 12));
         return btn;
     }
+
+    private void mostrarDialogoParadas(OrdemServico os) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Rota da OS #" + os.getId(), true);
+        dialog.setSize(700, 400);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        // Cabeçalho simples
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        header.setBackground(Color.WHITE);
+        header.add(new JLabel("Motorista: " + (os.getMotorista() != null ? os.getMotorista().getNome() : "Não definido")));
+        dialog.add(header, BorderLayout.NORTH);
+
+        // Nomes das colunas focadas no motorista
+        String[] colunas = {"Ordem", "Local de Parada", "Ação", "Horário"};
+
+        List<ParadaOS> paradas = os.getParadasRota();
+
+        // Criando a matriz de dados usando um for clássico
+        Object[][] dados = new Object[paradas.size()][4];
+
+        for (int i = 0; i < paradas.size(); i++) {
+            ParadaOS parada = paradas.get(i);
+
+            dados[i][0] = parada.getOrdemParada() + "º Parada";
+            dados[i][1] = parada.getLocalParada(); // Ex: Hotel Bourbon
+            dados[i][2] = parada.getAcao();        // Ex: "Embarcar 3 pessoas"
+            dados[i][3] = parada.getHorarioPrevisto() != null ? parada.getHorarioPrevisto().toString() : "--:--";
+        }
+
+        JTable tabelaParadas = new JTable(dados, colunas);
+        tabelaParadas.setRowHeight(30);
+        tabelaParadas.setFont(BASE_FONT);
+        tabelaParadas.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 13));
+
+        // Ajuste de largura das colunas para ficar bonito
+        tabelaParadas.getColumnModel().getColumn(0).setPreferredWidth(80);
+        tabelaParadas.getColumnModel().getColumn(1).setPreferredWidth(250);
+        tabelaParadas.getColumnModel().getColumn(2).setPreferredWidth(200);
+        tabelaParadas.getColumnModel().getColumn(3).setPreferredWidth(100);
+
+        dialog.add(new JScrollPane(tabelaParadas), BorderLayout.CENTER);
+
+        // Botão de fechar embaixo
+        JButton btnFechar = styledButton("Fechar", PRIMARY_BLUE);
+        btnFechar.addActionListener(e -> dialog.dispose());
+        JPanel bottom = new JPanel();
+        bottom.add(btnFechar);
+        dialog.add(bottom, BorderLayout.SOUTH);
+
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
 }

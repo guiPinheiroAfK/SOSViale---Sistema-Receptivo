@@ -6,6 +6,7 @@
     <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V3__Criar_Ordem_Servico.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V5__Criar_Parada_OS.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V6__Corrigir_Tipos_Coordenadas.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V7__Refatoracao_das_Paradas.sql" dialect="PostgreSQL" />
     <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>
