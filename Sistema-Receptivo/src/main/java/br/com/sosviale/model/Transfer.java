@@ -31,7 +31,7 @@ public class Transfer {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
-    private StatusTransfer status = StatusTransfer.AGENDADO;
+    private StatusTransfer status = StatusTransfer.NA_OS;
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
@@ -40,10 +40,10 @@ public class Transfer {
     @Column(name = "moeda_origem", length = 5, nullable = false)
     private Moeda moedaOrigem = Moeda.BRL;
 
-    @OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @OrderBy("ordemParada ASC")
+    /*@OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OrderBy(" ASC")
     private List<PontoColeta> pontosColeta = new ArrayList<>();
-
+    */
     @ManyToOne
     @JoinColumn(name = "os_id")
     private OrdemServico ordemServico;
@@ -92,13 +92,17 @@ public class Transfer {
 
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
-
+/*
     public List<PontoColeta> getPontosColeta() { return pontosColeta; }
     public void setPontosColeta(List<PontoColeta> pontosColeta) { this.pontosColeta = pontosColeta; }
-
+*/
     public OrdemServico getOrdemServico() { return ordemServico; }
     public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
 
     public Moeda getMoedaOrigem() { return moedaOrigem; }
     public void setMoedaOrigem(Moeda moedaOrigem) { this.moedaOrigem = moedaOrigem; }
+
+    public PontoColeta[] getPontosColeta() {
+    return null;
+    }
 }
