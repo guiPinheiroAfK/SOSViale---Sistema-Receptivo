@@ -13,3 +13,5 @@ CREATE TABLE transfer_passageiro (
                                      CONSTRAINT fk_transfer FOREIGN KEY (transfer_id) REFERENCES transfers(id) ON DELETE CASCADE,
                                      CONSTRAINT fk_passageiro FOREIGN KEY (passageiro_id) REFERENCES passageiros(id) ON DELETE CASCADE
 );
+
+ALTER TABLE transfers ADD COLUMN valor_original DECIMAL(10,2);

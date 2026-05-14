@@ -11,7 +11,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-/**
+/*
  * Tela de Login do SOS VIALE.
  * Gerencia a autenticação e o registro de novos usuários com suporte a i18n.
  */
@@ -39,7 +39,7 @@ public class LoginScreen extends JFrame {
         initializeUI();
     }
 
-    /**
+    /*
      * Inicializa a interface principal e o sistema de troca de telas (CardLayout).
      */
     private void initializeUI() {

@@ -2,7 +2,7 @@ package br.com.sosviale;
 
 import br.com.sosviale.auth.AuthenticationService;
 import br.com.sosviale.view.LoginScreen;
-import br.com.sosviale.view.ProtipoMainDashboard;
+import br.com.sosviale.view.MainDashboard;
 import org.flywaydb.core.Flyway;
 
 import javax.swing.*;
@@ -29,7 +29,7 @@ public class App {
                 LoginScreen loginScreen = new LoginScreen(authService);
 
                 loginScreen.setLoginCallback(username -> {
-                    ProtipoMainDashboard dashboard = new ProtipoMainDashboard(authService);
+                    MainDashboard dashboard = new MainDashboard(authService);
                     dashboard.setVisible(true);
                 });
 

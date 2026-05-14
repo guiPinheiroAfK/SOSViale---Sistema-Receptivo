@@ -33,6 +33,11 @@ public class Transfer {
     @Column(name = "status", length = 20, nullable = false)
     private StatusTransfer status = StatusTransfer.AGUARDANDO_OS;
 
+    // Este será o valor digitado pelo usuário no painel
+    @Column(name = "valor_original", precision = 10, scale = 2)
+    private BigDecimal valorOriginal;
+
+    // Este será o valor convertido + taxas, que usaremos para relatórios em BRL
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
 
@@ -48,24 +53,19 @@ public class Transfer {
     )
     private List<Passageiro> passageiros = new ArrayList<>();
 
-    /*@OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @OrderBy(" ASC")
-    private List<PontoColeta> pontosColeta = new ArrayList<>();
-    */
     @ManyToOne
     @JoinColumn(name = "os_id")
     private OrdemServico ordemServico;
 
-    // Construtor padrão (JPA)
     public Transfer() {}
 
-    // Construtor para novos agendamentos
-    public Transfer(LocalDate dataTransfer, LocalTime horaTransfer, String origem, String destino, BigDecimal valorBase) {
+    public Transfer(LocalDate dataTransfer, LocalTime horaTransfer, String origem, String destino, BigDecimal valorOriginal, Moeda moedaOrigem) {
         this.dataTransfer = dataTransfer;
         this.horaTransfer = horaTransfer;
         this.origem = origem;
         this.destino = destino;
-        this.valorBase = valorBase;
+        this.valorOriginal = valorOriginal;
+        this.moedaOrigem = moedaOrigem;
     }
 
     // Getters e Setters
@@ -87,23 +87,22 @@ public class Transfer {
     public StatusTransfer getStatus() { return status; }
     public void setStatus(StatusTransfer status) { this.status = status; }
 
+    public BigDecimal getValorOriginal() { return valorOriginal; }
+    public void setValorOriginal(BigDecimal valorOriginal) { this.valorOriginal = valorOriginal; }
+
     public BigDecimal getValorBase() { return valorBase; }
     public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
-
-    public List<Passageiro> getPassageiros() { return passageiros; }
-    public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
-
-/*
-    public List<PontoColeta> getPontosColeta() { return pontosColeta; }
-    public void setPontosColeta(List<PontoColeta> pontosColeta) { this.pontosColeta = pontosColeta; }
-*/
-    public OrdemServico getOrdemServico() { return ordemServico; }
-    public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
 
     public Moeda getMoedaOrigem() { return moedaOrigem; }
     public void setMoedaOrigem(Moeda moedaOrigem) { this.moedaOrigem = moedaOrigem; }
 
+    public List<Passageiro> getPassageiros() { return passageiros; }
+    public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
+
+    public OrdemServico getOrdemServico() { return ordemServico; }
+    public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
+
     public PontoColeta[] getPontosColeta() {
-    return null;
+        return null;
     }
 }

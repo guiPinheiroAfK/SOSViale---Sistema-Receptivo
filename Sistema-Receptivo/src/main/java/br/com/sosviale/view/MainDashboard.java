@@ -11,7 +11,7 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ProtipoMainDashboard extends JFrame implements LanguageManager.LanguageChangeListener {
+public class MainDashboard extends JFrame implements LanguageManager.LanguageChangeListener {
 
     private static final Color APP_BACKGROUND   = new Color(244, 245, 247);
     private static final Color PANEL_BACKGROUND = Color.WHITE;
@@ -42,7 +42,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
     private final Map<String, String> navLabels    = new LinkedHashMap<>();
     private final Map<String, String> navSubtitles = new LinkedHashMap<>();
 
-    public ProtipoMainDashboard(AuthenticationService authService) {
+    public MainDashboard(AuthenticationService authService) {
         this.authService = authService;
         configureLookAndFeel();
         setTitle("SOS VIALE - Sistema Receptivo");
@@ -305,7 +305,7 @@ public class ProtipoMainDashboard extends JFrame implements LanguageManager.Lang
             dispose();
             SwingUtilities.invokeLater(() -> {
                 LoginScreen ls = new LoginScreen(authService);
-                ls.setLoginCallback(u -> new ProtipoMainDashboard(authService).setVisible(true));
+                ls.setLoginCallback(u -> new MainDashboard(authService).setVisible(true));
                 ls.setVisible(true);
             });
         }
