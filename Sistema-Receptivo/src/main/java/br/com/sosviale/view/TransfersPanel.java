@@ -1,6 +1,8 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.model.Transfer;
+import br.com.sosviale.service.PontoColetaService;
 import br.com.sosviale.service.TransferService;
 
 import javax.swing.*;
@@ -8,8 +10,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.LocalDate; //
-import java.time.LocalTime; //
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -26,18 +28,20 @@ public class TransfersPanel extends JPanel {
     private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
 
     private final TransferService service = new TransferService();
+    private final PontoColetaService pcService = new PontoColetaService();
+
     private DefaultTableModel tableModel;
     private JTable table;
-    private JTextField origemField;
-    private JTextField destinoField;
-    private JTextField dataField; //
-    private JTextField horaField; //
+    private JComboBox<PontoColeta> comboOrigem;
+    private JComboBox<PontoColeta> comboDestino;
+    private JTextField dataField;
+    private JTextField horaField;
     private JButton salvarButton;
     private JButton excluirButton;
     private Integer idSelecionado = null;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy"); //
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm"); //
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     public TransfersPanel() {
         setLayout(new BorderLayout(14, 0));
@@ -59,127 +63,59 @@ public class TransfersPanel extends JPanel {
         gbc.gridx = 0;
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 10, 0);
 
         JLabel title = new JLabel("Agendar Transfer");
         title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 14, 0);
-        form.add(title, gbc);
+        gbc.gridy = 0; form.add(title, gbc);
 
-        // Origem
-        JLabel origemLabel = new JLabel("Origem:");
-        origemLabel.setFont(BASE_FONT);
-        origemLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 4, 0);
-        form.add(origemLabel, gbc);
+        // Seleção de Origem
+        comboOrigem = new JComboBox<>();
+        gbc.gridy++; form.add(label("Origem (Catálogo):"), gbc);
+        gbc.gridy++; form.add(comboOrigem, gbc);
 
-        origemField = new JTextField();
-        origemField.setFont(BASE_FONT);
-        origemField.setPreferredSize(new Dimension(0, 34));
-        origemField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 2;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(origemField, gbc);
+        // Seleção de Destino
+        comboDestino = new JComboBox<>();
+        gbc.gridy++; form.add(label("Destino (Catálogo):"), gbc);
+        gbc.gridy++; form.add(comboDestino, gbc);
 
-        // Destino
-        JLabel destinoLabel = new JLabel("Destino:");
-        destinoLabel.setFont(BASE_FONT);
-        destinoLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 3;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(destinoLabel, gbc);
+        // --- DATA E HORA LADO A LADO ---
+        JPanel rowDateTime = new JPanel(new GridLayout(1, 2, 10, 0));
+        rowDateTime.setOpaque(false);
 
-        destinoField = new JTextField();
-        destinoField.setFont(BASE_FONT);
-        destinoField.setPreferredSize(new Dimension(0, 34));
-        destinoField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(destinoField, gbc);
+        JPanel pData = new JPanel(new BorderLayout(0, 4));
+        pData.setOpaque(false);
+        dataField = field("Ex: 20/05/2026");
+        pData.add(label("Data (dd/mm/aaaa):"), BorderLayout.NORTH);
+        pData.add(dataField, BorderLayout.CENTER);
 
-        // Data //
-        JLabel dataLabel = new JLabel("Data (dd/MM/yyyy):");
-        dataLabel.setFont(BASE_FONT);
-        dataLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 5;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(dataLabel, gbc);
+        JPanel pHora = new JPanel(new BorderLayout(0, 4));
+        pHora.setOpaque(false);
+        horaField = field("Ex: 14:30");
+        pHora.add(label("Hora (hh:mm):"), BorderLayout.NORTH);
+        pHora.add(horaField, BorderLayout.CENTER);
 
-        dataField = new JTextField(); //
-        dataField.setFont(BASE_FONT);
-        dataField.setPreferredSize(new Dimension(0, 34));
-        dataField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 6;
-        form.add(dataField, gbc);
+        rowDateTime.add(pData);
+        rowDateTime.add(pHora);
 
-        // Hora //
-        JLabel horaLabel = new JLabel("Hora (HH:mm):");
-        horaLabel.setFont(BASE_FONT);
-        horaLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 7;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(horaLabel, gbc);
+        gbc.gridy++;
+        form.add(rowDateTime, gbc);
 
-        horaField = new JTextField(); //
-        horaField.setFont(BASE_FONT);
-        horaField.setPreferredSize(new Dimension(0, 34));
-        horaField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 8;
-        form.add(horaField, gbc);
+        carregarCombos();
 
         // Botões
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
-        salvarButton = new JButton("Agendar");
-        salvarButton.setBackground(PRIMARY_BLUE);
-        salvarButton.setForeground(Color.WHITE);
-        salvarButton.setFocusPainted(false);
-        salvarButton.setOpaque(true);
-        salvarButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(PRIMARY_BLUE),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        salvarButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        salvarButton = styledButton("Agendar", PRIMARY_BLUE);
         salvarButton.addActionListener(e -> salvarOuAtualizar());
 
-        excluirButton = new JButton("Excluir");
-        excluirButton.setBackground(DANGER_RED);
-        excluirButton.setForeground(Color.WHITE);
-        excluirButton.setFocusPainted(false);
-        excluirButton.setOpaque(true);
-        excluirButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DANGER_RED),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        excluirButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        excluirButton = styledButton("Excluir", DANGER_RED);
         excluirButton.setVisible(false);
         excluirButton.addActionListener(e -> excluirTransfer());
 
-        JButton limpar = new JButton("Limpar");
-        limpar.setBackground(PANEL_BACKGROUND);
+        JButton limpar = styledButton("Limpar", Color.LIGHT_GRAY);
         limpar.setForeground(TEXT_COLOR);
-        limpar.setFocusPainted(false);
-        limpar.setOpaque(true);
-        limpar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        limpar.setFont(BASE_FONT);
         limpar.addActionListener(e -> limparForm());
 
         actions.add(salvarButton);
@@ -195,6 +131,16 @@ public class TransfersPanel extends JPanel {
         return form;
     }
 
+    private void carregarCombos() {
+        List<PontoColeta> locais = pcService.listarTodos();
+        comboOrigem.removeAllItems();
+        comboDestino.removeAllItems();
+        for (PontoColeta p : locais) {
+            comboOrigem.addItem(p);
+            comboDestino.addItem(p);
+        }
+    }
+
     private JComponent buildTable() {
         JPanel panel = new JPanel(new BorderLayout(0, 12));
         panel.setBackground(PANEL_BACKGROUND);
@@ -203,155 +149,105 @@ public class TransfersPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Transfers cadastrados");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
-
         tableModel = new DefaultTableModel(
-                new String[]{"ID", "Origem", "Destino", "Data", "Hora", "Status", "Motorista"}, 0) { //
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+                new String[]{"ID", "Origem", "Destino", "Data", "Hora", "Status", "Motorista"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
         table = new JTable(tableModel);
-        table.setFillsViewportHeight(true);
         table.setRowHeight(28);
-        table.setShowGrid(true);
-        table.setGridColor(new Color(230, 232, 236));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setReorderingAllowed(false);
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        table.setFont(BASE_FONT);
-
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setBorder(new EmptyBorder(0, 8, 0, 8));
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
-
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
-                int row = table.getSelectedRow();
-                idSelecionado = (Integer) tableModel.getValueAt(row, 0);
-                origemField.setText((String) tableModel.getValueAt(row, 1));
-                destinoField.setText((String) tableModel.getValueAt(row, 2));
-                dataField.setText((String) tableModel.getValueAt(row, 3)); //
-                horaField.setText((String) tableModel.getValueAt(row, 4)); //
-                salvarButton.setText("Salvar alteração");
-                excluirButton.setVisible(true);
+                preencherFormParaEdicao();
             }
         });
 
-        JLabel dica = new JLabel("💡 Clique em um transfer para editar ou excluir.");
-        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        dica.setForeground(MUTED_TEXT);
-
+        panel.add(new JLabel("Transfers Cadastrados", JLabel.LEFT), BorderLayout.NORTH);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(dica, BorderLayout.SOUTH);
-        carregarTransfers();
         return panel;
     }
 
-    private void salvarOuAtualizar() {
-        String origem = origemField.getText().trim();
-        String destino = destinoField.getText().trim();
-        String dataStr = dataField.getText().trim(); //
-        String horaStr = horaField.getText().trim(); //
+    private void preencherFormParaEdicao() {
+        int row = table.getSelectedRow();
+        idSelecionado = (Integer) tableModel.getValueAt(row, 0);
+        String origemStr = (String) tableModel.getValueAt(row, 1);
+        String destinoStr = (String) tableModel.getValueAt(row, 2);
 
-        if (origem.isEmpty() || destino.isEmpty() || dataStr.isEmpty() || horaStr.isEmpty()) { //
-            JOptionPane.showMessageDialog(this, "Preencha todos os campos!", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        // Seleciona no Combo baseado na String da tabela
+        selecionarNoCombo(comboOrigem, origemStr);
+        selecionarNoCombo(comboDestino, destinoStr);
 
-        LocalDate data; //
-        LocalTime hora; //
-        try {
-            data = LocalDate.parse(dataStr, DATE_FORMATTER); //
-            hora = LocalTime.parse(horaStr, TIME_FORMATTER); //
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Formato inválido!\nData: dd/MM/yyyy\nHora: HH:mm",
-                    "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        dataField.setText((String) tableModel.getValueAt(row, 3));
+        horaField.setText((String) tableModel.getValueAt(row, 4));
+        salvarButton.setText("Salvar alteração");
+        excluirButton.setVisible(true);
+    }
 
-        try {
-            Transfer t = new Transfer();
-            t.setOrigem(origem);
-            t.setDestino(destino);
-            t.setDataTransfer(data); //
-            t.setHoraTransfer(hora); //
-
-            if (idSelecionado == null) {
-                service.cadastrar(t);
-                JOptionPane.showMessageDialog(this, "Transfer agendado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                t.setId(idSelecionado);
-                service.atualizar(t);
-                JOptionPane.showMessageDialog(this, "Transfer atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+    private void selecionarNoCombo(JComboBox<PontoColeta> combo, String nome) {
+        for (int i = 0; i < combo.getItemCount(); i++) {
+            if (combo.getItemAt(i).getLocalColeta().equals(nome)) {
+                combo.setSelectedIndex(i);
+                break;
             }
-            limparForm();
-            carregarTransfers();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void excluirTransfer() {
-        if (idSelecionado == null) return;
+    private void salvarOuAtualizar() {
+        PontoColeta pOrigem = (PontoColeta) comboOrigem.getSelectedItem();
+        PontoColeta pDestino = (PontoColeta) comboDestino.getSelectedItem();
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja excluir este transfer?",
-                "Confirmar exclusão",
-                JOptionPane.YES_NO_OPTION);
+        try {
+            Transfer t = new Transfer();
+            t.setOrigem(pOrigem.getLocalColeta());
+            t.setDestino(pDestino.getLocalColeta());
+            t.setDataTransfer(LocalDate.parse(dataField.getText(), DATE_FORMATTER));
+            t.setHoraTransfer(LocalTime.parse(horaField.getText(), TIME_FORMATTER));
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                service.excluir(idSelecionado); //
-                limparForm();
-                carregarTransfers();
-                JOptionPane.showMessageDialog(this, "Transfer excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            }
+            if (idSelecionado == null) service.cadastrar(t);
+            else { t.setId(idSelecionado); service.atualizar(t); }
+
+            limparForm();
+            carregarTransfers();
+            JOptionPane.showMessageDialog(this, "Sucesso!");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage());
         }
     }
 
     private void carregarTransfers() {
         tableModel.setRowCount(0);
-        try {
-            List<Transfer> lista = service.listarTodos();
-            for (Transfer t : lista) {
-                String motorista = (t.getOrdemServico() != null && t.getOrdemServico().getMotorista() != null)
-                        ? t.getOrdemServico().getMotorista().getNome()
-                        : "Sem OS";
-                tableModel.addRow(new Object[]{
-                        t.getId(),
-                        t.getOrigem(),
-                        t.getDestino(),
-                        t.getDataTransfer().format(DATE_FORMATTER), //
-                        t.getHoraTransfer().format(TIME_FORMATTER), //
-                        t.getStatus(),
-                        motorista
-                });
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        List<Transfer> lista = service.listarTodos();
+        for (Transfer t : lista) {
+            tableModel.addRow(new Object[]{
+                    t.getId(), t.getOrigem(), t.getDestino(),
+                    t.getDataTransfer().format(DATE_FORMATTER),
+                    t.getHoraTransfer().format(TIME_FORMATTER),
+                    t.getStatus(), "Sem OS"
+            });
         }
     }
 
     private void limparForm() {
         idSelecionado = null;
-        origemField.setText("");
-        destinoField.setText("");
-        dataField.setText(""); //
-        horaField.setText(""); //
+        if (comboOrigem.getItemCount() > 0) comboOrigem.setSelectedIndex(0);
+        if (comboDestino.getItemCount() > 0) comboDestino.setSelectedIndex(0);
+        dataField.setText("");
+        horaField.setText("");
         salvarButton.setText("Agendar");
         excluirButton.setVisible(false);
         table.clearSelection();
-        origemField.requestFocus();
     }
+
+    // Helpers de UI
+    private JLabel label(String t) { JLabel l = new JLabel(t); l.setFont(BASE_FONT); l.setForeground(MUTED_TEXT); return l; }
+    private JTextField field(String p) {
+        JTextField f = new JTextField(); f.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
+        f.setPreferredSize(new Dimension(0, 30)); return f;
+    }
+    private JButton styledButton(String t, Color bg) {
+        JButton b = new JButton(t); b.setBackground(bg); b.setForeground(Color.WHITE);
+        b.setFocusPainted(false); return b;
+    }
+
+    private void excluirTransfer() { /* sua lógica de excluir */ }
 }

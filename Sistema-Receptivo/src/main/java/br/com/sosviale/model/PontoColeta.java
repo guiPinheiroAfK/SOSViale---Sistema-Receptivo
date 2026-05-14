@@ -53,7 +53,8 @@ public class PontoColeta {
     public void setOrdemParada(int ordem) {
     }
 
-    public Object getOrdemParada() {
-        return null;
+    @Override
+    public String toString() {
+        return this.localColeta != null ? this.localColeta : "";
     }
 }
