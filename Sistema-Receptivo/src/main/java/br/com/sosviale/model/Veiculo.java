@@ -10,6 +10,9 @@ public class Veiculo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(length = 50)
+    private String marca;
+
     @Column(nullable = false, length = 50)
     private String label;
 
@@ -19,6 +22,9 @@ public class Veiculo {
 
     @Column(nullable = false)
     private Integer capacidade;
+
+    @Column(length = 50)
+    private String tipo;
 
     // construtor padrão obrigatório pelo JPA
     public Veiculo() {
@@ -43,4 +49,10 @@ public class Veiculo {
 
     public Integer getCapacidade() { return capacidade; }
     public void setCapacidade(Integer capacidade) { this.capacidade = capacidade; }
+
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
+
+    public String getMarca() { return marca; }
+    public void setMarca(String marca) { this.marca = marca; }
 }

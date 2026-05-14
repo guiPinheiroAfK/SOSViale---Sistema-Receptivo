@@ -1,5 +1,6 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.model.Transfer;
 import br.com.sosviale.service.PontoColetaService;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TransfersPanel extends JPanel {
@@ -29,6 +31,9 @@ public class TransfersPanel extends JPanel {
 
     private final TransferService service = new TransferService();
     private final PontoColetaService pcService = new PontoColetaService();
+
+    private final List<Passageiro> passageirosSelecionados = new ArrayList<>();
+    private DefaultTableModel modelPassageirosTransfer;
 
     private DefaultTableModel tableModel;
     private JTable table;
@@ -68,6 +73,31 @@ public class TransfersPanel extends JPanel {
         JLabel title = new JLabel("Agendar Transfer");
         title.setFont(SECTION_FONT);
         gbc.gridy = 0; form.add(title, gbc);
+
+        gbc.gridy++; form.add(label("Passageiros no Grupo:"), gbc);
+
+        JPanel pPass = new JPanel(new BorderLayout(5, 0));
+        pPass.setOpaque(false);
+
+        modelPassageirosTransfer = new DefaultTableModel(new String[]{"Nome"}, 0);
+        JTable miniTable = new JTable(modelPassageirosTransfer);
+        JScrollPane scroll = new JScrollPane(miniTable);
+        scroll.setPreferredSize(new Dimension(0, 80));
+
+        JButton btnAdd = styledButton("+", PRIMARY_BLUE);
+        btnAdd.addActionListener(e -> {
+            PassageiroSelectionDialog dialog = new PassageiroSelectionDialog((Frame) SwingUtilities.getWindowAncestor(this));
+            dialog.setVisible(true);
+            Passageiro p = dialog.getSelecionado();
+            if (p != null && !passageirosSelecionados.contains(p)) {
+                passageirosSelecionados.add(p);
+                modelPassageirosTransfer.addRow(new Object[]{p.getNome()});
+            }
+        });
+
+        pPass.add(scroll, BorderLayout.CENTER);
+        pPass.add(btnAdd, BorderLayout.EAST);
+        gbc.gridy++; form.add(pPass, gbc);
 
         // Seleção de Origem
         comboOrigem = new JComboBox<>();

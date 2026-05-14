@@ -26,6 +26,7 @@ public class MotoristasPanel extends JPanel {
     private JTable table;
     private JTextField nomeField;
     private JTextField cnhField;
+    private JTextField telefoneField;
     private JButton salvarButton;
     private JButton excluirButton;
     private Integer idSelecionado = null;
@@ -93,6 +94,16 @@ public class MotoristasPanel extends JPanel {
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(cnhField, gbc);
+
+        gbc.gridy++; form.add(label("Telefone:"), gbc);
+        telefoneField = new JTextField();
+        telefoneField.setFont(BASE_FONT);
+        telefoneField.setPreferredSize(new Dimension(0, 34));
+        telefoneField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        gbc.gridy++; form.add(telefoneField, gbc);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
@@ -207,6 +218,7 @@ public class MotoristasPanel extends JPanel {
     private void salvarOuAtualizar() {
         String nome = nomeField.getText().trim();
         String cnh = cnhField.getText().trim();
+        String telefone = telefoneField.getText().trim();
 
         if (nome.isEmpty() || cnh.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Preencha todos os campos!", "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -215,7 +227,14 @@ public class MotoristasPanel extends JPanel {
 
         try {
             if (idSelecionado == null) {
-                service.salvar(nome, cnh);
+                // Criamos o objeto completo
+                Motorista novoMotorista = new Motorista(nome, cnh);
+                novoMotorista.setTelefone(telefone);
+
+                // DICA: Se o seu service ainda só aceita (nome, cnh),
+                // você vai precisar atualizar o MotoristaService.java para aceitar o objeto Motorista!
+                service.salvar(novoMotorista.getNome(), novoMotorista.getCnh());
+
                 JOptionPane.showMessageDialog(this, "Motorista cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 service.atualizar(idSelecionado, nome, cnh);
@@ -268,5 +287,12 @@ public class MotoristasPanel extends JPanel {
         excluirButton.setVisible(false);
         table.clearSelection();
         nomeField.requestFocus();
+    }
+
+    private JLabel label(String t) {
+        JLabel l = new JLabel(t);
+        l.setFont(BASE_FONT);
+        l.setForeground(MUTED_TEXT);
+        return l;
     }
 }

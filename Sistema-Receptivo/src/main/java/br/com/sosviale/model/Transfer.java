@@ -40,6 +40,14 @@ public class Transfer {
     @Column(name = "moeda_origem", length = 5, nullable = false)
     private Moeda moedaOrigem = Moeda.BRL;
 
+    @ManyToMany
+    @JoinTable(
+            name = "transfer_passageiro",
+            joinColumns = @JoinColumn(name = "transfer_id"),
+            inverseJoinColumns = @JoinColumn(name = "passageiro_id")
+    )
+    private List<Passageiro> passageiros = new ArrayList<>();
+
     /*@OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @OrderBy(" ASC")
     private List<PontoColeta> pontosColeta = new ArrayList<>();
@@ -47,14 +55,6 @@ public class Transfer {
     @ManyToOne
     @JoinColumn(name = "os_id")
     private OrdemServico ordemServico;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "transfer_passageiros",
-            joinColumns = @JoinColumn(name = "transfer_id"),
-            inverseJoinColumns = @JoinColumn(name = "passageiro_id")
-    )
-    private List<Passageiro> passageiros = new ArrayList<>();
 
     // Construtor padrão (JPA)
     public Transfer() {}
@@ -92,6 +92,7 @@ public class Transfer {
 
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
+
 /*
     public List<PontoColeta> getPontosColeta() { return pontosColeta; }
     public void setPontosColeta(List<PontoColeta> pontosColeta) { this.pontosColeta = pontosColeta; }

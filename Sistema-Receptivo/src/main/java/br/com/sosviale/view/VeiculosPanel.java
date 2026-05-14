@@ -24,9 +24,14 @@ public class VeiculosPanel extends JPanel {
     private final VeiculoService service = new VeiculoService();
     private DefaultTableModel tableModel;
     private JTable table;
+
+    // Campos do formulário
     private JTextField labelField;
     private JTextField placaField;
     private JTextField capacidadeField;
+    private JTextField marcaField;
+    private JComboBox<String> comboTipo;
+
     private JButton salvarButton;
     private JButton excluirButton;
     private Integer idSelecionado = null;
@@ -51,106 +56,52 @@ public class VeiculosPanel extends JPanel {
         gbc.gridx = 0;
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 10, 0);
 
         JLabel title = new JLabel("Cadastro de Veículo");
         title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 14, 0);
-        form.add(title, gbc);
+        gbc.gridy = 0; form.add(title, gbc);
 
-        JLabel labelLabel = new JLabel("Modelo (ex: Mercedes Sprinter):");
-        labelLabel.setFont(BASE_FONT);
-        labelLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 4, 0);
-        form.add(labelLabel, gbc);
+        // Modelo
+        gbc.gridy++; form.add(label("Modelo (ex: Sprinter):"), gbc);
+        labelField = field();
+        gbc.gridy++; form.add(labelField, gbc);
 
-        labelField = new JTextField();
-        labelField.setFont(BASE_FONT);
-        labelField.setPreferredSize(new Dimension(0, 34));
-        labelField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 2;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(labelField, gbc);
+        // Marca (Adicionado)
+        gbc.gridy++; form.add(label("Marca (ex: Toyota, Chery):"), gbc);
+        marcaField = field();
+        gbc.gridy++; form.add(marcaField, gbc);
 
-        JLabel placaLabel = new JLabel("Placa (padrão Mercosul, ex: ABC1D23):");
-        placaLabel.setFont(BASE_FONT);
-        placaLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 3;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(placaLabel, gbc);
+        // Placa
+        gbc.gridy++; form.add(label("Placa:"), gbc);
+        placaField = field();
+        gbc.gridy++; form.add(placaField, gbc);
 
-        placaField = new JTextField();
-        placaField.setFont(BASE_FONT);
-        placaField.setPreferredSize(new Dimension(0, 34));
-        placaField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(placaField, gbc);
+        // Tipo (Adicionado)
+        gbc.gridy++; form.add(label("Tipo:"), gbc);
+        String[] tipos = {"Van", "SUV", "Sedan", "Hatch", "Micro-ônibus"};
+        comboTipo = new JComboBox<>(tipos);
+        comboTipo.setBackground(Color.WHITE);
+        gbc.gridy++; form.add(comboTipo, gbc);
 
-        JLabel capacidadeLabel = new JLabel("Capacidade de passageiros:");
-        capacidadeLabel.setFont(BASE_FONT);
-        capacidadeLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 5;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(capacidadeLabel, gbc);
+        // Capacidade
+        gbc.gridy++; form.add(label("Capacidade de passageiros:"), gbc);
+        capacidadeField = field();
+        gbc.gridy++; form.add(capacidadeField, gbc);
 
-        capacidadeField = new JTextField();
-        capacidadeField.setFont(BASE_FONT);
-        capacidadeField.setPreferredSize(new Dimension(0, 34));
-        capacidadeField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 6;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(capacidadeField, gbc);
-
+        // Botões
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
-        salvarButton = new JButton("Adicionar");
-        salvarButton.setBackground(PRIMARY_BLUE);
-        salvarButton.setForeground(Color.WHITE);
-        salvarButton.setFocusPainted(false);
-        salvarButton.setOpaque(true);
-        salvarButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(PRIMARY_BLUE),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        salvarButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        salvarButton = styledButton("Adicionar", PRIMARY_BLUE);
         salvarButton.addActionListener(e -> salvarOuAtualizar());
 
-        excluirButton = new JButton("Excluir");
-        excluirButton.setBackground(DANGER_RED);
-        excluirButton.setForeground(Color.WHITE);
-        excluirButton.setFocusPainted(false);
-        excluirButton.setOpaque(true);
-        excluirButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DANGER_RED),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        excluirButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        excluirButton = styledButton("Excluir", DANGER_RED);
         excluirButton.setVisible(false);
         excluirButton.addActionListener(e -> excluirVeiculo());
 
-        JButton limpar = new JButton("Limpar");
-        limpar.setBackground(PANEL_BACKGROUND);
+        JButton limpar = styledButton("Limpar", Color.LIGHT_GRAY);
         limpar.setForeground(TEXT_COLOR);
-        limpar.setFocusPainted(false);
-        limpar.setOpaque(true);
-        limpar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        limpar.setFont(BASE_FONT);
         limpar.addActionListener(e -> limparForm());
 
         actions.add(salvarButton);
@@ -160,10 +111,96 @@ public class VeiculosPanel extends JPanel {
         gbc.gridy = 99;
         gbc.weighty = 1;
         gbc.anchor = GridBagConstraints.SOUTHWEST;
-        gbc.insets = new Insets(18, 0, 0, 0);
         form.add(actions, gbc);
 
         return form;
+    }
+
+    private void salvarOuAtualizar() {
+        String labelTxt = labelField.getText().trim();
+        String placa = placaField.getText().trim().toUpperCase();
+        String capStr = capacidadeField.getText().trim();
+        String marca = marcaField.getText().trim();
+        String tipo = (String) comboTipo.getSelectedItem();
+
+        if (labelTxt.isEmpty() || placa.isEmpty() || capStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Preencha os campos obrigatórios!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int capacidade = Integer.parseInt(capStr);
+
+            // Criamos o objeto Veiculo para concentrar os dados
+            Veiculo v = new Veiculo(labelTxt, placa, capacidade);
+            v.setMarca(marca);
+            v.setTipo(tipo);
+
+            if (idSelecionado == null) {
+                // Se seu service ainda usa 3 parâmetros, você precisará atualizá-lo
+                // para aceitar marca e tipo também!
+                service.salvar(v.getLabel(), v.getPlaca(), v.getCapacidade());
+                JOptionPane.showMessageDialog(this, "Veículo cadastrado!");
+            } else {
+                v.setId(idSelecionado);
+                service.atualizar(idSelecionado, labelTxt, placa, capacidade);
+                JOptionPane.showMessageDialog(this, "Veículo atualizado!");
+            }
+
+            limparForm();
+            carregarVeiculos();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Capacidade inválida.");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage());
+        }
+    }
+
+    private void carregarVeiculos() {
+        tableModel.setRowCount(0);
+        service.listarTodos().forEach(v -> {
+            tableModel.addRow(new Object[]{v.getId(), v.getLabel(), v.getPlaca(), v.getCapacidade()});
+        });
+    }
+
+    private void limparForm() {
+        idSelecionado = null;
+        labelField.setText("");
+        placaField.setText("");
+        capacidadeField.setText("");
+        marcaField.setText("");
+        comboTipo.setSelectedIndex(0);
+        salvarButton.setText("Adicionar");
+        excluirButton.setVisible(false);
+        table.clearSelection();
+    }
+
+    // Helpers para manter o padrão visual
+    private JLabel label(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(BASE_FONT);
+        l.setForeground(MUTED_TEXT);
+        return l;
+    }
+
+    private JTextField field() {
+        JTextField f = new JTextField();
+        f.setFont(BASE_FONT);
+        f.setPreferredSize(new Dimension(0, 34));
+        f.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        return f;
+    }
+
+    private JButton styledButton(String text, Color bg) {
+        JButton b = new JButton(text);
+        b.setBackground(bg);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setFont(new Font("SansSerif", Font.BOLD, 12));
+        return b;
     }
 
     private JComponent buildTable() {
@@ -174,34 +211,12 @@ public class VeiculosPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Veículos cadastrados");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
-
         tableModel = new DefaultTableModel(new String[]{"ID", "Modelo", "Placa", "Capacidade"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
         table = new JTable(tableModel);
-        table.setFillsViewportHeight(true);
         table.setRowHeight(28);
-        table.setShowGrid(true);
-        table.setGridColor(new Color(230, 232, 236));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setReorderingAllowed(false);
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        table.setFont(BASE_FONT);
-
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setBorder(new EmptyBorder(0, 8, 0, 8));
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
-
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 int row = table.getSelectedRow();
@@ -209,95 +224,22 @@ public class VeiculosPanel extends JPanel {
                 labelField.setText((String) tableModel.getValueAt(row, 1));
                 placaField.setText((String) tableModel.getValueAt(row, 2));
                 capacidadeField.setText(String.valueOf(tableModel.getValueAt(row, 3)));
+                // Aqui você também poderia preencher Marca e Tipo se eles estivessem na tabela
                 salvarButton.setText("Salvar alteração");
                 excluirButton.setVisible(true);
             }
         });
 
-        JLabel dica = new JLabel("💡 Clique em um veículo para editar ou excluir.");
-        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        dica.setForeground(MUTED_TEXT);
-
+        panel.add(new JLabel("Veículos cadastrados", JLabel.LEFT), BorderLayout.NORTH);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(dica, BorderLayout.SOUTH);
-        carregarVeiculos();
         return panel;
     }
 
-    private void salvarOuAtualizar() {
-        String label = labelField.getText().trim();
-        String placa = placaField.getText().trim().toUpperCase();
-        String capacidadeStr = capacidadeField.getText().trim();
-
-        if (label.isEmpty() || placa.isEmpty() || capacidadeStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Preencha todos os campos!", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int capacidade;
-        try {
-            capacidade = Integer.parseInt(capacidadeStr);
-            if (capacidade <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Capacidade deve ser um número maior que zero!", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        try {
-            if (idSelecionado == null) {
-                service.salvar(label, placa, capacidade);
-                JOptionPane.showMessageDialog(this, "Veículo cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                service.atualizar(idSelecionado, label, placa, capacidade);
-                JOptionPane.showMessageDialog(this, "Veículo atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            }
+    private void excluirVeiculo() {
+        if (idSelecionado != null) {
+            service.excluir(idSelecionado);
             limparForm();
             carregarVeiculos();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void excluirVeiculo() {
-        if (idSelecionado == null) return;
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja excluir este veículo?",
-                "Confirmar exclusão",
-                JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                service.excluir(idSelecionado);
-                limparForm();
-                carregarVeiculos();
-                JOptionPane.showMessageDialog(this, "Veículo excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    private void carregarVeiculos() {
-        tableModel.setRowCount(0);
-        try {
-            List<Veiculo> veiculos = service.listarTodos();
-            for (Veiculo v : veiculos) {
-                tableModel.addRow(new Object[]{v.getId(), v.getLabel(), v.getPlaca(), v.getCapacidade()});
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void limparForm() {
-        idSelecionado = null;
-        labelField.setText("");
-        placaField.setText("");
-        capacidadeField.setText("");
-        salvarButton.setText("Adicionar");
-        excluirButton.setVisible(false);
-        table.clearSelection();
-        labelField.requestFocus();
     }
 }
