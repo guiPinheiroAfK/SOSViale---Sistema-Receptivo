@@ -78,12 +78,31 @@ public class UserRepository {
         }
     }
 
+    public void atualizar(User user) {
+        if (user == null || user.getId() == null)
+            throw new IllegalArgumentException("Usuário inválido para atualização.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(user);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
     public void excluir(String usuario) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            User u = buscarPorUsuario(usuario);
-            if (u != null) em.remove(em.merge(u));
+            List<User> resultado = em.createQuery(
+                            "SELECT u FROM User u WHERE u.usuario = :usuario", User.class)
+                    .setParameter("usuario", usuario)
+                    .getResultList();
+            if (!resultado.isEmpty()) em.remove(resultado.get(0));
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();

@@ -128,11 +128,45 @@ public class UserService {
     //  EXCLUSÃO
     // ════════════════════════════════════════════════════════════════════════
 
-    public void excluir(String usuario) throws AuthenticationException, ValidationException {
+    // ════════════════════════════════════════════════════════════════════════
+    //  EXCLUSÃO
+    // ════════════════════════════════════════════════════════════════════════
+
+    public void excluir(String usuario)
+            throws AuthenticationException, ValidationException {
+
         if ("admin".equalsIgnoreCase(usuario)) {
-            throw new ValidationException("Não é possível excluir o administrador.");
+            throw new ValidationException("Não é possível excluir o administrador do sistema.");
         }
+
         repository.excluir(usuario);
+    }
+
+    /**
+     * Atualiza nome e perfil. Usuário de login não é alterado.
+     */
+    public void atualizar(String usuario, String nome, Perfil perfil, String senhaAdmin)
+            throws AuthenticationException, ValidationException {
+        User admin = repository.buscarAdmin();
+        if (admin == null || !PasswordUtil.verificarSenha(senhaAdmin, admin.getSenha())) {
+            throw new AuthenticationException("Senha do administrador incorreta.");
+        }
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new ValidationException("Nome é obrigatório.");
+        }
+
+        User alvo = repository.buscarPorUsuario(usuario);
+        if (alvo == null) {
+            throw new ValidationException("Usuário não encontrado.");
+        }
+
+        alvo.setNome(nome.trim());
+        if (alvo.isAdmin()) {
+            alvo.setPerfil(Perfil.ADMIN);
+        } else {
+            alvo.setPerfil(perfil != null ? perfil : Perfil.GERENTE);
+        }
+        repository.atualizar(alvo);
     }
 
     // ════════════════════════════════════════════════════════════════════════
