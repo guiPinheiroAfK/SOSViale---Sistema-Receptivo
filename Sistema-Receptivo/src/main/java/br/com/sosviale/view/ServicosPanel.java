@@ -1,10 +1,10 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.OrdemServico;
 import br.com.sosviale.model.Transfer;
-import br.com.sosviale.service.OrdemServicoService;
+import br.com.sosviale.offline.MotoristaFieldService;
 import br.com.sosviale.service.StatusTransfer;
-import br.com.sosviale.service.TransferService;
 import br.com.sosviale.util.PdfItext;
 
 import javax.swing.*;
@@ -13,8 +13,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
+import java.util.Map;
 
-public class ServicosPanel extends JPanel {
+public class ServicosPanel extends JPanel implements LanguageManager.LanguageChangeListener {
 
     private static final Color PANEL_BACKGROUND = Color.WHITE;
     private static final Color BORDER_COLOR     = new Color(210, 214, 220);
@@ -25,17 +26,21 @@ public class ServicosPanel extends JPanel {
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
 
-    private final TransferService     transferService = new TransferService();
-    private final OrdemServicoService osService       = new OrdemServicoService();
+    private final MotoristaFieldService fieldService = new MotoristaFieldService();
 
     private DefaultTableModel tableModel;
     private JTable table;
 
+    private JLabel titleFormLabel;
+    private JLabel labelTransferKey, labelOsKey, labelMotoristaKey, labelRotaKey, labelPaxKey, labelStatusKey;
     private JLabel labelId;
     private JLabel labelOs;
     private JLabel labelMotorista;
     private JLabel labelRota;
     private JLabel labelPax;
+    private JLabel tableTitleLabel;
+    private JLabel dicaLabel;
+    private JLabel offlineStatusLabel;
     private JComboBox<StatusTransfer> comboStatus;
     private JButton excluirButton;
     private JButton btnGerarPdf;
@@ -44,10 +49,26 @@ public class ServicosPanel extends JPanel {
     private boolean atualizandoCombo = false;
 
     public ServicosPanel() {
-        setLayout(new BorderLayout(14, 0));
+        setLayout(new BorderLayout(0, 10));
         setOpaque(false);
-        add(buildForm(), BorderLayout.WEST);
-        add(buildTable(), BorderLayout.CENTER);
+
+        JPanel topBar = new JPanel(new BorderLayout(8, 0));
+        topBar.setOpaque(false);
+        offlineStatusLabel = new JLabel();
+        offlineStatusLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        offlineStatusLabel.setForeground(new Color(200, 120, 40));
+        topBar.add(offlineStatusLabel, BorderLayout.WEST);
+        topBar.add(new NotificationBellPanel(), BorderLayout.EAST);
+        add(topBar, BorderLayout.NORTH);
+
+        JPanel body = new JPanel(new BorderLayout(14, 0));
+        body.setOpaque(false);
+        body.add(buildForm(), BorderLayout.WEST);
+        body.add(buildTable(), BorderLayout.CENTER);
+        add(body, BorderLayout.CENTER);
+
+        LanguageManager.getInstance().addLanguageChangeListener(this);
+        updateTexts();
     }
 
     public void atualizar() {
@@ -68,56 +89,68 @@ public class ServicosPanel extends JPanel {
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel title = new JLabel("Detalhes do Serviço");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
+        titleFormLabel = new JLabel();
+        titleFormLabel.setFont(SECTION_FONT);
+        titleFormLabel.setForeground(TEXT_COLOR);
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 14, 0);
-        form.add(title, gbc);
+        form.add(titleFormLabel, gbc);
 
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.gridy++;
-        form.add(label("Transfer #:"), gbc);
+        labelTransferKey = label("servicos.label.transfer");
+        form.add(labelTransferKey, gbc);
         labelId = valueLabel("—");
         gbc.gridy++;
         form.add(labelId, gbc);
 
         gbc.gridy++;
-        form.add(label("Ordem de serviço:"), gbc);
+        labelOsKey = label("servicos.label.os");
+        form.add(labelOsKey, gbc);
         labelOs = valueLabel("—");
         gbc.gridy++;
         form.add(labelOs, gbc);
 
         gbc.gridy++;
-        form.add(label("Motorista:"), gbc);
+        labelMotoristaKey = label("servicos.label.driver");
+        form.add(labelMotoristaKey, gbc);
         labelMotorista = valueLabel("—");
         gbc.gridy++;
         form.add(labelMotorista, gbc);
 
         gbc.gridy++;
-        form.add(label("Rota:"), gbc);
+        labelRotaKey = label("servicos.label.route");
+        form.add(labelRotaKey, gbc);
         labelRota = valueLabel("—");
         gbc.gridy++;
         form.add(labelRota, gbc);
 
         gbc.gridy++;
-        form.add(label("Passageiros:"), gbc);
+        labelPaxKey = label("servicos.label.passengers");
+        form.add(labelPaxKey, gbc);
         labelPax = valueLabel("—");
         gbc.gridy++;
         form.add(labelPax, gbc);
 
         gbc.gridy++;
-        form.add(label("Status:"), gbc);
-        comboStatus = new JComboBox<>(new StatusTransfer[]{
-                StatusTransfer.NA_OS,
-                StatusTransfer.EM_EXECUCAO,
-                StatusTransfer.CONCLUIDO,
-                StatusTransfer.CANCELADO
-        });
+        labelStatusKey = label("servicos.label.status");
+        form.add(labelStatusKey, gbc);
+        comboStatus = new JComboBox<>(StatusTransfer.values());
         comboStatus.setFont(BASE_FONT);
         comboStatus.setBackground(Color.WHITE);
         comboStatus.setPreferredSize(new Dimension(0, 34));
         comboStatus.setEnabled(false);
+        comboStatus.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                            boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof StatusTransfer st) {
+                    setText(LanguageManager.getInstance().translateStatus(st));
+                }
+                return this;
+            }
+        });
         comboStatus.addActionListener(e -> {
             if (!atualizandoCombo && transferIdSelecionado != null) {
                 alterarStatus();
@@ -129,11 +162,11 @@ public class ServicosPanel extends JPanel {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
-        btnGerarPdf = styledButton("Baixar PDF da OS", PRIMARY_BLUE);
+        btnGerarPdf = styledButton("servicos.button.pdf", PRIMARY_BLUE);
         btnGerarPdf.setEnabled(false);
         btnGerarPdf.addActionListener(e -> baixarPdfOs());
 
-        excluirButton = styledButton("Excluir serviço", DANGER_RED);
+        excluirButton = styledButton("servicos.button.delete", DANGER_RED);
         excluirButton.setEnabled(false);
         excluirButton.addActionListener(e -> excluirServico());
 
@@ -157,13 +190,12 @@ public class ServicosPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Serviços ativos (transfers na OS)");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
+        tableTitleLabel = new JLabel();
+        tableTitleLabel.setFont(SECTION_FONT);
+        tableTitleLabel.setForeground(TEXT_COLOR);
+        panel.add(tableTitleLabel, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(
-                new String[]{"ID", "OS", "Motorista", "Origem / Destino", "Pax", "Status"}, 0) {
+        tableModel = new DefaultTableModel(new String[]{"", "", "", "", "", ""}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
@@ -176,14 +208,44 @@ public class ServicosPanel extends JPanel {
             }
         });
 
-        JLabel dica = new JLabel("💡 Selecione um serviço da OS para alterar status, baixar PDF da OS ou excluir o transfer.");
-        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        dica.setForeground(MUTED_TEXT);
+        dicaLabel = new JLabel();
+        dicaLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        dicaLabel.setForeground(MUTED_TEXT);
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(dica, BorderLayout.SOUTH);
+        panel.add(dicaLabel, BorderLayout.SOUTH);
         carregarServicos();
         return panel;
+    }
+
+    private void updateTexts() {
+        LanguageManager lm = LanguageManager.getInstance();
+        titleFormLabel.setText(lm.translate("servicos.form.title"));
+        labelTransferKey.setText(lm.translate("servicos.label.transfer"));
+        labelOsKey.setText(lm.translate("servicos.label.os"));
+        labelMotoristaKey.setText(lm.translate("servicos.label.driver"));
+        labelRotaKey.setText(lm.translate("servicos.label.route"));
+        labelPaxKey.setText(lm.translate("servicos.label.passengers"));
+        labelStatusKey.setText(lm.translate("servicos.label.status"));
+        tableTitleLabel.setText(lm.translate("servicos.table.title"));
+        dicaLabel.setText(lm.translate("servicos.table.hint"));
+        btnGerarPdf.setText(lm.translate("servicos.button.pdf"));
+        excluirButton.setText(lm.translate("servicos.button.delete"));
+        tableModel.setColumnIdentifiers(new String[]{
+                lm.translate("servicos.table.col.id"),
+                lm.translate("servicos.table.col.os"),
+                lm.translate("servicos.table.col.driver"),
+                lm.translate("servicos.table.col.route"),
+                lm.translate("servicos.table.col.pax"),
+                lm.translate("servicos.table.col.status")
+        });
+        comboStatus.repaint();
+        carregarServicos();
+    }
+
+    @Override
+    public void onLanguageChanged(LanguageManager.Language newLanguage) {
+        updateTexts();
     }
 
     private void preencherDetalhes(int row) {
@@ -196,7 +258,10 @@ public class ServicosPanel extends JPanel {
         labelPax.setText(String.valueOf(tableModel.getValueAt(row, 4)));
 
         atualizandoCombo = true;
-        comboStatus.setSelectedItem(tableModel.getValueAt(row, 5));
+        Object statusVal = tableModel.getValueAt(row, 5);
+        if (statusVal instanceof StatusTransfer st) {
+            comboStatus.setSelectedItem(st);
+        }
         atualizandoCombo = false;
 
         comboStatus.setEnabled(true);
@@ -216,26 +281,31 @@ public class ServicosPanel extends JPanel {
     private void baixarPdfOs() {
         if (osIdSelecionado == null) {
             JOptionPane.showMessageDialog(this,
-                    "Selecione um serviço vinculado a uma OS.",
-                    "Aviso", JOptionPane.WARNING_MESSAGE);
+                    LanguageManager.getInstance().translate("servicos.warn.select.os"),
+                    LanguageManager.getInstance().translate("transfers.message.warning"),
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
-            OrdemServico os = osService.buscarComTransfers(osIdSelecionado);
+            OrdemServico os = fieldService.buscarOsComTransfers(osIdSelecionado);
             if (os == null) {
-                JOptionPane.showMessageDialog(this, "OS não encontrada.", "Erro", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        LanguageManager.getInstance().translate("servicos.error.os.notfound"),
+                        LanguageManager.getInstance().translate("transfers.message.error"),
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (os.getTransfers() == null || os.getTransfers().isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                        "A OS não possui transfers vinculados para gerar o PDF.",
-                        "Aviso", JOptionPane.WARNING_MESSAGE);
+                        LanguageManager.getInstance().translate("servicos.warn.no.transfers"),
+                        LanguageManager.getInstance().translate("transfers.message.warning"),
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Salvar PDF da OS #" + os.getId());
+            chooser.setDialogTitle("OS #" + os.getId());
             chooser.setSelectedFile(new File(PdfItext.nomeArquivoPadrao(os)));
             chooser.setFileFilter(new FileNameExtensionFilter("PDF (*.pdf)", "pdf"));
 
@@ -250,8 +320,8 @@ public class ServicosPanel extends JPanel {
             String gerado = PdfItext.gerarPdfOs(os, caminho);
 
             int abrir = JOptionPane.showConfirmDialog(this,
-                    "PDF salvo em:\n" + gerado + "\n\nDeseja abrir o arquivo?",
-                    "PDF gerado",
+                    LanguageManager.getInstance().translate("servicos.pdf.saved", Map.of("path", gerado)),
+                    LanguageManager.getInstance().translate("servicos.pdf.title"),
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.INFORMATION_MESSAGE);
 
@@ -260,8 +330,9 @@ public class ServicosPanel extends JPanel {
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                    "Erro ao gerar PDF: " + ex.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
+                    LanguageManager.getInstance().translate("servicos.pdf.error", Map.of("msg", ex.getMessage())),
+                    LanguageManager.getInstance().translate("transfers.message.error"),
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -270,42 +341,45 @@ public class ServicosPanel extends JPanel {
 
         StatusTransfer novoStatus = (StatusTransfer) comboStatus.getSelectedItem();
         try {
-            Transfer t = transferService.buscarPorId(transferIdSelecionado);
-            if (t == null) {
-                JOptionPane.showMessageDialog(this, "Transfer não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            t.setStatus(novoStatus);
-            transferService.atualizar(t);
+            fieldService.atualizarStatus(transferIdSelecionado, novoStatus);
             carregarServicos();
             selecionarLinhaPorId(transferIdSelecionado);
             JOptionPane.showMessageDialog(this,
-                    "Status atualizado para: " + novoStatus.getDescricao(),
-                    "Sucesso",
+                    LanguageManager.getInstance().translate("servicos.status.updated", Map.of(
+                            "status", LanguageManager.getInstance().translateStatus(novoStatus))),
+                    LanguageManager.getInstance().translate("transfers.message.success"),
                     JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao atualizar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    LanguageManager.getInstance().translate("servicos.error.update", Map.of("msg", ex.getMessage())),
+                    LanguageManager.getInstance().translate("transfers.message.error"),
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void excluirServico() {
         if (transferIdSelecionado == null) return;
-
+        LanguageManager lm = LanguageManager.getInstance();
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Excluir o transfer #" + transferIdSelecionado + " do banco de dados?\n" +
-                        "Esta ação não pode ser desfeita.",
-                "Confirmar exclusão",
+                lm.translate("servicos.delete.confirm", Map.of("id", String.valueOf(transferIdSelecionado))),
+                lm.translate("transfers.message.delete.confirm.title"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            transferService.excluir(transferIdSelecionado);
+            fieldService.excluirTransfer(transferIdSelecionado);
             limparDetalhes();
             carregarServicos();
-            JOptionPane.showMessageDialog(this, "Serviço excluído do banco.", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    lm.translate("servicos.delete.success"),
+                    lm.translate("transfers.message.success"),
+                    JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao excluir: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    lm.translate("servicos.error.delete", Map.of("msg", ex.getMessage())),
+                    lm.translate("transfers.message.error"),
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -340,33 +414,66 @@ public class ServicosPanel extends JPanel {
     private void carregarServicos() {
         Integer idManter = transferIdSelecionado;
         tableModel.setRowCount(0);
+        LanguageManager lm = LanguageManager.getInstance();
 
-        for (Transfer t : transferService.listarVinculadosOrdemServico()) {
+        for (Transfer t : fieldService.listarServicosAtivos()) {
             OrdemServico os = t.getOrdemServico();
             if (os == null) continue;
 
-            String motorista = os.getMotorista() != null ? os.getMotorista().getNome() : "N/D";
+            String motorista = os.getMotorista() != null
+                    ? os.getMotorista().getNome()
+                    : lm.translate("common.na");
             tableModel.addRow(new Object[]{
                     t.getId(),
                     "OS-" + os.getId(),
                     motorista,
                     t.getOrigem() + " ➔ " + t.getDestino(),
-                    t.getPassageiros().size(),
+                    t.getPassageiros() != null ? t.getPassageiros().size() : 0,
                     t.getStatus()
             });
         }
+
+        atualizarIndicadorOffline();
 
         if (idManter != null) {
             selecionarLinhaPorId(idManter);
         }
     }
 
+    private void atualizarIndicadorOffline() {
+        if (offlineStatusLabel == null) return;
+        LanguageManager lm = LanguageManager.getInstance();
+        MotoristaFieldService.DataSource src = fieldService.getLastSource();
+        int pending = fieldService.getLastPendingCount();
+
+        String texto = switch (src) {
+            case ONLINE -> {
+                String base = lm.translate("offline.status.online");
+                if (pending > 0) {
+                    yield base + " · " + lm.translate("offline.status.pending", Map.of("n", String.valueOf(pending)));
+                }
+                yield fieldService.getUltimaSincronizacao()
+                        .map(s -> base + " · " + lm.translate("offline.status.synced", Map.of("when", s)))
+                        .orElse(base);
+            }
+            case OFFLINE_CACHE -> {
+                String base = lm.translate("offline.status.offline");
+                if (pending > 0) {
+                    yield base + " · " + lm.translate("offline.status.pending", Map.of("n", String.valueOf(pending)));
+                }
+                yield base;
+            }
+            case EMPTY -> lm.translate("offline.status.empty");
+        };
+        offlineStatusLabel.setText(texto);
+    }
+
     private String str(Object o) {
         return o != null ? o.toString() : "";
     }
 
-    private JLabel label(String text) {
-        JLabel l = new JLabel(text);
+    private JLabel label(String translationKey) {
+        JLabel l = new JLabel(LanguageManager.getInstance().translate(translationKey));
         l.setFont(BASE_FONT);
         l.setForeground(MUTED_TEXT);
         return l;
@@ -379,8 +486,8 @@ public class ServicosPanel extends JPanel {
         return l;
     }
 
-    private JButton styledButton(String text, Color bg) {
-        JButton b = new JButton(text);
+    private JButton styledButton(String translationKey, Color bg) {
+        JButton b = new JButton(LanguageManager.getInstance().translate(translationKey));
         b.setBackground(bg);
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);

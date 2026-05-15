@@ -1,5 +1,7 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.i18n.I18nRegistry;
+import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.*;
 import br.com.sosviale.service.*;
 import br.com.sosviale.service.pathfinding.RouteResult;
@@ -60,6 +62,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
     private JTextArea textAreaLog;
 
     private OrdemServico osSelecionada;
+    private JLabel headerTitleLabel;
 
     // ───────────────── CONSTRUTOR
     public OrdemServicoUnifiedPanel() {
@@ -81,6 +84,11 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         add(content, BorderLayout.CENTER);
 
         carregarDados();
+        I18nRegistry.register(() -> {
+            if (headerTitleLabel != null) {
+                headerTitleLabel.setText(LanguageManager.getInstance().translate("ordem.title"));
+            }
+        });
     }
 
     // ───────────────── HEADER
@@ -89,11 +97,11 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
 
-        JLabel title = new JLabel("Montagem de OS — criar, vincular transfers e otimizar rota");
-        title.setFont(TITLE_FONT);
-        title.setForeground(TEXT_COLOR);
+        headerTitleLabel = new JLabel(LanguageManager.getInstance().translate("ordem.title"));
+        headerTitleLabel.setFont(TITLE_FONT);
+        headerTitleLabel.setForeground(TEXT_COLOR);
 
-        panel.add(title, BorderLayout.WEST);
+        panel.add(headerTitleLabel, BorderLayout.WEST);
 
         return panel;
     }

@@ -1,5 +1,7 @@
 package br.com.sosviale.util;
 
+import br.com.sosviale.config.SecretsConfig;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -42,9 +44,6 @@ public final class CryptoUtil {
     private static final int    GCM_IV_BYTES     = 12;   // 96 bits — padrão NIST para GCM
     private static final int    SALT_BYTES       = 16;
     private static final int    PBKDF2_ITERS     = 310_000; // OWASP 2024
-
-    // ── Variável de ambiente que contém a senha mestra ──────────────────────
-    private static final String ENV_KEY = "RECEPTIVO_CRYPTO_KEY";
 
     // ── Dados de contexto para AAD (Additional Authenticated Data) ──────────
     // AAD vincula o dado cifrado ao seu contexto (tabela + coluna).
@@ -160,15 +159,7 @@ public final class CryptoUtil {
      * de execução (ex: systemd unit, Dockerfile, .env).
      */
     private static char[] obterSenhaMestra() {
-        String env = System.getenv(ENV_KEY);
-        if (env == null || env.isBlank()) {
-            // Fallback para desenvolvimento local — NUNCA use em produção
-            System.err.println("[AVISO DE SEGURANÇA] Variável " + ENV_KEY +
-                    " não definida. Usando chave padrão de DESENVOLVIMENTO. " +
-                    "CONFIGURE ESTA VARIÁVEL ANTES DE IR PARA PRODUÇÃO.");
-            return "DEV_ONLY_INSECURE_KEY_CHANGE_ME".toCharArray();
-        }
-        return env.toCharArray();
+        return SecretsConfig.cryptoKeyChars();
     }
 
     /*

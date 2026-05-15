@@ -1,5 +1,6 @@
 package br.com.sosviale.util;
 
+import br.com.sosviale.config.SecretsConfig;
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.model.User;
 
@@ -35,8 +36,6 @@ public final class JwtUtil {
     // ── Configuração ──────────────────────────────────────────────────────────
     private static final String HMAC_ALGO     = "HmacSHA256";
     private static final long   EXPIRACAO_MS  = 8 * 60 * 60 * 1000L; // 8 horas
-    private static final String ENV_JWT_KEY   = "RECEPTIVO_JWT_SECRET";
-
     // Header JWT fixo para HMAC-SHA256
     private static final String HEADER_B64 = base64url(
             "{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
@@ -173,14 +172,7 @@ public final class JwtUtil {
     }
 
     private static byte[] obterChaveSecreta() {
-        String env = System.getenv(ENV_JWT_KEY);
-        if (env == null || env.isBlank()) {
-            System.err.println("[AVISO DE SEGURANÇA] Variável " + ENV_JWT_KEY +
-                    " não definida. Usando segredo padrão de DESENVOLVIMENTO. " +
-                    "CONFIGURE ESTA VARIÁVEL ANTES DE IR PARA PRODUÇÃO.");
-            return "DEV_JWT_SECRET_CHANGE_IN_PRODUCTION_MIN_32_CHARS!!".getBytes(StandardCharsets.UTF_8);
-        }
-        return env.getBytes(StandardCharsets.UTF_8);
+        return SecretsConfig.jwtSecretBytes();
     }
 
     private static String base64url(String texto) {

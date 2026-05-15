@@ -2,6 +2,8 @@ package br.com.sosviale.auth;
 
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.model.User;
+import br.com.sosviale.offline.OfflineSyncService;
+import br.com.sosviale.offline.ConnectivityService;
 import br.com.sosviale.repository.UserRepository;
 import br.com.sosviale.util.JwtUtil;
 import br.com.sosviale.util.PasswordUtil;
@@ -75,6 +77,13 @@ public class AuthenticationService {
         // 5. Gerar JWT e iniciar sessão
         String token = JwtUtil.gerarToken(user);
         SessionManager.getInstance().iniciarSessao(token);
+
+        // 6. Offline First: salvar sessão local e sincronizar OS/passageiros
+        OfflineSyncService offlineSync = new OfflineSyncService();
+        offlineSync.saveSessionAfterLogin(user);
+        if (ConnectivityService.isDatabaseOnline()) {
+            offlineSync.syncFromServer(user.getUsuario());
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════════

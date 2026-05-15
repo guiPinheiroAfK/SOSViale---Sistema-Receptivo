@@ -6,6 +6,8 @@ import br.com.sosviale.util.JwtUtil;
 import br.com.sosviale.util.JwtUtil.Claims;
 import br.com.sosviale.util.JwtUtil.TokenInvalidoException;
 
+import java.time.Instant;
+
 /*
  * Gerenciador de sessão baseado em JWT para a aplicação desktop.
  *
@@ -29,6 +31,7 @@ public final class SessionManager {
 
     private String tokenAtual;      // JWT em memória (não persiste em disco)
     private Claims claimsAtual;     // Claims extraídas do token válido
+    private boolean modoOffline;
 
     private SessionManager() {}
 
@@ -50,6 +53,17 @@ public final class SessionManager {
     public void iniciarSessao(String token) {
         this.claimsAtual = JwtUtil.validarToken(token); // valida antes de aceitar
         this.tokenAtual  = token;
+        this.modoOffline = false;
+    }
+
+    /**
+     * Sessão local sem JWT — permite consultar cache offline após primeira sincronização.
+     */
+    public void iniciarSessaoOffline(String usuario, String nome, Perfil perfil, boolean isAdmin) {
+        long exp = (Instant.now().getEpochSecond() / 1000) + (365L * 24 * 3600);
+        this.claimsAtual = new JwtUtil.Claims(usuario, nome, perfil, isAdmin, exp);
+        this.tokenAtual = "OFFLINE_SESSION";
+        this.modoOffline = true;
     }
 
     /*
@@ -60,6 +74,11 @@ public final class SessionManager {
     public void encerrarSessao() {
         this.tokenAtual  = null;
         this.claimsAtual = null;
+        this.modoOffline = false;
+    }
+
+    public boolean isModoOffline() {
+        return modoOffline;
     }
 
     /**
@@ -67,6 +86,7 @@ public final class SessionManager {
      */
     public boolean isAutenticado() {
         if (tokenAtual == null || claimsAtual == null) return false;
+        if (modoOffline) return true;
         // Re-valida o token para checar expiração sem ir ao banco
         try {
             this.claimsAtual = JwtUtil.validarToken(tokenAtual);

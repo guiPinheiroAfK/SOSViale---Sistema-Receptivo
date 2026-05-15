@@ -4,10 +4,14 @@ import br.com.sosviale.auth.AuthenticationService;
 import br.com.sosviale.auth.SessionManager;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Perfil;
+import br.com.sosviale.offline.OfflineSyncService;
+import br.com.sosviale.service.NotificationService;
 import br.com.sosviale.service.TransferService;
+import br.com.sosviale.App;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -37,10 +41,9 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
     private static final Set<String> NAV_MOTORISTA = Set.of("servicos");
     private static final Set<String> NAV_ADMIN = Set.of("admin");
 
-    private static final String MSG_SEM_PERMISSAO =
-            "Você não tem permissão para acessar.";
-
     private final AuthenticationService authService;
+    private final TransferService transferService;
+    private final NotificationService notificationService;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel     cardPanel  = new JPanel(cardLayout);
     private final JLabel     pageTitle    = new JLabel();
@@ -49,18 +52,25 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
 
     private JLabel productLabel;
-    private JTextField searchField;
     private JButton    logoutButton;
-    private JLabel     adminLabel;
+    private JLabel     gerenteSectionLabel;
+    private JLabel     motoristaSectionLabel;
+    private JLabel     adminSectionLabel;
     private JLabel     versionLabel;
-    private final Map<String, String> navLabels    = new LinkedHashMap<>();
-    private final Map<String, String> navSubtitles = new LinkedHashMap<>();
+    private JLabel     langLabel;
+    private JComboBox<String> languageCombo;
+    private NotificationBellPanel notificationBell;
+    private final Map<String, String> navLabelKeys    = new LinkedHashMap<>();
+    private final Map<String, String> navSubtitleKeys = new LinkedHashMap<>();
 
+    private DashboardPanel  dashboardPanel;
     private ServicosPanel   servicosPanel;
     private UsuariosPanel   usuariosPanel;
 
     public MainDashboard(AuthenticationService authService, TransferService transferService) {
         this.authService = authService;
+        this.transferService = transferService;
+        this.notificationService = new NotificationService(transferService);
         configureLookAndFeel();
         setTitle("SOS VIALE - Sistema Receptivo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,23 +80,28 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         setResizable(true);
         setLocationRelativeTo(null);
         LanguageManager.getInstance().addLanguageChangeListener(this);
-
-        //NotificationService notificationService = new NotificationService(transferService);
-        //notificationService.startMonitoring();
-
+        notificationService.startMonitoring();
+        sincronizarDadosOffline();
         abrirPaginaInicial();
+    }
+
+    private void sincronizarDadosOffline() {
+        if (App.isDatabaseDisponivel() && SessionManager.getInstance().isAutenticado()
+                && !SessionManager.getInstance().isModoOffline()) {
+            new OfflineSyncService().syncFromServer(SessionManager.getInstance().getUsuarioAtual());
+        }
     }
 
     private void abrirPaginaInicial() {
         if (podeAcessar("dashboard")) {
-            selectPage("dashboard", navLabels.get("dashboard"), navSubtitles.get("dashboard"));
+            selectPage("dashboard");
         } else if (podeAcessar("servicos")) {
-            selectPage("servicos", navLabels.get("servicos"), navSubtitles.get("servicos"));
+            selectPage("servicos");
         } else {
             navButtons.keySet().stream()
                     .filter(this::podeAcessar)
                     .findFirst()
-                    .ifPresent(key -> selectPage(key, navLabels.get(key), navSubtitles.get(key)));
+                    .ifPresent(this::selectPage);
         }
     }
 
@@ -111,13 +126,10 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         productLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
         productLabel.setForeground(TEXT_COLOR);
 
-        searchField = new JTextField(" " + LanguageManager.getInstance().translate("app.search.placeholder"));
-        searchField.setPreferredSize(new Dimension(360, 34));
-        searchField.setForeground(MUTED_TEXT);
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
+        JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        center.setOpaque(false);
+        notificationBell = new NotificationBellPanel();
+        center.add(notificationBell);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         right.setOpaque(false);
@@ -140,7 +152,7 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         right.add(logoutButton);
 
         header.add(productLabel, BorderLayout.WEST);
-        header.add(searchField,  BorderLayout.CENTER);
+        header.add(center,       BorderLayout.CENTER);
         header.add(right,        BorderLayout.EAST);
         return header;
     }
@@ -148,24 +160,24 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
     private JPanel createLanguageSelector() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
         panel.setOpaque(false);
-        JLabel langLabel = new JLabel(LanguageManager.getInstance().translate("language.label") + ":");
+        langLabel = new JLabel(LanguageManager.getInstance().translate("language.label") + ":");
         langLabel.setFont(BASE_FONT);
         langLabel.setForeground(MUTED_TEXT);
         panel.add(langLabel);
-        JComboBox<String> combo = new JComboBox<>(new String[]{
+        languageCombo = new JComboBox<>(new String[]{
                 LanguageManager.getInstance().translate("language.pt"),
                 LanguageManager.getInstance().translate("language.en"),
                 LanguageManager.getInstance().translate("language.es")
         });
-        combo.setFont(BASE_FONT);
-        combo.setBackground(PANEL_BACKGROUND);
-        combo.setPreferredSize(new Dimension(120, 28));
-        combo.setSelectedIndex(LanguageManager.getInstance().getCurrentLanguage().ordinal());
-        combo.addActionListener(e -> {
+        languageCombo.setFont(BASE_FONT);
+        languageCombo.setBackground(PANEL_BACKGROUND);
+        languageCombo.setPreferredSize(new Dimension(120, 28));
+        languageCombo.setSelectedIndex(LanguageManager.getInstance().getCurrentLanguage().ordinal());
+        languageCombo.addActionListener(e -> {
             LanguageManager.Language[] langs = LanguageManager.Language.values();
-            LanguageManager.getInstance().setLanguage(langs[combo.getSelectedIndex()]);
+            LanguageManager.getInstance().setLanguage(langs[languageCombo.getSelectedIndex()]);
         });
-        panel.add(combo);
+        panel.add(languageCombo);
         return panel;
     }
 
@@ -176,31 +188,30 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         nav.setBackground(new Color(233, 236, 241));
         nav.setBorder(new EmptyBorder(18, 14, 18, 14));
 
-        nav.add(sectionLabel("GERENTE"));
+        gerenteSectionLabel = sectionLabel("nav.section.gerente");
+        nav.add(gerenteSectionLabel);
         nav.add(Box.createVerticalStrut(10));
 
-        addNavButton(nav, "dashboard",    "📊 Painel Inicial",    "menu.dashboard.subtitle");
-        addNavButton(nav, "passageiros",  "👥 Passageiros",      "menu.passengers.subtitle");
-        addNavButton(nav, "pontosColeta", "📍 Pontos de Coleta", "menu.pontosColeta.subtitle");
-        addNavButton(nav, "transfers",    "📋 Transfers",        "menu.transfers.subtitle");
-        addNavButton(nav, "ordens",       "📦 Ordens de Serviço", "menu.orders.subtitle");
-
-        /*addNavButton(nav, "montarRota",   "📝 Atribuir OS a Transfer", "menu.montarRota.subtitle");
-         */
-        addNavButton(nav, "motoristas",   "🧑‍✈️ Motoristas",      "menu.drivers.subtitle");
-        addNavButton(nav, "veiculos",     "🚐 Veículos",        "menu.vehicles.subtitle");
+        addNavButton(nav, "dashboard",    "menu.dashboard",        "menu.dashboard.subtitle");
+        addNavButton(nav, "passageiros",  "menu.passengers",       "menu.passengers.subtitle");
+        addNavButton(nav, "pontosColeta", "menu.pontosColeta",     "menu.pontosColeta.subtitle");
+        addNavButton(nav, "transfers",    "menu.transfers",        "menu.transfers.subtitle");
+        addNavButton(nav, "ordens",       "menu.orders",           "menu.orders.subtitle");
+        addNavButton(nav, "motoristas",   "menu.drivers",          "menu.drivers.subtitle");
+        addNavButton(nav, "veiculos",     "menu.vehicles",         "menu.vehicles.subtitle");
 
         nav.add(Box.createVerticalStrut(14));
-        nav.add(sectionLabel("MOTORISTA"));
+        motoristaSectionLabel = sectionLabel("nav.section.motorista");
+        nav.add(motoristaSectionLabel);
         nav.add(Box.createVerticalStrut(10));
 
-        addNavButton(nav, "servicos",     "🛠️ Serviços",         "menu.servicos.subtitle");
+        addNavButton(nav, "servicos",     "menu.servicos",         "menu.servicos.subtitle");
 
         nav.add(Box.createVerticalStrut(14));
-        adminLabel = sectionLabel("ADMIN");
-        nav.add(adminLabel);
+        adminSectionLabel = sectionLabel("nav.section.admin");
+        nav.add(adminSectionLabel);
         nav.add(Box.createVerticalStrut(10));
-        addNavButton(nav, "admin", "⚙️ Usuários", "menu.users.subtitle");
+        addNavButton(nav, "admin", "menu.users", "menu.users.subtitle");
 
         nav.add(Box.createVerticalGlue());
         atualizarEstiloBotoesNav();
@@ -216,19 +227,19 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         return nav;
     }
 
-    private JLabel sectionLabel(String text) {
-        JLabel label = new JLabel(text);
+    private JLabel sectionLabel(String translationKey) {
+        JLabel label = new JLabel(LanguageManager.getInstance().translate(translationKey));
         label.setForeground(SECTION_RED);
         label.setFont(NAV_SECTION_FONT);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
 
-    private void addNavButton(JPanel nav, String key, String labelText, String subtitleKey) {
-        navLabels.put(key, labelText);
-        navSubtitles.put(key, subtitleKey);
+    private void addNavButton(JPanel nav, String key, String labelKey, String subtitleKey) {
+        navLabelKeys.put(key, labelKey);
+        navSubtitleKeys.put(key, subtitleKey);
 
-        JButton button = new JButton(labelText);
+        JButton button = new JButton(LanguageManager.getInstance().translate(labelKey));
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         button.setFocusPainted(false);
@@ -241,13 +252,10 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         button.setFont(BASE_FONT);
         button.addActionListener(e -> {
             if (!podeAcessar(key)) {
-                JOptionPane.showMessageDialog(this,
-                        MSG_SEM_PERMISSAO,
-                        "Acesso negado",
-                        JOptionPane.WARNING_MESSAGE);
+                showAccessDenied();
                 return;
             }
-            selectPage(key, labelText, subtitleKey);
+            selectPage(key);
         });
 
         navButtons.put(key, button);
@@ -276,7 +284,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         heading.add(titleStack, BorderLayout.WEST);
 
         cardPanel.setBackground(APP_BACKGROUND);
-        cardPanel.add(new DashboardPanel(),    "dashboard");
+        dashboardPanel = new DashboardPanel();
+        cardPanel.add(dashboardPanel, "dashboard");
         cardPanel.add(new PassageirosPanel(),  "passageiros");
         cardPanel.add(new PontosColetaPanel(), "pontosColeta");
         cardPanel.add(new TransfersPanel(),    "transfers");
@@ -335,31 +344,32 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
     }
 
     private void atualizarEstiloBotoesNav() {
+        LanguageManager lm = LanguageManager.getInstance();
         navButtons.forEach((key, button) -> {
             boolean liberado = podeAcessar(key);
-            String rotulo = navLabels.get(key);
+            String rotulo = lm.translate(navLabelKeys.get(key));
             button.setText(liberado ? rotulo : "🔒 " + rotulo);
             button.setForeground(liberado ? TEXT_COLOR : MUTED_TEXT);
-            button.setToolTipText(liberado ? null : MSG_SEM_PERMISSAO);
+            button.setToolTipText(liberado ? null : lm.translate("access.denied"));
         });
     }
 
-    private void selectPage(String key, String titleText, String subtitleKey) {
+    private void selectPage(String key) {
         if (!podeAcessar(key)) {
-            JOptionPane.showMessageDialog(this,
-                    MSG_SEM_PERMISSAO,
-                    "Acesso negado",
-                    JOptionPane.WARNING_MESSAGE);
+            showAccessDenied();
             return;
         }
 
-        String cleanTitle = titleText.replaceAll("[🛠️📊👥📍📋📦📝🧑‍✈️🚐⚙️🔒]", "").trim();
-        String subtitle = LanguageManager.getInstance().translate(subtitleKey);
-
+        LanguageManager lm = LanguageManager.getInstance();
+        String titleText = lm.translate(navLabelKeys.get(key));
+        String cleanTitle = titleText.replaceAll("[🛠️📊👥📍📋📦📝🧑‍✈️🚐⚙️🔒🚗🚙]", "").trim();
         pageTitle.setText(cleanTitle);
-        pageSubtitle.setText(subtitle);
+        pageSubtitle.setText(lm.translate(navSubtitleKeys.get(key)));
         cardLayout.show(cardPanel, key);
 
+        if ("dashboard".equals(key) && dashboardPanel != null) {
+            dashboardPanel.refreshData();
+        }
         if ("servicos".equals(key) && servicosPanel != null) {
             servicosPanel.atualizar();
         }
@@ -367,6 +377,10 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
             usuariosPanel.atualizar();
         }
 
+        navButtons.values().forEach(b -> {
+            b.setBackground(PANEL_BACKGROUND);
+            b.setForeground(TEXT_COLOR);
+        });
         atualizarEstiloBotoesNav();
         JButton ativo = navButtons.get(key);
         if (ativo != null) {
@@ -375,12 +389,31 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         }
     }
 
+    private void showAccessDenied() {
+        LanguageManager lm = LanguageManager.getInstance();
+        JOptionPane.showMessageDialog(this,
+                lm.translate("access.denied"),
+                lm.translate("access.denied.title"),
+                JOptionPane.WARNING_MESSAGE);
+    }
+
     @Override
     public void onLanguageChanged(LanguageManager.Language newLanguage) {
-        productLabel.setText(LanguageManager.getInstance().translate("app.title"));
-        searchField.setText(" " + LanguageManager.getInstance().translate("app.search.placeholder"));
-        logoutButton.setText(LanguageManager.getInstance().translate("button.logout"));
-        versionLabel.setText(LanguageManager.getInstance().translate("version"));
+        LanguageManager lm = LanguageManager.getInstance();
+        productLabel.setText(lm.translate("app.title"));
+        logoutButton.setText(lm.translate("button.logout"));
+        versionLabel.setText(lm.translate("version"));
+        langLabel.setText(lm.translate("language.label") + ":");
+        languageCombo.setModel(new DefaultComboBoxModel<>(new String[]{
+                lm.translate("language.pt"),
+                lm.translate("language.en"),
+                lm.translate("language.es")
+        }));
+        languageCombo.setSelectedIndex(newLanguage.ordinal());
+        gerenteSectionLabel.setText(lm.translate("nav.section.gerente"));
+        motoristaSectionLabel.setText(lm.translate("nav.section.motorista"));
+        adminSectionLabel.setText(lm.translate("nav.section.admin"));
+        atualizarEstiloBotoesNav();
     }
 
     private void performLogout() {
@@ -393,7 +426,7 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
             authService.logout();
             dispose();
             SwingUtilities.invokeLater(() -> {
-                LoginScreen ls = new LoginScreen(authService);
+                LoginScreen ls = new LoginScreen(authService, App.isDatabaseDisponivel());
                 TransferService transferService = new TransferService();
                 ls.setLoginCallback(u -> new MainDashboard(authService, transferService).setVisible(true));
                 ls.setVisible(true);
