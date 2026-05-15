@@ -3,7 +3,7 @@ package br.com.sosviale.service.pathfinding;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.model.Transfer;
 
-public final class Coordenada {
+public class Coordenada {
 
     private final double latitude;
     private final double longitude;
