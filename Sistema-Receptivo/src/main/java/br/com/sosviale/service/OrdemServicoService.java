@@ -3,10 +3,12 @@ package br.com.sosviale.service;
 import br.com.sosviale.config.JPAUtil;
 import br.com.sosviale.model.OrdemServico;
 import br.com.sosviale.model.ParadaOS;
+import br.com.sosviale.model.Transfer;
 import br.com.sosviale.repository.OrdemServicoRepository;
 import br.com.sosviale.service.pathfinding.RouteResult;
 import br.com.sosviale.util.PathFindingUtil;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 import java.util.List;
 
@@ -25,11 +27,60 @@ public class OrdemServicoService {
         }
     }
 
+    /*
+     * Busca uma OS pelo ID de forma simples (objeto detached ao retornar).
+     * Os transfers são carregados pelo FetchType.EAGER definido na entidade,
+     * mas use buscarComTransfers() quando precisar de uma lista garantidamente
+     * fresca após operações de vinculação.
+     */
     public OrdemServico buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return new OrdemServicoRepository(em).buscarPorId(id);
+        } finally {
+            em.close();
+        }
+    }
+
+    /*
+     * Busca uma OS com seus transfers carregados via JOIN FETCH explícito.
+     *
+     * Por que este método existe?
+     *   - Após uma vinculação de transfer, o objeto osSelecionada no painel
+     *     está desatualizado (detached, lista em memória antiga).
+     *   - Este método abre um novo EntityManager e executa duas consultas
+     *     (transfers e, em seguida, passageiros) para evitar MultipleBagFetchException.
+     *   - Use este método sempre que precisar de um re-fetch após mutações.
+     *
+     * @param id ID da OrdemServico
+     * @return OS com transfers e passageiros carregados e frescos do banco
+     */
+    public OrdemServico buscarComTransfers(Integer id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            OrdemServico os = em.createQuery(
+                    "SELECT DISTINCT o FROM OrdemServico o " +
+                            "LEFT JOIN FETCH o.transfers " +
+                            "WHERE o.id = :id",
+                    OrdemServico.class
+            ).setParameter("id", id).getSingleResult();
+
+            // Hibernate não permite JOIN FETCH em duas List (bags) na mesma query.
+            // Carrega passageiros em uma segunda consulta, com a sessão ainda aberta.
+            if (!os.getTransfers().isEmpty()) {
+                em.createQuery(
+                        "SELECT DISTINCT t FROM Transfer t " +
+                                "LEFT JOIN FETCH t.passageiros " +
+                                "WHERE t.ordemServico.id = :osId",
+                        Transfer.class
+                ).setParameter("osId", id).getResultList();
+            }
+
+            return os;
+        } catch (NoResultException e) {
+            return null;
         } finally {
             em.close();
         }
@@ -58,8 +109,9 @@ public class OrdemServicoService {
     /*
      * Otimiza a rota da Ordem de Serviço, gera as paradas agrupadas e salva no banco.
      *
-     * @param osId ID da Ordem de Serviço
-     * @param usarGps true para usar cálculo OSRM com posição do motorista, false para Haversine
+     * @param osId    ID da Ordem de Serviço
+     * @param usarGps true para usar cálculo OSRM com posição do motorista,
+     *                false para Haversine
      */
     public void montarRotaOtimizada(Integer osId, boolean usarGps) {
         if (osId == null || osId <= 0) throw new IllegalArgumentException("ID da OS inválido.");
@@ -68,13 +120,10 @@ public class OrdemServicoService {
         try {
             em.getTransaction().begin();
 
-            // 1. Busca a OS já anexada no contexto do JPA
             OrdemServico os = em.find(OrdemServico.class, osId);
-            if (os == null) {
+            if (os == null)
                 throw new RuntimeException("Ordem de Serviço #" + osId + " não encontrada.");
-            }
 
-            // 2. Roda o algoritmo puro (delegando para o utilitário que criamos)
             RouteResult resultado;
             if (usarGps) {
                 resultado = PathFindingUtil.otimizarComGps(os, os.getMotorista());
@@ -82,23 +131,16 @@ public class OrdemServicoService {
                 resultado = PathFindingUtil.otimizar(os);
             }
 
-            // 3. Converte o resultado matemático em entidades de negócio (ParadaOS)
             List<ParadaOS> novasParadas = PathFindingUtil.gerarParadasOS(resultado, os);
 
-            // 4. Limpa as paradas antigas (o orphanRemoval = true vai apagar do banco)
             os.getParadasRota().clear();
-
-            // 5. Adiciona a nova sequência otimizada
             os.getParadasRota().addAll(novasParadas);
 
-            // 6. Atualiza a OS (isso faz o cascade salvar as novas ParadaOS e tabela pivot)
             em.merge(os);
             em.getTransaction().commit();
 
         } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw new RuntimeException("Falha ao otimizar rota da OS: " + e.getMessage(), e);
         } finally {
             em.close();
