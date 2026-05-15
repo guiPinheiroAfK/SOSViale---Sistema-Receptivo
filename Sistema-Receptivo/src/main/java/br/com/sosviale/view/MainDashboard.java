@@ -66,6 +66,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1250, 750));
         setContentPane(buildShell());
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setResizable(true);
         setLocationRelativeTo(null);
         LanguageManager.getInstance().addLanguageChangeListener(this);
 
@@ -174,7 +176,6 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         nav.setBackground(new Color(233, 236, 241));
         nav.setBorder(new EmptyBorder(18, 14, 18, 14));
 
-        // ── GERENTE ──────────────────────────────────────
         nav.add(sectionLabel("GERENTE"));
         nav.add(Box.createVerticalStrut(10));
 
@@ -185,18 +186,16 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         addNavButton(nav, "ordens",       "📦 Ordens de Serviço", "menu.orders.subtitle");
 
         /*addNavButton(nav, "montarRota",   "📝 Atribuir OS a Transfer", "menu.montarRota.subtitle");
-        */
+         */
         addNavButton(nav, "motoristas",   "🧑‍✈️ Motoristas",      "menu.drivers.subtitle");
         addNavButton(nav, "veiculos",     "🚐 Veículos",        "menu.vehicles.subtitle");
 
-        // ── MOTORISTA ─────────────────────────────────────
         nav.add(Box.createVerticalStrut(14));
         nav.add(sectionLabel("MOTORISTA"));
         nav.add(Box.createVerticalStrut(10));
 
         addNavButton(nav, "servicos",     "🛠️ Serviços",         "menu.servicos.subtitle");
 
-        // ── ADMIN ─────────────────────────────────────────
         nav.add(Box.createVerticalStrut(14));
         adminLabel = sectionLabel("ADMIN");
         nav.add(adminLabel);
@@ -318,9 +317,6 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         return page;
     }
 
-    /**
-     * Motorista: só Serviços. Gerente: Gerente + Motorista. Admin: tudo.
-     */
     private boolean podeAcessar(String key) {
         if (SessionManager.getInstance().isAdmin()) return true;
 
@@ -357,7 +353,6 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
             return;
         }
 
-        // Limpa os emojis do título para o header (inclui cadeado)
         String cleanTitle = titleText.replaceAll("[🛠️📊👥📍📋📦📝🧑‍✈️🚐⚙️🔒]", "").trim();
         String subtitle = LanguageManager.getInstance().translate(subtitleKey);
 

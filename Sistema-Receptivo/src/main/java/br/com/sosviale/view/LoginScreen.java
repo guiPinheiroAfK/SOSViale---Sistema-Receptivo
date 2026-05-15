@@ -38,6 +38,8 @@ public class LoginScreen extends JFrame {
     private JPanel mainPanel;
     private CardLayout cardLayout;
 
+    private LoginCallback loginCallback;
+
     public LoginScreen(AuthenticationService authService) {
         this.authService = authService;
         initializeUI();
@@ -46,9 +48,6 @@ public class LoginScreen extends JFrame {
     private void initializeUI() {
         setTitle("SOS VIALE - Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(560, 640);
-        setLocationRelativeTo(null);
-        setResizable(false);
 
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
@@ -58,6 +57,11 @@ public class LoginScreen extends JFrame {
         mainPanel.add(createRegisterPanel(), "register");
 
         setContentPane(mainPanel);
+
+        setMinimumSize(new Dimension(560, 640));
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setResizable(true);
+
         setVisible(true);
     }
 
@@ -99,7 +103,7 @@ public class LoginScreen extends JFrame {
         content.add(Box.createVerticalStrut(20));
         content.add(buttonPanel);
 
-        panel.add(content, BorderLayout.CENTER);
+        panel.add(createCenteredWrapper(content), BorderLayout.CENTER);
 
         return panel;
     }
@@ -130,7 +134,7 @@ public class LoginScreen extends JFrame {
         });
         perfilCombo.setFont(TEXT_FONT);
         perfilCombo.setBackground(WHITE);
-        perfilCombo.setPreferredSize(new Dimension(340, 40));
+        perfilCombo.setPreferredSize(new Dimension(520, 40));
         addField(registerCard, "Perfil:", perfilCombo, 3);
 
         JPasswordField adminPasswordField = createPasswordField(ERROR);
@@ -179,7 +183,7 @@ public class LoginScreen extends JFrame {
         content.add(Box.createVerticalStrut(20));
         content.add(buttonPanel);
 
-        panel.add(content, BorderLayout.CENTER);
+        panel.add(createCenteredWrapper(content), BorderLayout.CENTER);
 
         return panel;
     }
@@ -233,11 +237,31 @@ public class LoginScreen extends JFrame {
         return header;
     }
 
+    private JPanel createCenteredWrapper(JPanel content) {
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.setBackground(BACKGROUND);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(34, 0, 0, 0);
+
+        wrapper.add(content, gbc);
+
+        return wrapper;
+    }
+
     private JPanel createContentPanel(String title, String subtitle) {
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBackground(BACKGROUND);
-        content.setBorder(new EmptyBorder(34, 44, 34, 44));
+        content.setBorder(new EmptyBorder(0, 0, 34, 0));
+        content.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.setMaximumSize(new Dimension(620, Integer.MAX_VALUE));
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(TITLE_FONT);
@@ -265,7 +289,7 @@ public class LoginScreen extends JFrame {
                 new EmptyBorder(22, 18, 22, 18)
         ));
         card.setAlignmentX(Component.LEFT_ALIGNMENT);
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 430));
+        card.setMaximumSize(new Dimension(620, Integer.MAX_VALUE));
 
         return card;
     }
@@ -282,6 +306,8 @@ public class LoginScreen extends JFrame {
         GridBagConstraints labelGbc = new GridBagConstraints();
         labelGbc.gridx = 0;
         labelGbc.gridy = row * 2;
+        labelGbc.weightx = 1.0;
+        labelGbc.fill = GridBagConstraints.HORIZONTAL;
         labelGbc.anchor = GridBagConstraints.WEST;
         labelGbc.insets = new Insets(row == 0 ? 0 : 12, 0, 4, 0);
 
@@ -311,7 +337,7 @@ public class LoginScreen extends JFrame {
         JTextField field = new JTextField();
         field.setFont(TEXT_FONT);
         field.setForeground(TEXT);
-        field.setPreferredSize(new Dimension(340, 40));
+        field.setPreferredSize(new Dimension(520, 40));
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
                 new EmptyBorder(8, 10, 8, 10)
@@ -324,7 +350,7 @@ public class LoginScreen extends JFrame {
         JPasswordField field = new JPasswordField();
         field.setFont(TEXT_FONT);
         field.setForeground(TEXT);
-        field.setPreferredSize(new Dimension(340, 40));
+        field.setPreferredSize(new Dimension(520, 40));
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(borderColor),
                 new EmptyBorder(8, 10, 8, 10)
@@ -382,8 +408,6 @@ public class LoginScreen extends JFrame {
     public interface LoginCallback {
         void onLoginSuccess(String username);
     }
-
-    private LoginCallback loginCallback;
 
     public void setLoginCallback(LoginCallback callback) {
         this.loginCallback = callback;
