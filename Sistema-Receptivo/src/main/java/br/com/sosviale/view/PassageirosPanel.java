@@ -157,6 +157,19 @@ public class PassageirosPanel extends JPanel {
         String nacionalidade = nacionalidadeField.getText().trim();
         TipoDocumento tipo = (TipoDocumento) tipoDocumentoCombo.getSelectedItem();
 
+        if (nome.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nome é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (tipo == null) {
+            JOptionPane.showMessageDialog(this, "Tipo de documento é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (documento.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Documento é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         try {
             if (idSelecionado == null) {
                 service.salvar(nome, documento, tipo, nacionalidade);

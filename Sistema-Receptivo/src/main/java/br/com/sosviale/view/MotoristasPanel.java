@@ -171,6 +171,15 @@ public class MotoristasPanel extends JPanel {
         String cnh = cnhField.getText().trim();
         String telefone = telefoneField.getText().trim();
 
+        if (nome.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nome é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (cnh.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "CNH é obrigatória.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         try {
             if (idSelecionado == null) {
                 service.salvar(nome, cnh, telefone);

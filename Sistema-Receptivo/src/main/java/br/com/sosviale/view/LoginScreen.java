@@ -9,7 +9,6 @@ import br.com.sosviale.offline.OfflineStore;
 import br.com.sosviale.offline.dto.OfflineSessionDto;
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
-import br.com.sosviale.model.Perfil;
 import br.com.sosviale.service.UserService;
 
 import javax.swing.*;
@@ -187,33 +186,8 @@ public class LoginScreen extends JFrame {
         JPanel buttonPanel = createButtonPanel();
 
         JButton registerSubmitButton = createPrimaryButton("Criar Conta");
-        registerSubmitButton.addActionListener(e -> {
-            try {
-                String name = nameField.getText().trim();
-                String username = regUsernameField.getText().trim();
-                String password = new String(regPasswordField.getPassword()).trim();
-                String adminPassword = new String(adminPasswordField.getPassword()).trim();
-                Perfil perfil = (Perfil) perfilCombo.getSelectedItem();
-
-                if (name.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                    registerErrorLabel.setText("Preencha todos os campos");
-                    return;
-                }
-
-                userService.registrar(name, username, password, adminPassword, perfil);
-
-                JOptionPane.showMessageDialog(
-                        LoginScreen.this,
-                        "Conta criada com sucesso!",
-                        "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-
-                cardLayout.show(mainPanel, "login");
-            } catch (AuthenticationException | ValidationException ex) {
-                registerErrorLabel.setText(ex.getMessage());
-            }
-        });
+        registerSubmitButton.addActionListener(e -> performRegistration(
+                nameField, regUsernameField, regPasswordField, adminPasswordField, perfilCombo, registerErrorLabel));
         buttonPanel.add(registerSubmitButton);
 
         JButton backButton = createSecondaryButton("Voltar");
@@ -227,6 +201,41 @@ public class LoginScreen extends JFrame {
         panel.add(createCenteredWrapper(content), BorderLayout.CENTER);
 
         return panel;
+    }
+
+    private void performRegistration(
+            JTextField nameField,
+            JTextField regUsernameField,
+            JPasswordField regPasswordField,
+            JPasswordField adminPasswordField,
+            JComboBox<Perfil> perfilCombo,
+            JLabel registerErrorLabel
+    ) {
+        try {
+            String name = nameField.getText().trim();
+            String username = regUsernameField.getText().trim();
+            String password = new String(regPasswordField.getPassword()).trim();
+            String adminPassword = new String(adminPasswordField.getPassword()).trim();
+            Perfil perfil = (Perfil) perfilCombo.getSelectedItem();
+
+            if (name.isEmpty() || username.isEmpty() || password.isEmpty()) {
+                registerErrorLabel.setText("Preencha todos os campos");
+                return;
+            }
+
+            userService.registrar(name, username, password, adminPassword, perfil);
+
+            JOptionPane.showMessageDialog(
+                    LoginScreen.this,
+                    "Conta criada com sucesso!",
+                    "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            cardLayout.show(mainPanel, "login");
+        } catch (AuthenticationException | ValidationException ex) {
+            registerErrorLabel.setText(ex.getMessage());
+        }
     }
 
     private void performOfflineLogin() {

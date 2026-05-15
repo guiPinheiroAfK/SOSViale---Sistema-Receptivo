@@ -265,6 +265,8 @@ public class LanguageManager {
         pt.put("dashboard.upcoming.col.datetime", "Data / Hora");
         pt.put("dashboard.upcoming.col.status", "Status");
         pt.put("dashboard.upcoming.empty", "Nenhum transfer futuro agendado.");
+        pt.put("dashboard.error.load", "Não foi possível carregar os dados do painel.");
+        pt.put("common.error.title", "Erro");
         pt.put("servicos.form.title", "Detalhes do Serviço");
         pt.put("servicos.label.transfer", "Transfer #:");
         pt.put("servicos.label.os", "Ordem de serviço:");
@@ -537,6 +539,8 @@ public class LanguageManager {
         en.put("dashboard.upcoming.col.datetime", "Date / Time");
         en.put("dashboard.upcoming.col.status", "Status");
         en.put("dashboard.upcoming.empty", "No upcoming transfers scheduled.");
+        en.put("dashboard.error.load", "Could not load dashboard data.");
+        en.put("common.error.title", "Error");
         en.put("servicos.form.title", "Service details");
         en.put("servicos.label.transfer", "Transfer #:");
         en.put("servicos.label.os", "Service order:");
@@ -809,6 +813,8 @@ public class LanguageManager {
         es.put("dashboard.upcoming.col.datetime", "Fecha / Hora");
         es.put("dashboard.upcoming.col.status", "Estado");
         es.put("dashboard.upcoming.empty", "No hay transferencias futuras agendadas.");
+        es.put("dashboard.error.load", "No se pudieron cargar los datos del panel.");
+        es.put("common.error.title", "Error");
         es.put("servicos.form.title", "Detalles del servicio");
         es.put("servicos.label.transfer", "Transfer #:");
         es.put("servicos.label.os", "Orden de servicio:");
