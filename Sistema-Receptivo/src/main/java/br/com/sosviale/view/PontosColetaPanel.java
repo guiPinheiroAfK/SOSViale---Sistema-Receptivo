@@ -5,215 +5,175 @@ import br.com.sosviale.service.PontoColetaService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.List;
 
-/*
- * Painel de gerenciamento de Pontos de Coleta.
- *
- * Agora atua como um CATÁLOGO DE ENDEREÇOS.
- * Cadastra locais genéricos (Hotéis, Aeroportos, Pontos Turísticos) que
- * serão utilizados posteriormente como Origem/Destino nos Transfers.
- */
 public class PontosColetaPanel extends JPanel {
 
-    // ─── Constantes visuais ─────────────────────────────────────────────────
-    private static final Color PANEL_BG      = Color.WHITE;
-    private static final Color BORDER_COLOR  = new Color(210, 214, 220);
-    private static final Color PRIMARY_BLUE  = new Color(50, 91, 140);
-    private static final Color DANGER_RED    = new Color(200, 50, 50);
-    private static final Color MUTED_TEXT    = new Color(98, 108, 122);
-    private static final Font  BASE_FONT     = new Font("SansSerif", Font.PLAIN, 13);
-    private static final Font  BOLD_FONT     = new Font("SansSerif", Font.BOLD, 14);
+    private static final Color PANEL_BACKGROUND = Color.WHITE;
+    private static final Color BORDER_COLOR     = new Color(210, 214, 220);
+    private static final Color TEXT_COLOR       = new Color(38, 43, 51);
+    private static final Color MUTED_TEXT       = new Color(98, 108, 122);
+    private static final Color PRIMARY_BLUE     = new Color(50, 91, 140);
+    private static final Color DANGER_RED       = new Color(200, 50, 50);
+    private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
+    private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
 
-    // ─── Colunas da tabela ────────────────────────────────────────────────────
-    private static final String[] COLUNAS = {
-            "ID", "Local de Coleta", "Lat", "Lng"
-    };
+    private final PontoColetaService service = new PontoColetaService();
 
-    // ─── Serviços ─────────────────────────────────────────────────────────────
-    private final PontoColetaService pcService = new PontoColetaService();
-
-    // Componentes
     private DefaultTableModel tableModel;
-    private JTable            table;
-    private JTextField        fieldLocal;
-    private JTextField        fieldLat;
-    private JTextField        fieldLng;
+    private JTable table;
+    private JTextField fieldLocal;
+    private JTextField fieldLat;
+    private JTextField fieldLng;
+    private JButton salvarButton;
+    private JButton excluirButton;
+    private Long idSelecionado = null;
 
-    // ─── Estado
-    /* ID do ponto em edição; null = modo criação. */
-    private Long editandoId = null;
-
-    // Construção
     public PontosColetaPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
-
-        add(buildFormPanel(), BorderLayout.WEST);
-        add(buildTablePanel(), BorderLayout.CENTER);
-
-        atualizarTabela();
+        add(buildForm(), BorderLayout.WEST);
+        add(buildTable(), BorderLayout.CENTER);
     }
 
-    // =========================================================================
-    // Formulário lateral
-    // =========================================================================
-
-    private JPanel buildFormPanel() {
+    private JComponent buildForm() {
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(PANEL_BG);
+        form.setBackground(PANEL_BACKGROUND);
+        form.setPreferredSize(new Dimension(345, 0));
         form.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(16, 16, 16, 16)
+                new EmptyBorder(14, 14, 14, 14)
         ));
-        form.setPreferredSize(new Dimension(310, 0));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 0;
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(0, 0, 12, 0);
 
         JLabel title = new JLabel("Cadastro de Local");
-        title.setFont(new Font("SansSerif", Font.BOLD, 16));
+        title.setFont(SECTION_FONT);
+        title.setForeground(TEXT_COLOR);
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 14, 0);
         form.add(title, gbc);
 
-        // Local de coleta
-        fieldLocal = field("Ex: Hotel Bourbon");
-        gbc.gridy++; form.add(label("Nome do Local:"), gbc);
-        gbc.gridy++; form.add(fieldLocal, gbc);
-
-        // Latitude
-        fieldLat = field("Ex: -25.5925 (Opcional)");
-        gbc.gridy++; form.add(label("Latitude:"), gbc);
-        gbc.gridy++; form.add(fieldLat, gbc);
-
-        // Longitude
-        fieldLng = field("Ex: -54.4880 (Opcional)");
-        gbc.gridy++; form.add(label("Longitude:"), gbc);
-        gbc.gridy++; form.add(fieldLng, gbc);
-
-        // Botões
-        JPanel botoes = new JPanel(new GridLayout(1, 2, 8, 0));
-        botoes.setOpaque(false);
-
-        JButton btnSalvar = styledButton("Salvar", PRIMARY_BLUE);
-        btnSalvar.addActionListener(e -> salvar());
-
-        JButton btnLimpar = styledButton("Limpar", MUTED_TEXT);
-        btnLimpar.addActionListener(e -> limparFormulario());
-
-        botoes.add(btnSalvar);
-        botoes.add(btnLimpar);
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridy++;
+        form.add(label("Nome do Local:"), gbc);
+        fieldLocal = field();
+        gbc.gridy++;
+        form.add(fieldLocal, gbc);
 
         gbc.gridy++;
+        form.add(label("Latitude:"), gbc);
+        fieldLat = field();
+        fieldLat.setToolTipText("Ex: -25.5925 (opcional)");
+        gbc.gridy++;
+        form.add(fieldLat, gbc);
+
+        gbc.gridy++;
+        form.add(label("Longitude:"), gbc);
+        fieldLng = field();
+        fieldLng.setToolTipText("Ex: -54.4880 (opcional)");
+        gbc.gridy++;
+        form.add(fieldLng, gbc);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        actions.setOpaque(false);
+
+        salvarButton = styledButton("Adicionar", PRIMARY_BLUE);
+        salvarButton.addActionListener(e -> salvarOuAtualizar());
+
+        excluirButton = styledButton("Excluir", DANGER_RED);
+        excluirButton.setVisible(false);
+        excluirButton.addActionListener(e -> excluirPonto());
+
+        JButton limpar = styledButton("Limpar", Color.LIGHT_GRAY);
+        limpar.setForeground(TEXT_COLOR);
+        limpar.addActionListener(e -> limparForm());
+
+        actions.add(salvarButton);
+        actions.add(excluirButton);
+        actions.add(limpar);
+
+        gbc.gridy = 99;
         gbc.weighty = 1;
-        gbc.anchor = GridBagConstraints.SOUTH;
-        form.add(botoes, gbc);
+        gbc.anchor = GridBagConstraints.SOUTHWEST;
+        gbc.insets = new Insets(18, 0, 0, 0);
+        form.add(actions, gbc);
 
         return form;
     }
 
-    // =========================================================================
-    // Tabela principal
-    // =========================================================================
-
-    private JPanel buildTablePanel() {
+    private JComponent buildTable() {
         JPanel panel = new JPanel(new BorderLayout(0, 12));
-        panel.setOpaque(false);
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
 
-        tableModel = new DefaultTableModel(COLUNAS, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) { return false; }
+        JLabel title = new JLabel("Pontos de coleta cadastrados");
+        title.setFont(SECTION_FONT);
+        title.setForeground(TEXT_COLOR);
+        panel.add(title, BorderLayout.NORTH);
+
+        tableModel = new DefaultTableModel(new String[]{"ID", "Local de Coleta", "Lat", "Lng"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
         table = new JTable(tableModel);
+        table.setFillsViewportHeight(true);
         table.setRowHeight(28);
-        table.setFont(BASE_FONT);
-        table.getTableHeader().setFont(BOLD_FONT);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        // Centraliza colunas ID, Lat e Lng
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
-        center.setHorizontalAlignment(SwingConstants.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(center);
-        table.getColumnModel().getColumn(2).setCellRenderer(center);
-        table.getColumnModel().getColumn(3).setCellRenderer(center);
-
-        // Ajusta a largura das colunas
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(300);
-
-        // Clique na linha preenche o formulário para edição
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) preencherFormularioParaEdicao();
+            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
+                int row = table.getSelectedRow();
+                Integer idInt = (Integer) tableModel.getValueAt(row, 0);
+                idSelecionado = idInt.longValue();
+                fieldLocal.setText(str(tableModel.getValueAt(row, 1)));
+
+                try {
+                    PontoColeta pc = service.buscarPorId(idSelecionado);
+                    if (pc != null) {
+                        fieldLat.setText(pc.getLatitude() != null ? String.valueOf(pc.getLatitude()) : "");
+                        fieldLng.setText(pc.getLongitude() != null ? String.valueOf(pc.getLongitude()) : "");
+                    }
+                } catch (Exception ex) {
+                    fieldLat.setText("");
+                    fieldLng.setText("");
+                }
+
+                salvarButton.setText("Salvar alteração");
+                excluirButton.setVisible(true);
+            }
         });
 
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
-        panel.add(scroll, BorderLayout.CENTER);
+        JLabel dica = new JLabel("💡 Clique em um local para editar ou excluir.");
+        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        dica.setForeground(MUTED_TEXT);
 
-        // Barra de ações inferior
-        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        acoes.setOpaque(false);
-
-        JButton btnEditar = styledButton("Editar Selecionado", PRIMARY_BLUE);
-        btnEditar.addActionListener(e -> preencherFormularioParaEdicao());
-
-        JButton btnExcluir = styledButton("Excluir Selecionado", DANGER_RED);
-        btnExcluir.addActionListener(e -> excluir());
-
-        JButton btnAtualizar = styledButton("↻ Atualizar", MUTED_TEXT);
-        btnAtualizar.addActionListener(e -> atualizarTabela());
-
-        acoes.add(btnEditar);
-        acoes.add(btnExcluir);
-        acoes.add(btnAtualizar);
-
-        panel.add(acoes, BorderLayout.SOUTH);
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(dica, BorderLayout.SOUTH);
+        carregarPontos();
         return panel;
     }
 
-    // =========================================================================
-    // Lógica de dados
-    // =========================================================================
-
-    private void atualizarTabela() {
-        tableModel.setRowCount(0);
-        try {
-            // Puxa todos os locais cadastrados (independente de transfer)
-            List<PontoColeta> pontos = pcService.listarTodos();
-            for (PontoColeta pc : pontos) {
-                tableModel.addRow(new Object[]{
-                        pc.getId(),
-                        pc.getLocalColeta(),
-                        pc.getLatitude()  != null ? String.format("%.4f", pc.getLatitude())  : "—",
-                        pc.getLongitude() != null ? String.format("%.4f", pc.getLongitude()) : "—"
-                });
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar locais: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void salvar() {
+    private void salvarOuAtualizar() {
         String local = fieldLocal.getText().trim();
-
         if (local.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nome do local é obrigatório.", "Validação", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Nome do local é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
             PontoColeta pc;
-            if (editandoId != null) {
-                pc = pcService.buscarPorId(editandoId);
+            if (idSelecionado != null) {
+                pc = service.buscarPorId(idSelecionado);
+                if (pc == null) {
+                    JOptionPane.showMessageDialog(this, "Local não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             } else {
                 pc = new PontoColeta();
             }
@@ -222,101 +182,74 @@ public class PontosColetaPanel extends JPanel {
             pc.setLatitude(parseDouble(fieldLat.getText().trim()));
             pc.setLongitude(parseDouble(fieldLng.getText().trim()));
 
-            if (editandoId != null) {
-                pcService.atualizar(pc);
-                JOptionPane.showMessageDialog(this, "Local atualizado com sucesso!");
+            if (idSelecionado != null) {
+                service.atualizar(pc);
+                JOptionPane.showMessageDialog(this, "Local atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                pcService.cadastrar(pc);
-                JOptionPane.showMessageDialog(this, "Local cadastrado com sucesso!");
+                service.cadastrar(pc);
+                JOptionPane.showMessageDialog(this, "Local cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
 
-            limparFormulario();
-            atualizarTabela();
-
+            limparForm();
+            carregarPontos();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao salvar: " + ex.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void excluir() {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione um local na tabela.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        // Pega o ID da tabela (que é exibido como Integer)
-        Integer id = (Integer) tableModel.getValueAt(row, 0);
-        String local = (String) tableModel.getValueAt(row, 1);
+    private void excluirPonto() {
+        if (idSelecionado == null) return;
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Excluir o local \"" + local + "\"?",
-                "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                // Passa o ID convertido para Long caso seu Service espere isso
-                pcService.excluir(id.longValue());
-                limparFormulario();
-                atualizarTabela();
-                JOptionPane.showMessageDialog(this, "Local excluído.");
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this,
-                        "Erro ao excluir: " + ex.getMessage(),
-                        "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    private void preencherFormularioParaEdicao() {
-        int row = table.getSelectedRow();
-        if (row < 0) return;
-
-        // Pega o ID da tabela
-        Integer idInt = (Integer) tableModel.getValueAt(row, 0);
-        editandoId = idInt.longValue();
+                "Tem certeza que deseja excluir este local?",
+                "Confirmar exclusão",
+                JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            PontoColeta pc = pcService.buscarPorId(editandoId);
-            if (pc == null) return;
-
-            fieldLocal.setText(pc.getLocalColeta());
-            fieldLat.setText(pc.getLatitude()  != null ? String.valueOf(pc.getLatitude())  : "");
-            fieldLng.setText(pc.getLongitude() != null ? String.valueOf(pc.getLongitude()) : "");
-
+            service.excluir(idSelecionado);
+            limparForm();
+            carregarPontos();
+            JOptionPane.showMessageDialog(this, "Local excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar local: " + ex.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro ao excluir: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void limparFormulario() {
-        editandoId = null;
+    private void carregarPontos() {
+        tableModel.setRowCount(0);
+        for (PontoColeta pc : service.listarTodos()) {
+            tableModel.addRow(new Object[]{
+                    pc.getId(),
+                    pc.getLocalColeta(),
+                    pc.getLatitude() != null ? String.format("%.4f", pc.getLatitude()) : "—",
+                    pc.getLongitude() != null ? String.format("%.4f", pc.getLongitude()) : "—"
+            });
+        }
+    }
+
+    private void limparForm() {
+        idSelecionado = null;
         fieldLocal.setText("");
         fieldLat.setText("");
         fieldLng.setText("");
+        salvarButton.setText("Adicionar");
+        excluirButton.setVisible(false);
         table.clearSelection();
     }
-
-    // =========================================================================
-    // Helpers de parsing
-    // =========================================================================
 
     private Double parseDouble(String raw) {
         if (raw == null || raw.isBlank()) return null;
         try {
             return Double.parseDouble(raw.replace(",", "."));
         } catch (NumberFormatException e) {
-            return null;
+            throw new IllegalArgumentException("Coordenada inválida: " + raw);
         }
     }
 
-    // =========================================================================
-    // Helpers de UI
-    // =========================================================================
+    private String str(Object o) {
+        return o != null ? o.toString() : "";
+    }
 
     private JLabel label(String text) {
         JLabel l = new JLabel(text);
@@ -325,24 +258,23 @@ public class PontosColetaPanel extends JPanel {
         return l;
     }
 
-    private JTextField field(String placeholder) {
-        JTextField tf = new JTextField();
-        tf.setFont(BASE_FONT);
-        tf.setToolTipText(placeholder);
-        tf.setBorder(BorderFactory.createCompoundBorder(
+    private JTextField field() {
+        JTextField f = new JTextField();
+        f.setFont(BASE_FONT);
+        f.setPreferredSize(new Dimension(0, 34));
+        f.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(4, 8, 4, 8)
+                new EmptyBorder(0, 8, 0, 8)
         ));
-        return tf;
+        return f;
     }
 
     private JButton styledButton(String text, Color bg) {
-        JButton btn = new JButton(text);
-        btn.setFont(BASE_FONT);
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorder(new EmptyBorder(7, 14, 7, 14));
-        return btn;
+        JButton b = new JButton(text);
+        b.setBackground(bg);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setFont(new Font("SansSerif", Font.BOLD, 12));
+        return b;
     }
 }
