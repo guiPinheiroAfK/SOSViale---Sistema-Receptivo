@@ -4,6 +4,7 @@ import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Motorista;
 import br.com.sosviale.service.MotoristaService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -171,15 +172,6 @@ public class MotoristasPanel extends JPanel {
         String cnh = cnhField.getText().trim();
         String telefone = telefoneField.getText().trim();
 
-        if (nome.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nome é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (cnh.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "CNH é obrigatória.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
         try {
             if (idSelecionado == null) {
                 service.salvar(nome, cnh, telefone);
@@ -218,6 +210,7 @@ public class MotoristasPanel extends JPanel {
     }
 
     private void carregarMotoristas() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         service.listarTodos().forEach(m -> tableModel.addRow(new Object[]{
                 m.getId(),

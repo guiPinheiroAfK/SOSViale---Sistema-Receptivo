@@ -4,6 +4,7 @@ import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.service.PontoColetaService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -238,6 +239,7 @@ public class PontosColetaPanel extends JPanel {
     }
 
     private void carregarPontos() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         for (PontoColeta pc : service.listarTodos()) {
             tableModel.addRow(new Object[]{

@@ -5,6 +5,7 @@ import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.TipoDocumento;
 import br.com.sosviale.service.PassageiroService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -157,19 +158,6 @@ public class PassageirosPanel extends JPanel {
         String nacionalidade = nacionalidadeField.getText().trim();
         TipoDocumento tipo = (TipoDocumento) tipoDocumentoCombo.getSelectedItem();
 
-        if (nome.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nome é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (tipo == null) {
-            JOptionPane.showMessageDialog(this, "Tipo de documento é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (documento.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Documento é obrigatório.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
         try {
             if (idSelecionado == null) {
                 service.salvar(nome, documento, tipo, nacionalidade);
@@ -260,6 +248,7 @@ public class PassageirosPanel extends JPanel {
     }
 
     private void carregarPassageiros() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         service.listarTodos().forEach(p -> tableModel.addRow(new Object[]{
                 p.getId(), p.getNome(), p.getTipoDocumento(), p.getDocumento(), p.getNacionalidade()

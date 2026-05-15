@@ -3,6 +3,7 @@ package br.com.sosviale.view;
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.service.VeiculoService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -239,6 +240,7 @@ public class VeiculosPanel extends JPanel {
     }
 
     private void carregarVeiculos() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         service.listarTodos().forEach(v -> tableModel.addRow(new Object[]{
                 v.getId(),

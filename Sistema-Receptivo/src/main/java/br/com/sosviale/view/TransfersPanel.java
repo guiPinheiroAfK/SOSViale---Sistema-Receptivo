@@ -10,6 +10,7 @@ import br.com.sosviale.service.PassageiroService;
 import br.com.sosviale.service.PontoColetaService;
 import br.com.sosviale.service.StatusTransfer;
 import br.com.sosviale.service.TransferService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -378,12 +379,14 @@ public class TransfersPanel extends JPanel {
     }
 
     private void carregarCombos() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         List<PontoColeta> locais = pcService.listarTodos();
         comboOrigem.removeAllItems(); comboDestino.removeAllItems();
         for (PontoColeta p : locais) { comboOrigem.addItem(p); comboDestino.addItem(p); }
     }
 
     private void carregarTransfers() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         for (Transfer t : service.listarTodos()) {
             tableModel.addRow(new Object[]{t.getId(), t.getOrigem(), t.getDestino(),

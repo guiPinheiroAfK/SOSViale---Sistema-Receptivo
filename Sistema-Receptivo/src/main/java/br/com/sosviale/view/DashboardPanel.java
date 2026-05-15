@@ -2,15 +2,24 @@ package br.com.sosviale.view;
 
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Transfer;
-import br.com.sosviale.service.DashboardService;
+import br.com.sosviale.repository.MotoristaRepository;
+import br.com.sosviale.repository.PassageiroRepository;
+import br.com.sosviale.repository.TransferRepository;
+import br.com.sosviale.repository.VeiculoRepository;
+import br.com.sosviale.service.StatusTransfer;
+import br.com.sosviale.service.TransferService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DashboardPanel extends JPanel implements LanguageManager.LanguageChangeListener {
 
@@ -38,7 +47,6 @@ public class DashboardPanel extends JPanel implements LanguageManager.LanguageCh
     private JLabel upcomingEmptyLabel;
     private DefaultTableModel upcomingModel;
     private final JLabel[] metricValueLabels = new JLabel[8];
-    private final DashboardService dashboardService = new DashboardService();
 
     public DashboardPanel() {
         setLayout(new BorderLayout(14, 14));
@@ -52,30 +60,57 @@ public class DashboardPanel extends JPanel implements LanguageManager.LanguageCh
     }
 
     public void refreshData() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) {
+            for (int i = 0; i < metricValueLabels.length; i++) {
+                setMetricValue(i, 0);
+            }
+            loadUpcoming(List.of());
+            if (dateLabel != null) {
+                dateLabel.setText(LocalDate.now().format(DATE_FMT));
+            }
+            return;
+        }
         long totalPassageiros = 0, totalMotoristas = 0, totalVeiculos = 0, transfersSemOS = 0;
         long transfersHoje = 0, transfersComOs = 0, emExecucao = 0, totalOs = 0;
         List<Transfer> proximos = List.of();
 
         try {
-            DashboardService.DashboardSnapshot snap = dashboardService.carregarSnapshot();
-            totalPassageiros = snap.totalPassageiros();
-            totalMotoristas = snap.totalMotoristas();
-            totalVeiculos = snap.totalVeiculos();
-            transfersSemOS = snap.transfersSemOS();
-            totalOs = snap.totalOs();
-            transfersHoje = snap.transfersHoje();
-            transfersComOs = snap.transfersComOs();
-            emExecucao = snap.emExecucao();
-            proximos = snap.proximosTransfers();
+            totalPassageiros = new PassageiroRepository().contar();
+            totalMotoristas = new MotoristaRepository().contar();
+            totalVeiculos = new VeiculoRepository().contar();
+            transfersSemOS = new TransferRepository().contarSemOrdemServico();
+
+            List<Transfer> todos = new TransferService().listarTodos();
+            LocalDate hoje = LocalDate.now();
+            LocalDateTime agora = LocalDateTime.now();
+
+            transfersHoje = todos.stream()
+                    .filter(t -> hoje.equals(t.getDataTransfer()))
+                    .count();
+            transfersComOs = todos.stream()
+                    .filter(t -> t.getOrdemServico() != null)
+                    .count();
+            emExecucao = todos.stream()
+                    .filter(t -> t.getStatus() == StatusTransfer.EM_EXECUCAO)
+                    .count();
+            totalOs = todos.stream()
+                    .filter(t -> t.getOrdemServico() != null)
+                    .map(t -> t.getOrdemServico().getId())
+                    .distinct()
+                    .count();
+
+            proximos = todos.stream()
+                    .filter(t -> t.getDataTransfer() != null && t.getHoraTransfer() != null)
+                    .filter(t -> {
+                        LocalDateTime dt = LocalDateTime.of(t.getDataTransfer(), t.getHoraTransfer());
+                        return !dt.isBefore(agora);
+                    })
+                    .sorted(Comparator.comparing(t ->
+                            LocalDateTime.of(t.getDataTransfer(), t.getHoraTransfer())))
+                    .limit(8)
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             e.printStackTrace();
-            LanguageManager lm = LanguageManager.getInstance();
-            JOptionPane.showMessageDialog(
-                    this,
-                    lm.translate("dashboard.error.load") + "\n" + e.getMessage(),
-                    lm.translate("common.error.title"),
-                    JOptionPane.ERROR_MESSAGE
-            );
         }
 
         setMetricValue(0, totalPassageiros);
@@ -88,9 +123,7 @@ public class DashboardPanel extends JPanel implements LanguageManager.LanguageCh
         setMetricValue(7, emExecucao);
 
         loadUpcoming(proximos);
-        if (dateLabel != null) {
-            dateLabel.setText(LocalDate.now().format(DATE_FMT));
-        }
+        dateLabel.setText(LocalDate.now().format(DATE_FMT));
     }
 
     private void setMetricValue(int index, long value) {

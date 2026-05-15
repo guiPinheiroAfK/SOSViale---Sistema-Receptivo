@@ -2,6 +2,7 @@ package br.com.sosviale.view;
 
 import br.com.sosviale.model.*;
 import br.com.sosviale.service.*;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -91,6 +92,11 @@ public class OrdensPanel extends JPanel {
     private void carregarDadosBase() {
         comboMotoristas.removeAllItems();
         comboVeiculos.removeAllItems();
+
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) {
+            osTableModel.setRowCount(0);
+            return;
+        }
 
         List<Motorista> motoristas = motoristaService.listarTodos();
         for (Motorista m : motoristas) comboMotoristas.addItem(m);

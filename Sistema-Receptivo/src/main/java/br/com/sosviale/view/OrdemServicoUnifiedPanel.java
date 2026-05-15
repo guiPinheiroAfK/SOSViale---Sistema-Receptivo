@@ -5,6 +5,7 @@ import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.*;
 import br.com.sosviale.service.*;
 import br.com.sosviale.service.pathfinding.RouteResult;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -313,6 +314,13 @@ public class OrdemServicoUnifiedPanel extends JPanel {
 
         comboMotoristas.removeAllItems();
         comboVeiculos.removeAllItems();
+
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) {
+            osTableModel.setRowCount(0);
+            transferTableModel.setRowCount(0);
+            osTransferModel.setRowCount(0);
+            return;
+        }
 
         for(Motorista m : motoristaService.listarTodos()) {
             comboMotoristas.addItem(m);

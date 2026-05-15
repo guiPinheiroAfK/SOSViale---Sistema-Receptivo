@@ -5,6 +5,7 @@ import br.com.sosviale.model.Transfer;
 import br.com.sosviale.service.OrdemServicoService;
 import br.com.sosviale.service.StatusTransfer;
 import br.com.sosviale.service.TransferService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -175,11 +176,15 @@ public class AtribuirOS_TransferPanel extends JPanel {
         return panel;
     }
 
-    // -------------------------------------------------------
     // Lógica
-    // -------------------------------------------------------
     private void carregarOS() {
         osTableModel.setRowCount(0);
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) {
+            transferTableModel.setRowCount(0);
+            osSelecionada = null;
+            resetarDetalhes();
+            return;
+        }
         List<OrdemServico> lista = osService.listarTodos();
         for (OrdemServico os : lista) {
             if ("ABERTA".equals(os.getStatus())) {
