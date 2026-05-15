@@ -154,10 +154,5 @@ Mensagens e rótulos são carregados via **`LanguageManager`** (mapas em código
 
 ## Licença e equipe
 
-Defina aqui a licença e os autores do trabalho acadêmico ou da organização.
+Guilherme Gocks, Guilherme Pinheiro e Kamilly
 
----
-
-## Histórico Git
-
-Mantenha **commits** pequenos e mensagens claras; toda a entrega deve estar versionada no repositório remoto conforme orientação do professor.
