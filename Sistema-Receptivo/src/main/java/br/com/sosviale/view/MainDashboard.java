@@ -152,7 +152,9 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         addNavButton(nav, "pontosColeta", "📍 Pontos de Coleta", "menu.pontosColeta.subtitle");
         addNavButton(nav, "transfers",    "📋 Transfers",        "menu.transfers.subtitle");
         addNavButton(nav, "ordens",       "📦 Ordens de Serviço", "menu.orders.subtitle");
-        addNavButton(nav, "montarRota",   "📝 Atribuir OS a Transfer", "menu.montarRota.subtitle");
+
+        /*addNavButton(nav, "montarRota",   "📝 Atribuir OS a Transfer", "menu.montarRota.subtitle");
+        */
         addNavButton(nav, "motoristas",   "🧑‍✈️ Motoristas",      "menu.drivers.subtitle");
         addNavButton(nav, "veiculos",     "🚐 Veículos",        "menu.vehicles.subtitle");
 
@@ -240,8 +242,10 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         cardPanel.add(new PassageirosPanel(),  "passageiros");
         cardPanel.add(new PontosColetaPanel(), "pontosColeta");
         cardPanel.add(new TransfersPanel(),    "transfers");
-        cardPanel.add(new OrdensPanel(),       "ordens");
-        cardPanel.add(new AtribuirOS_TransferPanel(), "montarRota");
+        cardPanel.add(new OrdemServicoUnifiedPanel(),       "ordens");
+
+        cardPanel.add(new AtribuirOS_TransferPanel(), "OrdensVerdadeiras");
+
         cardPanel.add(new MotoristasPanel(),   "motoristas");
         cardPanel.add(new VeiculosPanel(),     "veiculos");
         cardPanel.add(new ServicosPanel(),     "servicos");
