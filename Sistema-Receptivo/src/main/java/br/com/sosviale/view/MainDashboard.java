@@ -44,6 +44,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
     private final Map<String, String> navLabels    = new LinkedHashMap<>();
     private final Map<String, String> navSubtitles = new LinkedHashMap<>();
 
+    private ServicosPanel servicosPanel;
+
     public MainDashboard(AuthenticationService authService, TransferService transferService) {
         this.authService = authService;
         configureLookAndFeel();
@@ -248,7 +250,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
 
         cardPanel.add(new MotoristasPanel(),   "motoristas");
         cardPanel.add(new VeiculosPanel(),     "veiculos");
-        cardPanel.add(new ServicosPanel(),     "servicos");
+        servicosPanel = new ServicosPanel();
+        cardPanel.add(servicosPanel, "servicos");
 
         if (authService.isAdmin()) {
             cardPanel.add(buildAdminPage(), "admin");
@@ -287,6 +290,10 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         pageTitle.setText(cleanTitle);
         pageSubtitle.setText(subtitle);
         cardLayout.show(cardPanel, key);
+
+        if ("servicos".equals(key) && servicosPanel != null) {
+            servicosPanel.atualizar();
+        }
 
         navButtons.forEach((navKey, button) -> {
             boolean active = navKey.equals(key);

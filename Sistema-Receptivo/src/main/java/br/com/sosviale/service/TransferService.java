@@ -107,6 +107,10 @@ public class TransferService {
         return repository.listarTodos();
     }
 
+    public List<Transfer> listarVinculadosOrdemServico() {
+        return repository.listarVinculadosOrdemServico();
+    }
+
     public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         repository.excluir(id);

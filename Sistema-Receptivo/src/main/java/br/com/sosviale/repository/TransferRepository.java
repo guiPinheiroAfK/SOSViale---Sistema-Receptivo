@@ -39,6 +39,24 @@ public class TransferRepository {
         }
     }
 
+    /** Transfers com OS atribuída — usado na tela do motorista (ServicosPanel). */
+    public List<Transfer> listarVinculadosOrdemServico() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                    "SELECT DISTINCT t FROM Transfer t " +
+                            "JOIN FETCH t.ordemServico os " +
+                            "LEFT JOIN FETCH os.motorista " +
+                            "LEFT JOIN FETCH t.passageiros " +
+                            "WHERE t.ordemServico IS NOT NULL " +
+                            "ORDER BY os.id ASC, t.horaTransfer ASC",
+                    Transfer.class
+            ).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     public void atualizar(Transfer transfer) {
         if (transfer == null || transfer.getId() == null)
             throw new IllegalArgumentException("transfer inválido para atualização.");

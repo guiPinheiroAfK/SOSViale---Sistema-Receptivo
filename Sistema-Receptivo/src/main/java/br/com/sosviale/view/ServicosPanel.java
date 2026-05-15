@@ -23,8 +23,7 @@ public class ServicosPanel extends JPanel {
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 15);
 
-    private final OrdemServicoService osService = new OrdemServicoService();
-    private final TransferService     transferService = new TransferService();
+    private final TransferService transferService = new TransferService();
 
     private DefaultTableModel tableModel;
     private JTable            table;
@@ -34,11 +33,17 @@ public class ServicosPanel extends JPanel {
         setBackground(PANEL_BACKGROUND);
         setBorder(new EmptyBorder(14, 14, 14, 14));
 
-        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
         JLabel title = new JLabel("Controle de Serviços Ativos");
         title.setFont(SECTION_FONT);
         title.setForeground(TEXT_COLOR);
-        add(title, BorderLayout.NORTH);
+        JButton btnAtualizar = new JButton("Atualizar");
+        btnAtualizar.setFont(BASE_FONT);
+        btnAtualizar.addActionListener(e -> atualizar());
+        header.add(title, BorderLayout.WEST);
+        header.add(btnAtualizar, BorderLayout.EAST);
+        add(header, BorderLayout.NORTH);
 
         // Tabela
         String[] colunas = {"ID", "OS", "Motorista", "Origem / Destino", "Pax", "Status"};
@@ -56,6 +61,11 @@ public class ServicosPanel extends JPanel {
         // Footer com o InfoBox
         add(buildInfoBox(), BorderLayout.SOUTH);
 
+        atualizar();
+    }
+
+    /** Recarrega a lista ao abrir a aba ou clicar em Atualizar. */
+    public void atualizar() {
         carregarServicos();
     }
 
@@ -102,8 +112,8 @@ public class ServicosPanel extends JPanel {
                     if (t != null) {
                         t.setStatus(novoStatus);
                         transferService.atualizar(t);
+                        carregarServicos();
 
-                        // O box clássico do Swing
                         JOptionPane.showMessageDialog(this,
                                 "Status do Transfer #" + tId + " atualizado para: " + novoStatus.getDescricao(),
                                 "Atualização de Serviço",
@@ -118,22 +128,20 @@ public class ServicosPanel extends JPanel {
 
     private void carregarServicos() {
         tableModel.setRowCount(0);
-        List<OrdemServico> ordens = osService.listarTodos();
 
-        for (OrdemServico os : ordens) {
-            if (os.getTransfers() != null && !os.getTransfers().isEmpty()) {
-                String motorista = (os.getMotorista() != null) ? os.getMotorista().getNome() : "N/D";
-                for (Transfer t : os.getTransfers()) {
-                    tableModel.addRow(new Object[]{
-                            t.getId(),
-                            "OS-" + os.getId(),
-                            motorista,
-                            t.getOrigem() + " ➔ " + t.getDestino(),
-                            t.getPassageiros().size(),
-                            t.getStatus()
-                    });
-                }
-            }
+        for (Transfer t : transferService.listarVinculadosOrdemServico()) {
+            OrdemServico os = t.getOrdemServico();
+            if (os == null) continue;
+
+            String motorista = os.getMotorista() != null ? os.getMotorista().getNome() : "N/D";
+            tableModel.addRow(new Object[]{
+                    t.getId(),
+                    "OS-" + os.getId(),
+                    motorista,
+                    t.getOrigem() + " ➔ " + t.getDestino(),
+                    t.getPassageiros().size(),
+                    t.getStatus()
+            });
         }
     }
 }

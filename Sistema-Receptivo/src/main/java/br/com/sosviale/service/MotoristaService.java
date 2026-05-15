@@ -1,9 +1,7 @@
 package br.com.sosviale.service;
 
 import br.com.sosviale.model.Motorista;
-import br.com.sosviale.model.TipoDocumento;
 import br.com.sosviale.repository.MotoristaRepository;
-import br.com.sosviale.util.DocumentoValidator;
 
 import java.util.List;
 
@@ -12,17 +10,33 @@ public class MotoristaService {
     private final MotoristaRepository repository = new MotoristaRepository();
 
     public void salvar(String nome, String cnh) {
+        salvar(nome, cnh, null);
+    }
+
+    public void salvar(String nome, String cnh, String telefone) {
         validarCampos(nome, cnh);
-        repository.salvar(new Motorista(nome.trim(), cnh.trim()));
+        Motorista m = new Motorista(nome.trim(), cnh.trim());
+        m.setTelefone(normalizarTelefone(telefone));
+        repository.salvar(m);
     }
 
     public void atualizar(Integer id, String nome, String cnh) {
+        atualizar(id, nome, cnh, null);
+    }
+
+    public void atualizar(Integer id, String nome, String cnh, String telefone) {
         if (id == null) throw new IllegalArgumentException("ID inválido.");
         validarCampos(nome, cnh);
 
         Motorista m = new Motorista(nome.trim(), cnh.trim());
         m.setId(id);
+        m.setTelefone(normalizarTelefone(telefone));
         repository.atualizar(m);
+    }
+
+    private String normalizarTelefone(String telefone) {
+        if (telefone == null || telefone.isBlank()) return null;
+        return telefone.trim();
     }
 
     public void excluir(Integer id) {
