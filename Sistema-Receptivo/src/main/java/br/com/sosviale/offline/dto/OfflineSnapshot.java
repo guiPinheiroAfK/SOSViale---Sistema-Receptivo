@@ -3,9 +3,8 @@ package br.com.sosviale.offline.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Pacote completo de OS + transfers + passageiros para uso sem rede.
- */
+// o que vai em snapshot.json — todas as OS visiveis pro usuario
+
 public class OfflineSnapshot {
 
     private String usuario;

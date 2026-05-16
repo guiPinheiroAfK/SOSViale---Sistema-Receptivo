@@ -1,5 +1,7 @@
 package br.com.sosviale.offline.dto;
 
+// transfer + pax list pra ida e volta json
+
 import java.util.ArrayList;
 import java.util.List;
 

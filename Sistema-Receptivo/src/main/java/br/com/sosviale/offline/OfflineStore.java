@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/**
- * Persistência local em JSON (~/.sos-viale/offline/).
- */
+// ~/.sos-viale/offline/<usuario>/ snapshot.json session.json pending.json
+
 public class OfflineStore {
 
-    /** ROOT deve ser declarado antes de INSTANCE (ordem de init estática em Java). */
+    // ROOT antes de INSTANCE (init estatico)
+
     private static final Path ROOT = resolveRootPath();
     private static final OfflineStore INSTANCE = new OfflineStore();
 
@@ -41,6 +41,8 @@ public class OfflineStore {
         return INSTANCE;
     }
 
+    // --- snapshot ---
+
     public void saveSnapshot(String usuario, OfflineSnapshot snapshot) throws IOException {
         snapshot.setUsuario(usuario);
         write(usuarioDir(usuario).resolve("snapshot.json"), snapshot);
@@ -49,6 +51,8 @@ public class OfflineStore {
     public Optional<OfflineSnapshot> loadSnapshot(String usuario) {
         return read(usuarioDir(usuario).resolve("snapshot.json"), OfflineSnapshot.class);
     }
+
+    // --- sessao pos login ---
 
     public void saveSession(OfflineSessionDto session) throws IOException {
         write(usuarioDir(session.getUsuario()).resolve("session.json"), session);
@@ -71,6 +75,8 @@ public class OfflineStore {
         }
     }
 
+    // --- checagens rapidas ---
+
     public boolean hasSnapshot(String usuario) {
         return Files.isRegularFile(usuarioDir(usuario).resolve("snapshot.json"));
     }
@@ -85,6 +91,8 @@ public class OfflineStore {
         }
     }
 
+    // --- fila pending ---
+
     public List<PendingOperationDto> loadPending(String usuario) {
         return readList(usuarioDir(usuario).resolve("pending.json"), PendingOperationDto.class);
     }
@@ -92,6 +100,8 @@ public class OfflineStore {
     public void savePending(String usuario, List<PendingOperationDto> pending) throws IOException {
         write(usuarioDir(usuario).resolve("pending.json"), pending);
     }
+
+    // --- io interno ---
 
     private Path usuarioDir(String usuario) {
         String safe = usuario.replaceAll("[^a-zA-Z0-9._-]", "_");

@@ -1,5 +1,7 @@
 package br.com.sosviale.offline.dto;
 
+// veiculo no snapshot
+
 public class OfflineVeiculoDto {
 
     private Integer id;

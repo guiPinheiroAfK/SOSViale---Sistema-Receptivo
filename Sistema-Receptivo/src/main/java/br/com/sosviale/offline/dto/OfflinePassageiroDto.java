@@ -1,5 +1,7 @@
 package br.com.sosviale.offline.dto;
 
+// passageiro achatado no json do transfer
+
 public class OfflinePassageiroDto {
 
     private Integer id;

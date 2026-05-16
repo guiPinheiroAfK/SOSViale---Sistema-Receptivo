@@ -5,10 +5,10 @@ import br.com.sosviale.config.JPAUtil;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-// DAO responsável pelas operações de persistência da entidade Motorista
+// crud motorista: sempre abre transaction local e fecha o em
+
 public class MotoristaRepository {
 
-    // persiste um novo motorista no banco; lança exceção em caso de falha
     public void salvar(Motorista motorista) {
         if (motorista == null) throw new IllegalArgumentException("motorista não pode ser nulo.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -24,7 +24,6 @@ public class MotoristaRepository {
         }
     }
 
-    // retorna todos os motoristas cadastrados; lista vazia se não houver nenhum
     public List<Motorista> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -35,7 +34,6 @@ public class MotoristaRepository {
         }
     }
 
-    // busca um motorista pelo ID; retorna null se não encontrado
     public Motorista buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -46,7 +44,6 @@ public class MotoristaRepository {
         }
     }
 
-    // atualiza os dados de um motorista existente
     public void atualizar(Motorista motorista) {
         if (motorista == null || motorista.getId() == null)
             throw new IllegalArgumentException("motorista inválido para atualização.");
@@ -63,7 +60,6 @@ public class MotoristaRepository {
         }
     }
 
-    // remove o motorista com o ID informado; ignorado silenciosamente se não existir
     public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -89,5 +85,4 @@ public class MotoristaRepository {
             em.close();
         }
     }
-
 }

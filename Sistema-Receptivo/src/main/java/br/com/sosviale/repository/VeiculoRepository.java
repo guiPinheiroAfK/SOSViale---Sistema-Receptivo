@@ -5,10 +5,10 @@ import br.com.sosviale.model.Veiculo;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-// DAO responsável pelas operações de persistência da entidade Veiculo
+// frota
+
 public class VeiculoRepository {
 
-    // persiste um novo veículo no banco
     public void salvar(Veiculo veiculo) {
         if (veiculo == null) throw new IllegalArgumentException("veículo não pode ser nulo.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -24,7 +24,6 @@ public class VeiculoRepository {
         }
     }
 
-    // retorna todos os veículos cadastrados
     public List<Veiculo> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -35,7 +34,6 @@ public class VeiculoRepository {
         }
     }
 
-    // busca um veículo pelo ID; retorna null se não encontrado
     public Veiculo buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -46,7 +44,6 @@ public class VeiculoRepository {
         }
     }
 
-    // atualiza os dados de um veículo existente
     public void atualizar(Veiculo veiculo) {
         if (veiculo == null || veiculo.getId() == null)
             throw new IllegalArgumentException("veículo inválido para atualização.");
@@ -63,7 +60,6 @@ public class VeiculoRepository {
         }
     }
 
-    // remove o veículo com o ID informado; ignorado silenciosamente se não existir
     public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();

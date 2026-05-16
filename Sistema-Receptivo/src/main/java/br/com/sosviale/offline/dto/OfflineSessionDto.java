@@ -1,5 +1,7 @@
 package br.com.sosviale.offline.dto;
 
+// login salvo em session.json pra bootstrap offline
+
 public class OfflineSessionDto {
 
     private String usuario;

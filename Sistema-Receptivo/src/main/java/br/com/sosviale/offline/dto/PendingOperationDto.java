@@ -1,5 +1,7 @@
 package br.com.sosviale.offline.dto;
 
+// operacao enfileirada quando mexeu offline e ainda nao flushou no server
+
 public class PendingOperationDto {
 
     public enum Type { UPDATE_TRANSFER_STATUS, DELETE_TRANSFER }

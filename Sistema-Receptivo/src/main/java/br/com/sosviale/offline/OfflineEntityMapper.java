@@ -12,12 +12,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+// jpa entities <-> json snapshot; uns patches só mexem no dto antes de salvar de novo
+
 public final class OfflineEntityMapper {
 
     private static final DateTimeFormatter DATE = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
 
     private OfflineEntityMapper() {}
+
+    // persistencia server -> disco
 
     public static OfflineSnapshot fromOrdens(List<OrdemServico> ordens, String usuario) {
         OfflineSnapshot snap = new OfflineSnapshot();
@@ -82,6 +86,8 @@ public final class OfflineEntityMapper {
         }
         return dto;
     }
+
+    // json -> objetos pra tela (sem round-trip no banco)
 
     public static List<Transfer> toTransfers(OfflineSnapshot snapshot) {
         List<Transfer> result = new ArrayList<>();
@@ -160,6 +166,8 @@ public final class OfflineEntityMapper {
         return t;
     }
 
+    // atualiza status no dto antes de rewrite do arquivo
+
     public static OfflineSnapshot mergeStatusUpdate(OfflineSnapshot snap, int transferId, StatusTransfer status) {
         for (OfflineOrdemServicoDto os : snap.getOrdens()) {
             for (OfflineTransferDto t : os.getTransfers()) {
@@ -179,7 +187,8 @@ public final class OfflineEntityMapper {
         return snap;
     }
 
-    /** Agrupa transfers vinculados em OS completas a partir de lista plana. */
+    // agrupa transfers que ja tem mesmo os attached (atalho de dominio)
+
     public static List<OrdemServico> groupTransfersToOrdens(List<Transfer> transfers) {
         Map<Integer, OrdemServico> map = new LinkedHashMap<>();
         for (Transfer t : transfers) {

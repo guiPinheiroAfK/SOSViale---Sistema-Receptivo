@@ -14,18 +14,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Sincroniza OS + passageiros do servidor para o disco local.
- */
+// baixa OS do server e joga snapshot no disco; salva session no login
+
 public class OfflineSyncService {
 
     private final TransferService transferService = new TransferService();
     private final OrdemServicoService osService = new OrdemServicoService();
     private final OfflineStore store = OfflineStore.getInstance();
 
-    /**
-     * @return true se sincronizou com sucesso no servidor
-     */
+    // lista transfers com OS, re-busca cada OS com fetch, serializa tudo
+
     public boolean syncFromServer(String usuario) {
         if (!ConnectivityService.isDatabaseOnline()) {
             return false;
@@ -55,6 +53,8 @@ public class OfflineSyncService {
             return false;
         }
     }
+
+    // json minimo pra login offline saber quem era
 
     public void saveSessionAfterLogin(User user) {
         if (user == null) return;

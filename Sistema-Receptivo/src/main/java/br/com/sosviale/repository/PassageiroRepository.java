@@ -5,10 +5,10 @@ import br.com.sosviale.config.JPAUtil;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-// DAO responsável pelas operações de persistência da entidade Passageiro
+// passageiro: crud padrao
+
 public class PassageiroRepository {
 
-    // persiste um novo passageiro no banco
     public void salvar(Passageiro passageiro) {
         if (passageiro == null) throw new IllegalArgumentException("passageiro não pode ser nulo.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -27,7 +27,6 @@ public class PassageiroRepository {
         }
     }
 
-    // retorna todos os passageiros cadastrados ordenados por nome
     public List<Passageiro> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -38,7 +37,6 @@ public class PassageiroRepository {
         }
     }
 
-    // busca um passageiro pelo ID; retorna null se não encontrado
     public Passageiro buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -49,7 +47,6 @@ public class PassageiroRepository {
         }
     }
 
-    // atualiza os dados de um passageiro existente
     public void atualizar(Passageiro passageiro) {
         if (passageiro == null || passageiro.getId() == null)
             throw new IllegalArgumentException("passageiro inválido para atualização.");
@@ -66,7 +63,6 @@ public class PassageiroRepository {
         }
     }
 
-    // remove o passageiro com o ID informado; ignorado silenciosamente se não existir
     public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();

@@ -13,9 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Fila de alterações feitas offline para envio quando a rede voltar.
- */
+// fila pendente quando fez update/delete sem rede; flush manda pro transferService
+
 public class PendingSyncService {
 
     private final OfflineStore store = OfflineStore.getInstance();
@@ -43,6 +42,8 @@ public class PendingSyncService {
         pending.add(op);
         store.savePending(usuario, pending);
     }
+
+    // aplica ate esgotar ou erro; remove da fila o que passou
 
     public int flushPending(String usuario) {
         if (!ConnectivityService.isDatabaseOnline()) {

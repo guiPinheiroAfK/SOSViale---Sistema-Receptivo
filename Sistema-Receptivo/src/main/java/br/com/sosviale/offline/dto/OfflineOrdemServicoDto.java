@@ -1,5 +1,7 @@
 package br.com.sosviale.offline.dto;
 
+// os completa pra leitura offline (transfers embutidos)
+
 import java.util.ArrayList;
 import java.util.List;
 

@@ -1,15 +1,13 @@
 package br.com.sosviale.offline;
 
 import br.com.sosviale.config.DatabaseConfig;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Verifica disponibilidade do PostgreSQL com cache curto para não sobrecarregar.
- */
+// ping leve no postgres com cache de alguns segundos pra nao martelar rede
+
 public class ConnectivityService {
 
     private static final long CACHE_MS = 5_000L;
@@ -28,6 +26,8 @@ public class ConnectivityService {
         LAST_CHECK.set(now);
         return online;
     }
+
+    // proxima chamada ignora cache (ex.: depois de flyway)
 
     public static void invalidateCache() {
         LAST_CHECK.set(0);

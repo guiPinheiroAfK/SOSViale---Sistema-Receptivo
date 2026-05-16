@@ -1,5 +1,7 @@
 package br.com.sosviale.offline.dto;
 
+// bean jackson: motorista serializado no snapshot
+
 public class OfflineMotoristaDto {
 
     private Integer id;

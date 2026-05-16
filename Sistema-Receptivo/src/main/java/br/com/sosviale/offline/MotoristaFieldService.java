@@ -13,9 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Fachada Offline First para a tela de serviços do motorista.
- */
+// uso da tela de servicos do motorista: online cacheia e offline reidrata do disco
+
 public class MotoristaFieldService {
 
     public enum DataSource { ONLINE, OFFLINE_CACHE, EMPTY }
@@ -45,9 +44,8 @@ public class MotoristaFieldService {
         return SessionManager.getInstance().getUsuarioAtual();
     }
 
-    /**
-     * Lista transfers vinculados à OS — online com fallback para cache local.
-     */
+    // lista servicos: online flush pending + sync; offline mapeia snapshot
+
     public List<Transfer> listarServicosAtivos() {
         String usuario = getUsuarioAtual();
         lastPendingCount = pendingSync.countPending(usuario);
@@ -60,7 +58,7 @@ public class MotoristaFieldService {
                 lastSource = DataSource.ONLINE;
                 return online;
             } catch (Exception e) {
-                // cai para cache
+                // cai pro snapshot
             }
         }
 
@@ -83,6 +81,8 @@ public class MotoristaFieldService {
         return null;
     }
 
+    // OS montada igual online, ou reconstruida do json
+
     public OrdemServico buscarOsComTransfers(Integer osId) {
         String usuario = getUsuarioAtual();
 
@@ -104,6 +104,8 @@ public class MotoristaFieldService {
                         .map(OfflineEntityMapper::toOrdem))
                 .orElse(null);
     }
+
+    // offline: mexe no json + enfileira pending; online grava direto
 
     public void atualizarStatus(Integer transferId, StatusTransfer novoStatus) throws IOException {
         String usuario = getUsuarioAtual();
@@ -145,6 +147,8 @@ public class MotoristaFieldService {
         pendingSync.enqueueDelete(usuario, transferId);
         lastPendingCount = pendingSync.countPending(usuario);
     }
+
+    // --- cache / sync leve ---
 
     public boolean forcarSincronizacao() {
         if (!isOnline()) return false;
