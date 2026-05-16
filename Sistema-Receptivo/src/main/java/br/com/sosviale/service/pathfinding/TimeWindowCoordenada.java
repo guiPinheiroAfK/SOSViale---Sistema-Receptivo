@@ -5,16 +5,14 @@ import br.com.sosviale.model.Transfer;
 
 import java.time.LocalTime;
 
-/*
-  Extensão de Coordenada que inclui janela de tempo (time window).
+// extensão de Coordenada que inclui janela de tempo (time window)
 
-  Problema real:
+ /* Problema real:
     Se Transfer B é às 08:30 e Transfer A é às 08:45, o algoritmo
-    NÃO pode inverter a ordem, mesmo que geograficamente fique mais próximo.
-    Porque o passageiro de B espera ser buscado às 08:30, não depois de A.
+    NÃO pode inverter a ordem, mesmo que geograficamente fique mais próximo
+    Porque o passageiro de B espera ser buscado às 08:30, não depois de A
 
-  Solução:
-    Cada coordenada carrega sua hora prometida. O PathFinding respeita isso.
+   A solucao é cada coordenada carrega sua hora prometida. O PathFinding respeita isso
  */
 public final class TimeWindowCoordenada extends Coordenada {
 
@@ -23,8 +21,7 @@ public final class TimeWindowCoordenada extends Coordenada {
     private final boolean ehPontoDePartida;
 
 
-    // Construtores
-
+    // construtores
     public TimeWindowCoordenada(double latitude, double longitude, String nome,
                                 PontoColeta pontoColeta, Transfer transfer,
                                 LocalTime horarioPrevisto, int marginemMinutos) {
@@ -36,8 +33,7 @@ public final class TimeWindowCoordenada extends Coordenada {
         this.ehPontoDePartida = false;
     }
 
-    // Construtor para ponto de partida (motorista) — sem time window.
-
+    // construtor para ponto de partida (motorista)
     public TimeWindowCoordenada(double latitude, double longitude, String nome) {
         super(latitude, longitude, nome);
         this.horarioPrevisto = null;
@@ -55,26 +51,22 @@ public final class TimeWindowCoordenada extends Coordenada {
         this.ehPontoDePartida = false;
     }
 
-    // Getters
-
+    // getters
     public LocalTime getHorarioPrevisto() { return horarioPrevisto; }
     public LocalTime getHoraLimite()      { return horaLimite; }
     public boolean isPontoDePartida()     { return ehPontoDePartida; }
 
-    /*
-     * Verifica se a chegada em um horário é viável para este ponto.
-     *
-     * Regra: horario <= horaLimite (com margem de 15 min)
-     */
+    // verifica se a chegada em um horário é viável para este ponto.
+    // regra: horario <= horaLimite (com margem de 15 min)
+
     public boolean isChegadaViavel(LocalTime horaChegada) {
         if (horaLimite == null) return true; // Ponto de partida ou sem restrição
         return !horaChegada.isAfter(horaLimite);
     }
 
-    /*
-     * Verifica se uma chegada está "muito cedo" (mais de 30 min antes do horário).
-     * O motorista pode chegar cedo, mas esperar > 30 min é ineficiente.
-     */
+    // verifica se uma chegada está "muito cedo" (mais de 30 min antes do horário).
+    //O motorista pode chegar cedo, mas esperar > 30 min é ineficiente.
+
     public boolean isChegadaMuitoCedo(LocalTime horaChegada) {
         if (horarioPrevisto == null) return false;
         return horaChegada.plusMinutes(30).isBefore(horarioPrevisto);

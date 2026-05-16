@@ -27,12 +27,10 @@ public class OrdemServicoService {
         }
     }
 
-    /*
-     * Busca uma OS pelo ID de forma simples (objeto detached ao retornar).
-     * Os transfers são carregados pelo FetchType.EAGER definido na entidade,
-     * mas use buscarComTransfers() quando precisar de uma lista garantidamente
-     * fresca após operações de vinculação.
-     */
+    /*busca uma OS pelo ID de forma simples (objeto detached ao retornar).
+     Os transfers são carregados pelo FetchType.EAGER definido na entidade,
+     mas use buscarComTransfers() quando precisar de uma lista garantidamente
+     fresca após operações de vinculação.*/
     public OrdemServico buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -43,19 +41,8 @@ public class OrdemServicoService {
         }
     }
 
-    /*
-     * Busca uma OS com seus transfers carregados via JOIN FETCH explícito.
-     *
-     * Por que este método existe?
-     *   - Após uma vinculação de transfer, o objeto osSelecionada no painel
-     *     está desatualizado (detached, lista em memória antiga).
-     *   - Este método abre um novo EntityManager e executa duas consultas
-     *     (transfers e, em seguida, passageiros) para evitar MultipleBagFetchException.
-     *   - Use este método sempre que precisar de um re-fetch após mutações.
-     *
-     * @param id ID da OrdemServico
-     * @return OS com transfers e passageiros carregados e frescos do banco
-     */
+    // busca uma OS com seus transfers carregados via JOIN FETCH explícito.
+
     public OrdemServico buscarComTransfers(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -67,8 +54,8 @@ public class OrdemServicoService {
                     OrdemServico.class
             ).setParameter("id", id).getSingleResult();
 
-            // Hibernate não permite JOIN FETCH em duas List (bags) na mesma query.
-            // Carrega passageiros em uma segunda consulta, com a sessão ainda aberta.
+            // hibernate não permite JOIN FETCH em duas List (bags) na mesma query
+            // carrega passageiros em uma segunda consulta, com a sessão ainda aberta
             if (!os.getTransfers().isEmpty()) {
                 em.createQuery(
                         "SELECT DISTINCT t FROM Transfer t " +
@@ -106,13 +93,8 @@ public class OrdemServicoService {
         }
     }
 
-    /*
-     * Otimiza a rota da Ordem de Serviço, gera as paradas agrupadas e salva no banco.
-     *
-     * @param osId    ID da Ordem de Serviço
-     * @param usarGps true para usar cálculo OSRM com posição do motorista,
-     *                false para Haversine
-     */
+    //otimiza a rota da Ordem de Serviço, gera as paradas agrupadas e salva no banco.
+
     public void montarRotaOtimizada(Integer osId, boolean usarGps) {
         if (osId == null || osId <= 0) throw new IllegalArgumentException("ID da OS inválido.");
 

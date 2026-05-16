@@ -14,24 +14,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.logging.Logger;
-
-/* Conflito de Horário Detectado
- *
- *   Se o motorista não conseguir chegar em tempo:
- *     1. O algoritmo marca como inviável (⚠ no log)
- *     2. O painel exibe aviso: "Conflito de horário detectado"
- *     3. Admin tem 3 opções:
- *        a) Aceitar (motorista chegará atrasado — log com justificativa)
- *        b) Mover transfer para próxima OS
- *        c) Aumentar margem de tempo / verificar coordenadas
- *
- * Tempo de Viagem
- *
- *   Estimado como:
- *     - OSRM: distância real / velocidade média 40 km/h (urbano)
- *     - Haversine: distância linha reta / velocidade média 40 km/h
- *     + 5 minutos por parada (embarque/desembarque)
- */
 public final class PathFindingTimeWindow {
 
     private static final Logger LOG = Logger.getLogger(PathFindingTimeWindow.class.getName());
@@ -45,14 +27,7 @@ public final class PathFindingTimeWindow {
     private PathFindingTimeWindow() {}
 
     // API pública
-
-    /*
-     * Otimiza rota de uma OS respeitando horários dos transfers.
-     * Modo básico: Haversine sem posição GPS do motorista.
-     *
-     * @param os a Ordem de Serviço com transfers e pontos de coleta
-     * @return resultado com rota otimizada, conflitos detectados e log
-     */
+    //otimiza rota de uma OS respeitando horários dos transfers
     public static RouteResult otimizarComTimeWindow(OrdemServico os) {
         if (os == null) {
             return resultadoVazio("OS não pode ser nula.");
@@ -78,14 +53,8 @@ public final class PathFindingTimeWindow {
         return resultado;
     }
 
-    /*
-     * Otimiza rota com GPS do motorista e distâncias reais (OSRM).
-     * Respeitando time windows.
-     *
-     * @param os            a Ordem de Serviço
-     * @param motoristaRepo repositório para buscar posição GPS atualizada
-     * @return resultado com rota otimizada
-     */
+    //otimiza rota com GPS do motorista e distâncias reais (OSRM) respeitando time windows.
+
     public static RouteResult otimizarComTimeWindowEGps(
             OrdemServico os,
             MotoristaRepository motoristaRepo) {
@@ -100,7 +69,7 @@ public final class PathFindingTimeWindow {
             return resultadoVazio("Nenhum ponto de coleta encontrado na OS #" + os.getId());
         }
 
-        // Resolve posição do motorista
+        // resolve posição do motorista
         TimeWindowCoordenada posicaoMotorista = resolverPosicaoMotoristaTW(
                 os.getMotorista(), motoristaRepo);
 
@@ -114,7 +83,7 @@ public final class PathFindingTimeWindow {
         LOG.info("PathFindingTimeWindow | Modo GPS+OSRM+TimeWindow | OS #" + os.getId()
                 + " com " + pontos.size() + " pontos");
 
-        // Função que calcula tempo via OSRM
+        // função que calcula tempo via OSRM
         BiFunction<TimeWindowCoordenada, TimeWindowCoordenada, Integer> tempoViagemFn =
                 (o, d) -> calcularTempoViagem(o, d, true);
 
@@ -125,9 +94,8 @@ public final class PathFindingTimeWindow {
         return resultado;
     }
 
-    /*
-     * Aplica a ordem otimizada de volta no banco de dados.
-     */
+    // aplica a ordem otimizada de volta no banco de dados.
+
     public static void aplicarOrdemOtimizada(RouteResult resultado, PontoColetaRepository pcRepo) {
         if (resultado == null || resultado.getRotaOtimizada().isEmpty()) {
             LOG.warning("Nenhuma rota otimizada para aplicar.");
@@ -153,10 +121,9 @@ public final class PathFindingTimeWindow {
     }
 
     // Helpers privados
-    /*
-     * Coleta coordenadas com time windows de uma OS.
-     * Ordena automaticamente por horário (prioridade absoluta).
-     */
+    // coleta coordenadas com time windows de uma OS.
+    //ordena automaticamente por horário (prioridade absoluta).
+
     private static List<TimeWindowCoordenada> coletarCoordenadasComTimeWindow(OrdemServico os) {
         List<TimeWindowCoordenada> coordenadas = new ArrayList<>();
 
@@ -176,9 +143,8 @@ public final class PathFindingTimeWindow {
         return coordenadas;
     }
 
-    /*
-     * Converte PontoColeta em TimeWindowCoordenada.
-     */
+    //converte PontoColeta em TimeWindowCoordenada.
+
     private static TimeWindowCoordenada resolverCoordenadasTW(PontoColeta pc, Transfer transfer) {
         boolean coordenadasValidas =
                 pc.getLatitude() != null && pc.getLongitude() != null
@@ -186,7 +152,7 @@ public final class PathFindingTimeWindow {
                         || Math.abs(pc.getLongitude()) > 0.0001);
 
         if (!coordenadasValidas) {
-            // Tenta geocodificação
+            // tenta geocodificação
             try {
                 Coordenada geocodificada = GeocodingService.resolver(
                         pc.getLocalColeta() + ", Foz do Iguaçu, Brasil");
@@ -203,7 +169,7 @@ public final class PathFindingTimeWindow {
             }
         }
 
-        // Extrai horário do PontoColeta (pode vir de várias fontes)
+        // extrai horário do PontoColeta (pode vir de várias fontes)
         LocalTime horario = extrairHorario(pc);
 
         return new TimeWindowCoordenada(
@@ -211,13 +177,6 @@ public final class PathFindingTimeWindow {
                 pc.getLocalColeta(), pc, transfer, horario, 15);
     }
 
-    /*
-     * Extrai o horário de um PontoColeta.
-     * Ordem de prioridade:
-     *   1. horarioPrevisto (se existir)
-     *   2. horaPrevista (se existir)
-     *   3. null (sem restrição de horário)
-     */
     private static LocalTime extrairHorario(PontoColeta pc) {
         if (pc.getHorarioPrevisto() != null) {
             return pc.getHorarioPrevisto();
@@ -226,9 +185,8 @@ public final class PathFindingTimeWindow {
         return null;
     }
 
-    /*
-     * Resolve posição GPS do motorista como TimeWindowCoordenada.
-     */
+    // resolve posição GPS do motorista como TimeWindowCoordenada.
+
     private static TimeWindowCoordenada resolverPosicaoMotoristaTW(
             Motorista motorista,
             MotoristaRepository motoristaRepo) {
@@ -249,12 +207,8 @@ public final class PathFindingTimeWindow {
         return new TimeWindowCoordenada(lat, lon, "Posição atual de " + atualizado.getNome());
     }
 
-    /*
-     * Calcula tempo de viagem em minutos entre dois pontos.
-     *
-     * Fórmula:
-     *   tempo = (distância_km / velocidade_kmh) * 60 + tempo_parada
-     */
+    /* calcula tempo de viagem em minutos entre dois pontos
+     Fórmula:tempo = (distância_km / velocidade_kmh) * 60 + tempo_parada*/
     private static Integer calcularTempoViagem(
             TimeWindowCoordenada origem,
             TimeWindowCoordenada destino,

@@ -1,5 +1,7 @@
 package br.com.sosviale.model;
 
+// frota: label + placa (unica) + capacidade usada na montagem de OS
+
 import jakarta.persistence.*;
 
 @Entity
@@ -16,7 +18,6 @@ public class Veiculo {
     @Column(nullable = false, length = 50)
     private String label;
 
-    // placa deve ser única no sistema
     @Column(nullable = false, unique = true, length = 10)
     private String placa;
 
@@ -26,18 +27,16 @@ public class Veiculo {
     @Column(length = 50)
     private String tipo;
 
-    // construtor padrão obrigatório pelo JPA
     public Veiculo() {
     }
 
-    // construtor completo para facilitar a criação em testes e serviços
+    // atalho pra seed / tela simples
     public Veiculo(String label, String placa, Integer capacidade) {
         this.label = label;
         this.placa = placa;
         this.capacidade = capacidade;
     }
 
-    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

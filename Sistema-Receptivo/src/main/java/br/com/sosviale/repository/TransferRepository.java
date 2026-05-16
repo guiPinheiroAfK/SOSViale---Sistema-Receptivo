@@ -7,7 +7,8 @@ import br.com.sosviale.service.StatusTransfer;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-// DAO responsável pelas operações de persistência da entidade Transfer.
+// transfer: lista agressiva com fetch join onde a tela precisa
+
 public class TransferRepository {
 
     public void salvar(Transfer transfer) {
@@ -26,7 +27,6 @@ public class TransferRepository {
         }
     }
 
-    // Retorna todos os transfers ordenados por data e depois por hora.
     public List<Transfer> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -39,7 +39,8 @@ public class TransferRepository {
         }
     }
 
-    /** Transfers com OS atribuída — usado na tela do motorista (ServicosPanel). */
+    // painel servicos motorista: só quem ja tem OS e veio com motorista/pax carregados
+
     public List<Transfer> listarVinculadosOrdemServico() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -73,18 +74,8 @@ public class TransferRepository {
         }
     }
 
-    /*
-     * Vincula um Transfer a uma OrdemServico de forma segura.
-     *
-     * Diferente do atualizar(), este método:
-     *   - Abre seu próprio EntityManager e busca o Transfer pelo ID (objeto attached)
-     *   - Seta apenas os campos necessários para a vinculação (ordemServico + status)
-     *   - NÃO reprocessa a lógica financeira (valorBase, taxas, etc.)
-     *   - Faz o merge dentro de uma única transação atômica
-     *
-     * @param transferId ID do transfer a ser vinculado
-     * @param osId       ID da OrdemServico de destino
-     */
+    // attach via find no mesmo em: seta os + status NA_OS (sem recalcular grana)
+
     public void vincular(Integer transferId, Integer osId) {
         if (transferId == null || transferId <= 0)
             throw new IllegalArgumentException("ID do transfer inválido.");
@@ -95,7 +86,6 @@ public class TransferRepository {
         try {
             em.getTransaction().begin();
 
-            // find() retorna objeto managed/attached — o merge vai ser limpo
             Transfer t = em.find(Transfer.class, transferId);
             if (t == null)
                 throw new IllegalArgumentException("Transfer #" + transferId + " não encontrado.");
@@ -107,8 +97,6 @@ public class TransferRepository {
             t.setOrdemServico(os);
             t.setStatus(StatusTransfer.NA_OS);
 
-            // Como t é managed, o JPA detecta a mudança automaticamente.
-            // O merge aqui é redundante mas explícito para clareza.
             em.merge(t);
 
             em.getTransaction().commit();

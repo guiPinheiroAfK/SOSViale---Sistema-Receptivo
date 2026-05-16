@@ -12,24 +12,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.logging.Logger;
 
-/*
- * Resolve endereços textuais para coordenadas geográficas (geocodificação direta).
- *
- * Utiliza a API pública Nominatim do OpenStreetMap, que é gratuita e não requer
- * chave de API. Termos de uso: máximo 1 requisição/segundo, User-Agent obrigatório.
- *
- * Contexto do sistema: região de Foz do Iguaçu/Tríplice Fronteira.
- * O bias de área é configurado para essa região, melhorando a precisão dos resultados.
- *
- * Quando a geocodificação falha (endereço ambíguo, sem rede), o sistema lança
- * {@link GeocodingException} com uma mensagem explicativa — o chamador decide se
- * cancela a operação ou pede ao usuário para inserir as coordenadas manualmente.
- */
+// Resolve endereços textuais para coordenadas geográficas (geocodificação direta).
+
 public final class GeocodingService {
 
     private static final Logger LOG = Logger.getLogger(GeocodingService.class.getName());
 
-    /* User-Agent obrigatório pela política de uso da Nominatim. */
+    // User-Agent obrigatório pela política de uso da Nominatim
     private static final String USER_AGENT = "SosVialeTransfer/1.0 (contato@sosviale.com.br)";
 
     private static final String NOMINATIM_URL =
@@ -44,18 +33,7 @@ public final class GeocodingService {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private GeocodingService() {}
-
-    // -------------------------------------------------------------------------
-    // API pública
-    // -------------------------------------------------------------------------
-
-    /*
-     * Converte um endereço textual para coordenadas geográficas.
-     *
-     * @param endereco endereço legível (ex: "Aeroporto Internacional de Foz do Iguaçu")
-     * @return coordenada com lat/lng resolvidos e o endereço como nome
-     * @throws GeocodingException se o endereço não for encontrado ou a API falhar
-     */
+     // converte um endereço textual para coordenadas geográficas.
     public static Coordenada resolver(String endereco) throws GeocodingException {
         if (endereco == null || endereco.isBlank()) {
             throw new GeocodingException("Endereço não pode ser vazio.");
@@ -102,13 +80,9 @@ public final class GeocodingService {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Exceção específica do serviço
-    // -------------------------------------------------------------------------
-
-    /*
-     * Lançada quando não é possível resolver um endereço para coordenadas.
-     * O chamador deve tratar esta exceção e oferecer entrada manual ao usuário.
+    /*lançada quando não é possível resolver um endereço para coordenadas.
+     O chamador deve tratar esta exceção e oferecer entrada manual ao usuário.
      */
     public static class GeocodingException extends Exception {
         public GeocodingException(String message) {

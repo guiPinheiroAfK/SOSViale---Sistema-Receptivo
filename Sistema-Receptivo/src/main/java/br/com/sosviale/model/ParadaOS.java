@@ -5,6 +5,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// parada de rota dentro da os; transfere opcional ligado pelo join table sem cascade agressivo
+
 @Entity
 @Table(name = "paradas_os")
 public class ParadaOS {
@@ -33,12 +35,12 @@ public class ParadaOS {
     private LocalTime horarioPrevisto;
 
     @Column(name = "acao")
-    private String acao; // Ex: "EMBARQUE", "DESEMBARQUE"
+    private String acao; // exemplo EMBARQUE / DESEMBARQUE
 
     @Column(name = "status_parada")
     private String statusParada = "PENDENTE";
 
-    // Sem CascadeType.ALL aqui para não excluir o Transfer inteiro sem querer!
+    // sem cascade forte: só desassociar parada sem apagar transfer
     @ManyToMany
     @JoinTable(
             name = "parada_os_transfers",
@@ -49,7 +51,6 @@ public class ParadaOS {
 
     public ParadaOS() {}
 
-    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

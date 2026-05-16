@@ -1,8 +1,11 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.i18n.I18nRegistry;
+import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.TipoDocumento;
 import br.com.sosviale.service.PassageiroService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -32,12 +35,41 @@ public class PassageirosPanel extends JPanel {
     private JButton salvarButton;
     private JButton excluirButton;
     private Integer idSelecionado = null;
+    private JLabel formTitleLabel;
+    private JLabel tableTitleLabel;
+    private JLabel dicaLabel;
+    private JLabel lblNome, lblDocumento, lblTipo, lblNacionalidade;
 
     public PassageirosPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        I18nRegistry.register(this::refreshTexts);
+    }
+
+    private void refreshTexts() {
+        LanguageManager lm = LanguageManager.getInstance();
+        if (formTitleLabel != null) formTitleLabel.setText(lm.translate("passengers.form.title"));
+        if (tableTitleLabel != null) tableTitleLabel.setText(lm.translate("passengers.list.title"));
+        if (dicaLabel != null) dicaLabel.setText(lm.translate("passengers.table.hint"));
+        if (lblNome != null) lblNome.setText(lm.translate("passengers.label.fullname"));
+        if (lblDocumento != null) lblDocumento.setText(lm.translate("passengers.label.document.number"));
+        if (lblTipo != null) lblTipo.setText(lm.translate("passengers.label.document.type"));
+        if (lblNacionalidade != null) lblNacionalidade.setText(lm.translate("passengers.label.nationality"));
+        if (salvarButton != null && idSelecionado == null) {
+            salvarButton.setText(lm.translate("passengers.button.add"));
+        }
+        if (excluirButton != null) excluirButton.setText(lm.translate("passengers.button.delete"));
+        if (tableModel != null) {
+            tableModel.setColumnIdentifiers(new String[]{
+                    lm.translate("passengers.table.id"),
+                    lm.translate("passengers.table.name"),
+                    lm.translate("passengers.table.document.type"),
+                    lm.translate("passengers.table.document"),
+                    lm.translate("passengers.table.nationality")
+            });
+        }
     }
 
     private JComponent buildForm() {
@@ -54,20 +86,23 @@ public class PassageirosPanel extends JPanel {
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel title = new JLabel("Cadastro de Passageiro");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
+        formTitleLabel = new JLabel();
+        formTitleLabel.setFont(SECTION_FONT);
+        formTitleLabel.setForeground(TEXT_COLOR);
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 14, 0);
-        form.add(title, gbc);
+        form.add(formTitleLabel, gbc);
 
-        // Nome
-        gbc.gridy++; form.add(label("Nome completo:"), gbc);
+        gbc.gridy++;
+        lblNome = label("");
+        form.add(lblNome, gbc);
         nomeField = field();
         gbc.gridy++; form.add(nomeField, gbc);
 
         // Tipo de Documento
-        gbc.gridy++; form.add(label("Tipo de Documento:"), gbc);
+        gbc.gridy++;
+        lblTipo = label("");
+        form.add(lblTipo, gbc);
         tipoDocumentoCombo = new JComboBox<>(TipoDocumento.values());
         tipoDocumentoCombo.setFont(BASE_FONT);
         tipoDocumentoCombo.setBackground(Color.WHITE);
@@ -75,12 +110,16 @@ public class PassageirosPanel extends JPanel {
         gbc.gridy++; form.add(tipoDocumentoCombo, gbc);
 
         // Número do Documento
-        gbc.gridy++; form.add(label("Número do Documento:"), gbc);
+        gbc.gridy++;
+        lblDocumento = label("");
+        form.add(lblDocumento, gbc);
         documentoField = field();
         gbc.gridy++; form.add(documentoField, gbc);
 
         // Nacionalidade
-        gbc.gridy++; form.add(label("Nacionalidade:"), gbc);
+        gbc.gridy++;
+        lblNacionalidade = label("");
+        form.add(lblNacionalidade, gbc);
         nacionalidadeField = field();
         nacionalidadeField.setText("Brasileira");
         gbc.gridy++; form.add(nacionalidadeField, gbc);
@@ -173,10 +212,10 @@ public class PassageirosPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Passageiros cadastrados");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
+        tableTitleLabel = new JLabel();
+        tableTitleLabel.setFont(SECTION_FONT);
+        tableTitleLabel.setForeground(TEXT_COLOR);
+        panel.add(tableTitleLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "Tipo", "Documento", "Nacionalidade"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -198,17 +237,18 @@ public class PassageirosPanel extends JPanel {
             }
         });
 
-        JLabel dica = new JLabel("💡 Clique em um passageiro para editar ou excluir.");
-        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        dica.setForeground(MUTED_TEXT);
+        dicaLabel = new JLabel();
+        dicaLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        dicaLabel.setForeground(MUTED_TEXT);
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(dica, BorderLayout.SOUTH);
+        panel.add(dicaLabel, BorderLayout.SOUTH);
         carregarPassageiros();
         return panel;
     }
 
     private void carregarPassageiros() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         service.listarTodos().forEach(p -> tableModel.addRow(new Object[]{
                 p.getId(), p.getNome(), p.getTipoDocumento(), p.getDocumento(), p.getNacionalidade()

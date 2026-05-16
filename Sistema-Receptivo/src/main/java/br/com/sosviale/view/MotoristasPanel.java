@@ -1,7 +1,10 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.i18n.I18nRegistry;
+import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Motorista;
 import br.com.sosviale.service.MotoristaService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -28,12 +31,31 @@ public class MotoristasPanel extends JPanel {
     private JButton salvarButton;
     private JButton excluirButton;
     private Integer idSelecionado = null;
+    private JLabel formTitleLabel;
+    private JLabel tableTitleLabel;
 
     public MotoristasPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        I18nRegistry.register(this::refreshTexts);
+    }
+
+    private void refreshTexts() {
+        LanguageManager lm = LanguageManager.getInstance();
+        if (formTitleLabel != null) formTitleLabel.setText(lm.translate("drivers.form.title"));
+        if (tableTitleLabel != null) tableTitleLabel.setText(lm.translate("drivers.list.title"));
+        if (salvarButton != null) salvarButton.setText(lm.translate("common.save"));
+        if (excluirButton != null) excluirButton.setText(lm.translate("common.delete"));
+        if (tableModel != null) {
+            tableModel.setColumnIdentifiers(new String[]{
+                    lm.translate("drivers.table.id"),
+                    lm.translate("drivers.table.name"),
+                    lm.translate("drivers.table.license"),
+                    lm.translate("drivers.table.phone")
+            });
+        }
     }
 
     private JComponent buildForm() {
@@ -50,12 +72,12 @@ public class MotoristasPanel extends JPanel {
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel title = new JLabel("Cadastro de Motorista");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
+        formTitleLabel = new JLabel();
+        formTitleLabel.setFont(SECTION_FONT);
+        formTitleLabel.setForeground(TEXT_COLOR);
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 14, 0);
-        form.add(title, gbc);
+        form.add(formTitleLabel, gbc);
 
         gbc.gridy++;
         form.add(label("Nome completo:"), gbc);
@@ -110,10 +132,10 @@ public class MotoristasPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Motoristas cadastrados");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
+        tableTitleLabel = new JLabel();
+        tableTitleLabel.setFont(SECTION_FONT);
+        tableTitleLabel.setForeground(TEXT_COLOR);
+        panel.add(tableTitleLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "CNH", "Telefone"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -188,6 +210,7 @@ public class MotoristasPanel extends JPanel {
     }
 
     private void carregarMotoristas() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         service.listarTodos().forEach(m -> tableModel.addRow(new Object[]{
                 m.getId(),

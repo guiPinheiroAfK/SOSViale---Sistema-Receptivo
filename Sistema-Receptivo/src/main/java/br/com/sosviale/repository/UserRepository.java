@@ -5,10 +5,8 @@ import br.com.sosviale.config.JPAUtil;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-/*
- * Repositório de usuários — adicionado metodo atualizarSenha para suporte
- * ao re-hash silencioso e à troca de senha.
- */
+// usuario + atualizarSenha pra bcrypt / troca, sem merge da entidade toda
+
 public class UserRepository {
 
     public User buscarPorUsuario(String usuario) {
@@ -50,13 +48,8 @@ public class UserRepository {
         }
     }
 
-    /**
-     * Atualiza apenas o campo senha de um usuário.
-     * Usado no re-hash silencioso (login com dado legado) e na troca de senha.
-     *
-     * @param usuario  Login do usuário
-     * @param novoHash Hash BCrypt já calculado
-     */
+    // update direto só do hash (login rehash ou trocar senha)
+
     public void atualizarSenha(String usuario, String novoHash) {
         EntityManager em = JPAUtil.getEntityManager();
         try {

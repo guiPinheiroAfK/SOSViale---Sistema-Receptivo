@@ -5,6 +5,7 @@ import br.com.sosviale.auth.ValidationException;
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.model.User;
 import br.com.sosviale.service.UserService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -241,6 +242,7 @@ public class UsuariosPanel extends JPanel {
     }
 
     private void carregarUsuarios() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         for (User u : service.listarTodos()) {
             String perfil = u.isAdmin() ? "ADMIN" : (u.getPerfil() != null ? u.getPerfil().name() : "—");

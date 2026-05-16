@@ -1,7 +1,10 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.i18n.I18nRegistry;
+import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.service.PontoColetaService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -29,12 +32,31 @@ public class PontosColetaPanel extends JPanel {
     private JButton salvarButton;
     private JButton excluirButton;
     private Long idSelecionado = null;
+    private JLabel formTitleLabel;
+    private JLabel tableTitleLabel;
+    private JLabel dicaLabel;
 
     public PontosColetaPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        I18nRegistry.register(this::refreshTexts);
+    }
+
+    private void refreshTexts() {
+        LanguageManager lm = LanguageManager.getInstance();
+        if (formTitleLabel != null) formTitleLabel.setText(lm.translate("collection.form.title"));
+        if (tableTitleLabel != null) tableTitleLabel.setText(lm.translate("collection.list.title"));
+        if (dicaLabel != null) dicaLabel.setText(lm.translate("collection.table.hint"));
+        if (tableModel != null) {
+            tableModel.setColumnIdentifiers(new String[]{
+                    lm.translate("collection.table.id"),
+                    lm.translate("collection.table.name"),
+                    lm.translate("collection.table.address"),
+                    lm.translate("collection.table.city")
+            });
+        }
     }
 
     private JComponent buildForm() {
@@ -51,12 +73,12 @@ public class PontosColetaPanel extends JPanel {
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel title = new JLabel("Cadastro de Local");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
+        formTitleLabel = new JLabel();
+        formTitleLabel.setFont(SECTION_FONT);
+        formTitleLabel.setForeground(TEXT_COLOR);
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 14, 0);
-        form.add(title, gbc);
+        form.add(formTitleLabel, gbc);
 
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.gridy++;
@@ -114,10 +136,10 @@ public class PontosColetaPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Pontos de coleta cadastrados");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
+        tableTitleLabel = new JLabel();
+        tableTitleLabel.setFont(SECTION_FONT);
+        tableTitleLabel.setForeground(TEXT_COLOR);
+        panel.add(tableTitleLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new String[]{"ID", "Local de Coleta", "Lat", "Lng"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -149,12 +171,12 @@ public class PontosColetaPanel extends JPanel {
             }
         });
 
-        JLabel dica = new JLabel("💡 Clique em um local para editar ou excluir.");
-        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        dica.setForeground(MUTED_TEXT);
+        dicaLabel = new JLabel();
+        dicaLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        dicaLabel.setForeground(MUTED_TEXT);
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(dica, BorderLayout.SOUTH);
+        panel.add(dicaLabel, BorderLayout.SOUTH);
         carregarPontos();
         return panel;
     }
@@ -217,6 +239,7 @@ public class PontosColetaPanel extends JPanel {
     }
 
     private void carregarPontos() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         for (PontoColeta pc : service.listarTodos()) {
             tableModel.addRow(new Object[]{

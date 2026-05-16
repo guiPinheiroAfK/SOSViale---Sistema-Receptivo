@@ -1,5 +1,7 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.i18n.I18nRegistry;
+import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.model.Transfer;
@@ -8,6 +10,7 @@ import br.com.sosviale.service.PassageiroService;
 import br.com.sosviale.service.PontoColetaService;
 import br.com.sosviale.service.StatusTransfer;
 import br.com.sosviale.service.TransferService;
+import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -47,6 +50,7 @@ public class TransfersPanel extends JPanel {
     private JLabel labelConversao, labelPorPessoa;
     private JButton salvarButton, excluirButton, btnAdd; // btnAdd agora é atributo
     private Integer idSelecionado = null;
+    private JLabel formTitleLabel;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
@@ -57,6 +61,30 @@ public class TransfersPanel extends JPanel {
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
         carregarTransfers();
+        I18nRegistry.register(this::refreshTexts);
+    }
+
+    private void refreshTexts() {
+        LanguageManager lm = LanguageManager.getInstance();
+        if (formTitleLabel != null) formTitleLabel.setText(lm.translate("transfers.title"));
+        if (salvarButton != null) {
+            salvarButton.setText(idSelecionado == null
+                    ? lm.translate("transfers.button.schedule")
+                    : lm.translate("transfers.button.edit"));
+        }
+        if (btnAdd != null) btnAdd.setText(lm.translate("transfers.button.add.passenger"));
+        if (tableModel != null) {
+            tableModel.setColumnIdentifiers(new String[]{
+                    lm.translate("transfers.table.id"),
+                    lm.translate("transfers.table.origin"),
+                    lm.translate("transfers.table.destiny"),
+                    lm.translate("transfers.table.date"),
+                    lm.translate("transfers.table.time"),
+                    lm.translate("transfers.table.value"),
+                    lm.translate("transfers.table.status")
+            });
+            carregarTransfers();
+        }
     }
 
     private JComponent buildForm() {
@@ -73,9 +101,9 @@ public class TransfersPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 12, 0);
         gbc.gridx = 0; gbc.gridy = 0;
 
-        JLabel title = new JLabel("Agendar Transfer");
-        title.setFont(new Font("SansSerif", Font.BOLD, 18));
-        form.add(title, gbc);
+        formTitleLabel = new JLabel();
+        formTitleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        form.add(formTitleLabel, gbc);
 
         // --- PAINEL DE PASSAGEIROS NO GRUPO ---
         gbc.gridy++;
@@ -351,17 +379,20 @@ public class TransfersPanel extends JPanel {
     }
 
     private void carregarCombos() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         List<PontoColeta> locais = pcService.listarTodos();
         comboOrigem.removeAllItems(); comboDestino.removeAllItems();
         for (PontoColeta p : locais) { comboOrigem.addItem(p); comboDestino.addItem(p); }
     }
 
     private void carregarTransfers() {
+        if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
         for (Transfer t : service.listarTodos()) {
             tableModel.addRow(new Object[]{t.getId(), t.getOrigem(), t.getDestino(),
                     t.getDataTransfer().format(DATE_FORMATTER), t.getHoraTransfer().format(TIME_FORMATTER),
-                    "R$ " + t.getValorBase(), t.getStatus()});
+                    "R$ " + t.getValorBase(),
+                    LanguageManager.getInstance().translateStatus(t.getStatus())});
         }
     }
 

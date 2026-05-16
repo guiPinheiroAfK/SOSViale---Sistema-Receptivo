@@ -4,9 +4,10 @@ import br.com.sosviale.config.JPAUtil;
 import br.com.sosviale.model.ParadaOS;
 import jakarta.persistence.EntityManager;
 
+// parada de rota: so update e find simples
+
 public class ParadaOSRepository {
 
-    // Atualiza os dados de uma parada (ex: quando o motorista altera o status para 'CONCLUIDO')
     public void atualizar(ParadaOS parada) {
         if (parada == null || parada.getId() == null) {
             throw new IllegalArgumentException("Parada inválida para atualização.");
@@ -26,7 +27,6 @@ public class ParadaOSRepository {
         }
     }
 
-    // Busca uma parada específica pelo ID
     public ParadaOS buscarPorId(Integer id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("ID inválido.");

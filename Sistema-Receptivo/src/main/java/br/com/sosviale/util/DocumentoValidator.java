@@ -7,7 +7,7 @@ public class DocumentoValidator {
     public static boolean isValido(String documento, TipoDocumento tipo) {
         if (documento == null || documento.trim().isEmpty()) return false;
 
-        // Limpa caracteres especiais e padroniza para maiúsculo (importante para RG e Passaporte)
+        // limpa caracteres especiais e padroniza para maiúsculo (importante para RG e Passaporte)
         String docLimpo = documento.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
 
         return switch (tipo) {
@@ -20,7 +20,7 @@ public class DocumentoValidator {
     }
 
     private static boolean validarCPF(String cpf) {
-        // Bloqueia se não tiver 11 dígitos ou se for sequência repetida
+        // bloqueia se não tiver 11 dígitos ou se for sequência repetida
         if (!cpf.matches("\\d{11}") || cpf.matches("(\\d)\\1{10}")) return false;
         try {
             int d1 = 0, d2 = 0, p1 = 10, p2 = 11;
@@ -55,12 +55,12 @@ public class DocumentoValidator {
     private static boolean validarPassaporte(String passaporte) {
         if (passaporte == null || passaporte.length() < 3) return false;
 
-        //Tenta validar primeiro contra o padrão brasileiro (Regra mais restrita)
+        //tenta validar primeiro contra o padrão brasileiro (Regra mais restrita)
         if (passaporte.matches("^[A-Z]{2}\\d{6,7}$")) {
             return true;
         }
 
-        //Se não é brasileiro, aplica a regra geral da ICAO (International Civil Aviation Organization)
+        //se não é brasileiro, aplica a regra geral da ICAO (International Civil Aviation Organization)
         return passaporte.matches("^[A-Z0-9]{6,12}$");
     }
 }

@@ -5,10 +5,10 @@ import br.com.sosviale.model.PontoColeta;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-// DAO responsável pelas operações de persistência da entidade PontoColeta
+// pontos de coleta por transfer
+
 public class PontoColetaRepository {
 
-    // persiste um novo ponto de coleta no banco
     public void salvar(PontoColeta ponto) {
         if (ponto == null) throw new IllegalArgumentException("ponto de coleta não pode ser nulo.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -27,7 +27,6 @@ public class PontoColetaRepository {
         }
     }
 
-    // atualiza os dados de um ponto de coleta existente
     public void atualizar(PontoColeta ponto) {
         if (ponto == null || ponto.getId() == null)
             throw new IllegalArgumentException("ponto de coleta inválido para atualização.");
@@ -44,7 +43,6 @@ public class PontoColetaRepository {
         }
     }
 
-    // remove um ponto de coleta pelo ID; ignorado silenciosamente se não existir
     public void excluir(Long id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();
@@ -63,7 +61,6 @@ public class PontoColetaRepository {
         }
     }
 
-    // busca um ponto de coleta pelo ID; retorna null se não encontrado
     public PontoColeta buscarPorId(Long id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();

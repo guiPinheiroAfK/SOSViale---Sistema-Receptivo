@@ -1,11 +1,11 @@
 package br.com.sosviale.i18n;
 
+import br.com.sosviale.service.StatusTransfer;
+
 import java.util.*;
 
-/*
- * LanguageManager - Gerenciador centralizado de idiomas
- * Suporta: Português (PT), Inglês (EN) e Espanhol (ES)
- */
+// map statico chave → texto por idioma; telas só chamam translate / setLanguage
+
 public class LanguageManager {
 
     public enum Language {
@@ -44,7 +44,7 @@ public class LanguageManager {
     }
 
     private void loadTranslations() {
-        // Português
+        // locale pt
         Map<String, String> pt = new HashMap<>();
         pt.put("app.title", "SOS VIALE | Sistema Receptivo");
         pt.put("app.search.placeholder", "Buscar transfer, passageiro ou OS...");
@@ -84,12 +84,24 @@ public class LanguageManager {
         pt.put("login.link.register", "Não tem conta? Registre-se");
         pt.put("login.link.login", "Já tem conta? Faça login");
         pt.put("register.title", "Criar Conta");
+        pt.put("register.subtitle", "Cadastre um novo usuário para acessar o sistema.");
         pt.put("register.username.label", "Usuário:");
         pt.put("register.email.label", "Email:");
         pt.put("register.password.label", "Senha:");
         pt.put("register.confirm.label", "Confirmar Senha:");
         pt.put("register.button.register", "Criar Conta");
         pt.put("register.button.cancel", "Cancelar");
+        pt.put("register.fullname.label", "Nome completo:");
+        pt.put("register.profile.label", "Perfil:");
+        pt.put("register.adminPassword.label", "Senha do Admin:");
+        pt.put("register.button.back", "Voltar");
+        pt.put("register.validation.required", "Preencha todos os campos");
+        pt.put("register.success.message", "Conta criada com sucesso!");
+        pt.put("register.success.title", "Sucesso");
+        pt.put("login.validation.fill.credentials", "Preencha usuário e senha");
+        pt.put("perfil.ADMIN", "Administrador");
+        pt.put("perfil.GERENTE", "Gerente");
+        pt.put("perfil.MOTORISTA", "Motorista");
         pt.put("error.invalid.credentials", "Usuário ou senha inválidos");
         pt.put("error.user.exists", "Usuário já existe");
         pt.put("error.passwords.mismatch", "As senhas não correspondem");
@@ -128,6 +140,8 @@ public class LanguageManager {
         pt.put("transfers.table.time", "Hora");
         pt.put("transfers.table.status", "Status");
         pt.put("transfers.table.driver", "Motorista");
+        pt.put("transfers.table.value", "Valor (R$)");
+        pt.put("transfers.button.add.passenger", "+ Adicionar Passageiro");
         pt.put("transfers.button.edit", "Salvar alteração");
         pt.put("transfers.message.required", "Preencha todos os campos!");
         pt.put("transfers.message.invalid", "Formato inválido!\nData: dd/MM/yyyy\nHora: HH:mm");
@@ -144,6 +158,13 @@ public class LanguageManager {
         // Passengers Panel
         pt.put("passengers.title", "Cadastrar Passageiro");
         pt.put("passengers.label.name", "Nome:");
+        pt.put("passengers.label.fullname", "Nome completo:");
+        pt.put("passengers.label.document.number", "Número do Documento:");
+        pt.put("passengers.label.nationality", "Nacionalidade:");
+        pt.put("passengers.button.add", "Adicionar");
+        pt.put("passengers.table.hint", "💡 Clique em um passageiro para editar ou excluir.");
+        pt.put("passengers.table.document.type", "Tipo");
+        pt.put("passengers.table.nationality", "Nacionalidade");
         pt.put("passengers.label.email", "Email:");
         pt.put("passengers.label.phone", "Telefone:");
         pt.put("passengers.label.document", "Documento:");
@@ -203,6 +224,8 @@ public class LanguageManager {
 
         // Pontos Coleta Panel
         pt.put("collection.title", "Cadastrar Ponto de Coleta");
+        pt.put("collection.form.title", "Cadastro de Local");
+        pt.put("collection.table.hint", "💡 Clique em um local para editar ou excluir.");
         pt.put("collection.label.name", "Nome:");
         pt.put("collection.label.address", "Endereço:");
         pt.put("collection.label.city", "Cidade:");
@@ -215,7 +238,104 @@ public class LanguageManager {
         pt.put("collection.table.address", "Endereço");
         pt.put("collection.table.city", "Cidade");
 
-        // Inglês
+        pt.put("menu.servicos", "🛠️ Serviços");
+        pt.put("menu.servicos.subtitle", "Transfers vinculados à OS — motorista");
+        pt.put("nav.section.gerente", "GERENTE");
+        pt.put("nav.section.motorista", "MOTORISTA");
+        pt.put("nav.section.admin", "ADMIN");
+        pt.put("access.denied", "Você não tem permissão para acessar.");
+        pt.put("access.denied.title", "Acesso negado");
+        pt.put("notifications.bell", "🔔");
+        pt.put("notifications.tooltip", "Notificações de transfers");
+        pt.put("notifications.title", "Notificações");
+        pt.put("notifications.empty", "Nenhuma notificação no momento.");
+        pt.put("notifications.dismiss", "Remover");
+        pt.put("notifications.clear.all", "Limpar todas");
+        pt.put("notifications.transfer.alert",
+                "Em {minutos} min será o horário do Transfer #{id}\n{origem} → {destino} às {hora}");
+        pt.put("status.transfer.AGUARDANDO_OS", "Aguardando OS");
+        pt.put("status.transfer.NA_OS", "Na OS");
+        pt.put("status.transfer.EM_EXECUCAO", "Em Execução");
+        pt.put("status.transfer.CONCLUIDO", "Concluído");
+        pt.put("status.transfer.CANCELADO", "Cancelado");
+        pt.put("dashboard.welcome", "Painel operacional");
+        pt.put("dashboard.today", "Hoje");
+        pt.put("dashboard.metric.orders", "Ordens de serviço");
+        pt.put("dashboard.metric.orders.hint", "cadastradas");
+        pt.put("dashboard.metric.today", "Transfers hoje");
+        pt.put("dashboard.metric.today.hint", "agendados para hoje");
+        pt.put("dashboard.metric.linked", "Transfers na OS");
+        pt.put("dashboard.metric.linked.hint", "vinculados a rotas");
+        pt.put("dashboard.metric.execution", "Em execução");
+        pt.put("dashboard.metric.execution.hint", "em andamento agora");
+        pt.put("dashboard.upcoming.title", "Próximos transfers");
+        pt.put("dashboard.upcoming.col.id", "ID");
+        pt.put("dashboard.upcoming.col.route", "Rota");
+        pt.put("dashboard.upcoming.col.datetime", "Data / Hora");
+        pt.put("dashboard.upcoming.col.status", "Status");
+        pt.put("dashboard.upcoming.empty", "Nenhum transfer futuro agendado.");
+        pt.put("dashboard.error.load", "Não foi possível carregar os dados do painel.");
+        pt.put("common.error.title", "Erro");
+        pt.put("servicos.form.title", "Detalhes do Serviço");
+        pt.put("servicos.label.transfer", "Transfer #:");
+        pt.put("servicos.label.os", "Ordem de serviço:");
+        pt.put("servicos.label.driver", "Motorista:");
+        pt.put("servicos.label.route", "Rota:");
+        pt.put("servicos.label.passengers", "Passageiros:");
+        pt.put("servicos.label.status", "Status:");
+        pt.put("servicos.table.title", "Serviços ativos (transfers na OS)");
+        pt.put("servicos.table.hint", "💡 Selecione um serviço da OS para alterar status, baixar PDF da OS ou excluir o transfer.");
+        pt.put("servicos.button.pdf", "Baixar PDF da OS");
+        pt.put("servicos.button.delete", "Excluir serviço");
+        pt.put("servicos.os.group.one", "1 transfer nesta OS. IDs: {ids}.");
+        pt.put("servicos.os.group.many", "{n} transfers nesta OS.\nIDs: {ids}.");
+        pt.put("servicos.table.os.bracket", "{os} ({n}×)");
+        pt.put("servicos.table.os.branch.mid", "├─");
+        pt.put("servicos.table.os.branch.last", "└─");
+        pt.put("servicos.table.os.tooltip", "{os} — {n} transfers nesta OS");
+        pt.put("servicos.table.col.id", "ID");
+        pt.put("servicos.table.col.os", "OS");
+        pt.put("servicos.table.col.driver", "Motorista");
+        pt.put("servicos.table.col.route", "Origem / Destino");
+        pt.put("servicos.table.col.pax", "Pax");
+        pt.put("servicos.table.col.status", "Status");
+        pt.put("login.access.title", "Acesso ao Sistema");
+        pt.put("login.access.subtitle", "Entre com seu usuário e senha para continuar.");
+        pt.put("login.create.account", "Criar conta");
+        pt.put("ordem.title", "Montagem de OS — criar, vincular transfers e otimizar rota");
+        pt.put("users.title", "Cadastro de Usuário");
+        pt.put("users.list.title", "Usuários do sistema");
+        pt.put("passengers.form.title", "Cadastro de Passageiro");
+        pt.put("drivers.form.title", "Cadastro de Motorista");
+        pt.put("drivers.label.fullname", "Nome completo:");
+        pt.put("vehicles.form.title", "Cadastro de Veículo");
+        pt.put("common.save", "Salvar");
+        pt.put("common.delete", "Excluir");
+        pt.put("common.clear", "Limpar");
+        pt.put("common.na", "N/D");
+        pt.put("servicos.warn.select.os", "Selecione um serviço vinculado a uma OS.");
+        pt.put("servicos.error.os.notfound", "OS não encontrada.");
+        pt.put("servicos.warn.no.transfers", "A OS não possui transfers vinculados para gerar o PDF.");
+        pt.put("servicos.pdf.saved", "PDF salvo em:\n{path}\n\nDeseja abrir o arquivo?");
+        pt.put("servicos.pdf.title", "PDF gerado");
+        pt.put("servicos.pdf.error", "Erro ao gerar PDF: {msg}");
+        pt.put("servicos.error.transfer.notfound", "Transfer não encontrado.");
+        pt.put("servicos.status.updated", "Status atualizado para: {status}");
+        pt.put("servicos.error.update", "Erro ao atualizar: {msg}");
+        pt.put("servicos.delete.confirm", "Excluir o transfer #{id} do banco de dados?\nEsta ação não pode ser desfeita.");
+        pt.put("servicos.delete.success", "Serviço excluído do banco.");
+        pt.put("servicos.error.delete", "Erro ao excluir: {msg}");
+        pt.put("login.button.offline", "Entrar offline (dados salvos)");
+        pt.put("login.offline.need.user", "Informe o usuário para carregar o cache local.");
+        pt.put("login.offline.no.cache", "Não há dados offline para este usuário. Conecte-se na primeira vez.");
+        pt.put("login.offline.no.network", "Sem rede — tentando modo offline...");
+        pt.put("offline.status.online", "🟢 Online — dados sincronizados");
+        pt.put("offline.status.offline", "🟠 Modo offline — consultando dados do dispositivo");
+        pt.put("offline.status.empty", "⚠ Nenhum dado local. Conecte-se e abra Serviços uma vez.");
+        pt.put("offline.status.synced", "última sync: {when}");
+        pt.put("offline.status.pending", "{n} alteração(ões) aguardando envio");
+
+        // locale en
         Map<String, String> en = new HashMap<>();
         en.put("app.title", "SOS VIALE | Receptive System");
         en.put("app.search.placeholder", "Search transfer, passenger or OS...");
@@ -255,12 +375,24 @@ public class LanguageManager {
         en.put("login.link.register", "Don't have an account? Register");
         en.put("login.link.login", "Already have an account? Login");
         en.put("register.title", "Create Account");
+        en.put("register.subtitle", "Register a new user to access the system.");
         en.put("register.username.label", "Username:");
         en.put("register.email.label", "Email:");
         en.put("register.password.label", "Password:");
         en.put("register.confirm.label", "Confirm Password:");
         en.put("register.button.register", "Create Account");
         en.put("register.button.cancel", "Cancel");
+        en.put("register.fullname.label", "Full name:");
+        en.put("register.profile.label", "Role:");
+        en.put("register.adminPassword.label", "Admin password:");
+        en.put("register.button.back", "Back");
+        en.put("register.validation.required", "Fill in all required fields");
+        en.put("register.success.message", "Account created successfully!");
+        en.put("register.success.title", "Success");
+        en.put("login.validation.fill.credentials", "Enter username and password");
+        en.put("perfil.ADMIN", "Administrator");
+        en.put("perfil.GERENTE", "Manager");
+        en.put("perfil.MOTORISTA", "Driver");
         en.put("error.invalid.credentials", "Invalid username or password");
         en.put("error.user.exists", "User already exists");
         en.put("error.passwords.mismatch", "Passwords do not match");
@@ -299,6 +431,8 @@ public class LanguageManager {
         en.put("transfers.table.time", "Time");
         en.put("transfers.table.status", "Status");
         en.put("transfers.table.driver", "Driver");
+        en.put("transfers.table.value", "Amount (BRL)");
+        en.put("transfers.button.add.passenger", "+ Add Passenger");
         en.put("transfers.button.edit", "Save changes");
         en.put("transfers.message.required", "Fill in all fields!");
         en.put("transfers.message.invalid", "Invalid format!\nDate: dd/MM/yyyy\nTime: HH:mm");
@@ -315,6 +449,13 @@ public class LanguageManager {
         // Passengers Panel
         en.put("passengers.title", "Register Passenger");
         en.put("passengers.label.name", "Name:");
+        en.put("passengers.label.fullname", "Full name:");
+        en.put("passengers.label.document.number", "Document number:");
+        en.put("passengers.label.nationality", "Nationality:");
+        en.put("passengers.button.add", "Add");
+        en.put("passengers.table.hint", "💡 Click a passenger to edit or delete.");
+        en.put("passengers.table.document.type", "Type");
+        en.put("passengers.table.nationality", "Nationality");
         en.put("passengers.label.email", "Email:");
         en.put("passengers.label.phone", "Phone:");
         en.put("passengers.label.document", "Document:");
@@ -374,6 +515,8 @@ public class LanguageManager {
 
         // Pontos Coleta Panel
         en.put("collection.title", "Register Collection Point");
+        en.put("collection.form.title", "Location registration");
+        en.put("collection.table.hint", "💡 Click a location to edit or delete.");
         en.put("collection.label.name", "Name:");
         en.put("collection.label.address", "Address:");
         en.put("collection.label.city", "City:");
@@ -386,7 +529,104 @@ public class LanguageManager {
         en.put("collection.table.address", "Address");
         en.put("collection.table.city", "City");
 
-        // Espanhol
+        en.put("menu.servicos", "🛠️ Services");
+        en.put("menu.servicos.subtitle", "Transfers linked to service orders — driver");
+        en.put("nav.section.gerente", "MANAGER");
+        en.put("nav.section.motorista", "DRIVER");
+        en.put("nav.section.admin", "ADMIN");
+        en.put("access.denied", "You do not have permission to access this.");
+        en.put("access.denied.title", "Access denied");
+        en.put("notifications.bell", "🔔");
+        en.put("notifications.tooltip", "Transfer notifications");
+        en.put("notifications.title", "Notifications");
+        en.put("notifications.empty", "No notifications at the moment.");
+        en.put("notifications.dismiss", "Dismiss");
+        en.put("notifications.clear.all", "Clear all");
+        en.put("notifications.transfer.alert",
+                "Transfer #{id} is scheduled in {minutos} min\n{origem} → {destino} at {hora}");
+        en.put("status.transfer.AGUARDANDO_OS", "Awaiting SO");
+        en.put("status.transfer.NA_OS", "On SO");
+        en.put("status.transfer.EM_EXECUCAO", "In progress");
+        en.put("status.transfer.CONCLUIDO", "Completed");
+        en.put("status.transfer.CANCELADO", "Cancelled");
+        en.put("dashboard.welcome", "Operations dashboard");
+        en.put("dashboard.today", "Today");
+        en.put("dashboard.metric.orders", "Service orders");
+        en.put("dashboard.metric.orders.hint", "registered");
+        en.put("dashboard.metric.today", "Transfers today");
+        en.put("dashboard.metric.today.hint", "scheduled for today");
+        en.put("dashboard.metric.linked", "Transfers on SO");
+        en.put("dashboard.metric.linked.hint", "linked to routes");
+        en.put("dashboard.metric.execution", "In execution");
+        en.put("dashboard.metric.execution.hint", "currently running");
+        en.put("dashboard.upcoming.title", "Upcoming transfers");
+        en.put("dashboard.upcoming.col.id", "ID");
+        en.put("dashboard.upcoming.col.route", "Route");
+        en.put("dashboard.upcoming.col.datetime", "Date / Time");
+        en.put("dashboard.upcoming.col.status", "Status");
+        en.put("dashboard.upcoming.empty", "No upcoming transfers scheduled.");
+        en.put("dashboard.error.load", "Could not load dashboard data.");
+        en.put("common.error.title", "Error");
+        en.put("servicos.form.title", "Service details");
+        en.put("servicos.label.transfer", "Transfer #:");
+        en.put("servicos.label.os", "Service order:");
+        en.put("servicos.label.driver", "Driver:");
+        en.put("servicos.label.route", "Route:");
+        en.put("servicos.label.passengers", "Passengers:");
+        en.put("servicos.label.status", "Status:");
+        en.put("servicos.table.title", "Active services (transfers on SO)");
+        en.put("servicos.table.hint", "💡 Select a service to change status, download SO PDF or delete the transfer.");
+        en.put("servicos.button.pdf", "Download SO PDF");
+        en.put("servicos.button.delete", "Delete service");
+        en.put("servicos.os.group.one", "1 transfer on this SO. IDs: {ids}.");
+        en.put("servicos.os.group.many", "{n} transfers on this SO.\nIDs: {ids}.");
+        en.put("servicos.table.os.bracket", "{os} ({n}×)");
+        en.put("servicos.table.os.branch.mid", "├─");
+        en.put("servicos.table.os.branch.last", "└─");
+        en.put("servicos.table.os.tooltip", "{os} — {n} transfers on this SO");
+        en.put("servicos.table.col.id", "ID");
+        en.put("servicos.table.col.os", "SO");
+        en.put("servicos.table.col.driver", "Driver");
+        en.put("servicos.table.col.route", "Origin / Destination");
+        en.put("servicos.table.col.pax", "Pax");
+        en.put("servicos.table.col.status", "Status");
+        en.put("login.access.title", "System access");
+        en.put("login.access.subtitle", "Enter your username and password to continue.");
+        en.put("login.create.account", "Create account");
+        en.put("ordem.title", "Build SO — create, link transfers and optimize route");
+        en.put("users.title", "User registration");
+        en.put("users.list.title", "System users");
+        en.put("passengers.form.title", "Passenger registration");
+        en.put("drivers.form.title", "Driver registration");
+        en.put("drivers.label.fullname", "Full name:");
+        en.put("vehicles.form.title", "Vehicle registration");
+        en.put("common.save", "Save");
+        en.put("common.delete", "Delete");
+        en.put("common.clear", "Clear");
+        en.put("common.na", "N/A");
+        en.put("servicos.warn.select.os", "Select a service linked to a service order.");
+        en.put("servicos.error.os.notfound", "Service order not found.");
+        en.put("servicos.warn.no.transfers", "The service order has no linked transfers to generate the PDF.");
+        en.put("servicos.pdf.saved", "PDF saved at:\n{path}\n\nOpen the file?");
+        en.put("servicos.pdf.title", "PDF generated");
+        en.put("servicos.pdf.error", "Error generating PDF: {msg}");
+        en.put("servicos.error.transfer.notfound", "Transfer not found.");
+        en.put("servicos.status.updated", "Status updated to: {status}");
+        en.put("servicos.error.update", "Update error: {msg}");
+        en.put("servicos.delete.confirm", "Delete transfer #{id} from the database?\nThis action cannot be undone.");
+        en.put("servicos.delete.success", "Service deleted from database.");
+        en.put("servicos.error.delete", "Delete error: {msg}");
+        en.put("login.button.offline", "Offline login (saved data)");
+        en.put("login.offline.need.user", "Enter username to load local cache.");
+        en.put("login.offline.no.cache", "No offline data for this user. Connect online first.");
+        en.put("login.offline.no.network", "No network — trying offline mode...");
+        en.put("offline.status.online", "🟢 Online — data synced");
+        en.put("offline.status.offline", "🟠 Offline mode — using device data");
+        en.put("offline.status.empty", "⚠ No local data. Connect and open Services once.");
+        en.put("offline.status.synced", "last sync: {when}");
+        en.put("offline.status.pending", "{n} change(s) pending upload");
+
+        // locale es
         Map<String, String> es = new HashMap<>();
         es.put("app.title", "SOS VIALE | Sistema Receptivo");
         es.put("app.search.placeholder", "Buscar transferencia, pasajero u OS...");
@@ -426,12 +666,24 @@ public class LanguageManager {
         es.put("login.link.register", "¿Sin cuenta? Regístrese");
         es.put("login.link.login", "¿Tiene cuenta? Inicie sesión");
         es.put("register.title", "Crear Cuenta");
+        es.put("register.subtitle", "Registre un nuevo usuario para acceder al sistema.");
         es.put("register.username.label", "Usuario:");
         es.put("register.email.label", "Correo Electrónico:");
         es.put("register.password.label", "Contraseña:");
         es.put("register.confirm.label", "Confirmar Contraseña:");
         es.put("register.button.register", "Crear Cuenta");
         es.put("register.button.cancel", "Cancelar");
+        es.put("register.fullname.label", "Nombre completo:");
+        es.put("register.profile.label", "Perfil:");
+        es.put("register.adminPassword.label", "Contraseña de administrador:");
+        es.put("register.button.back", "Volver");
+        es.put("register.validation.required", "Complete todos los campos");
+        es.put("register.success.message", "¡Cuenta creada con éxito!");
+        es.put("register.success.title", "Éxito");
+        es.put("login.validation.fill.credentials", "Ingrese usuario y contraseña");
+        es.put("perfil.ADMIN", "Administrador");
+        es.put("perfil.GERENTE", "Gerente");
+        es.put("perfil.MOTORISTA", "Conductor");
         es.put("error.invalid.credentials", "Usuario o contraseña inválidos");
         es.put("error.user.exists", "El usuario ya existe");
         es.put("error.passwords.mismatch", "Las contraseñas no coinciden");
@@ -470,6 +722,8 @@ public class LanguageManager {
         es.put("transfers.table.time", "Hora");
         es.put("transfers.table.status", "Estado");
         es.put("transfers.table.driver", "Conductor");
+        es.put("transfers.table.value", "Valor (BRL)");
+        es.put("transfers.button.add.passenger", "+ Agregar Pasajero");
         es.put("transfers.button.edit", "Guardar cambios");
         es.put("transfers.message.required", "¡Rellene todos los campos!");
         es.put("transfers.message.invalid", "¡Formato inválido!\nFecha: dd/MM/yyyy\nHora: HH:mm");
@@ -486,6 +740,13 @@ public class LanguageManager {
         // Passengers Panel
         es.put("passengers.title", "Registrar Pasajero");
         es.put("passengers.label.name", "Nombre:");
+        es.put("passengers.label.fullname", "Nombre completo:");
+        es.put("passengers.label.document.number", "Número de documento:");
+        es.put("passengers.label.nationality", "Nacionalidad:");
+        es.put("passengers.button.add", "Agregar");
+        es.put("passengers.table.hint", "💡 Haga clic en un pasajero para editar o eliminar.");
+        es.put("passengers.table.document.type", "Tipo");
+        es.put("passengers.table.nationality", "Nacionalidad");
         es.put("passengers.label.email", "Correo Electrónico:");
         es.put("passengers.label.phone", "Teléfono:");
         es.put("passengers.label.document", "Documento:");
@@ -545,6 +806,8 @@ public class LanguageManager {
 
         // Pontos Coleta Panel
         es.put("collection.title", "Registrar Punto de Recogida");
+        es.put("collection.form.title", "Registro de local");
+        es.put("collection.table.hint", "💡 Haga clic en un local para editar o eliminar.");
         es.put("collection.label.name", "Nombre:");
         es.put("collection.label.address", "Dirección:");
         es.put("collection.label.city", "Ciudad:");
@@ -557,10 +820,109 @@ public class LanguageManager {
         es.put("collection.table.address", "Dirección");
         es.put("collection.table.city", "Ciudad");
 
+        es.put("menu.servicos", "🛠️ Servicios");
+        es.put("menu.servicos.subtitle", "Transferencias vinculadas a la OS — conductor");
+        es.put("nav.section.gerente", "GERENTE");
+        es.put("nav.section.motorista", "CONDUCTOR");
+        es.put("nav.section.admin", "ADMIN");
+        es.put("access.denied", "No tiene permiso para acceder.");
+        es.put("access.denied.title", "Acceso denegado");
+        es.put("notifications.bell", "🔔");
+        es.put("notifications.tooltip", "Notificaciones de transferencias");
+        es.put("notifications.title", "Notificaciones");
+        es.put("notifications.empty", "No hay notificaciones en este momento.");
+        es.put("notifications.dismiss", "Quitar");
+        es.put("notifications.clear.all", "Limpiar todas");
+        es.put("notifications.transfer.alert",
+                "En {minutos} min será la hora del Transfer #{id}\n{origem} → {destino} a las {hora}");
+        es.put("status.transfer.AGUARDANDO_OS", "Esperando OS");
+        es.put("status.transfer.NA_OS", "En OS");
+        es.put("status.transfer.EM_EXECUCAO", "En ejecución");
+        es.put("status.transfer.CONCLUIDO", "Concluido");
+        es.put("status.transfer.CANCELADO", "Cancelado");
+        es.put("dashboard.welcome", "Panel operacional");
+        es.put("dashboard.today", "Hoy");
+        es.put("dashboard.metric.orders", "Órdenes de servicio");
+        es.put("dashboard.metric.orders.hint", "registradas");
+        es.put("dashboard.metric.today", "Transferencias hoy");
+        es.put("dashboard.metric.today.hint", "agendadas para hoy");
+        es.put("dashboard.metric.linked", "Transferencias en OS");
+        es.put("dashboard.metric.linked.hint", "vinculadas a rutas");
+        es.put("dashboard.metric.execution", "En ejecución");
+        es.put("dashboard.metric.execution.hint", "en curso ahora");
+        es.put("dashboard.upcoming.title", "Próximas transferencias");
+        es.put("dashboard.upcoming.col.id", "ID");
+        es.put("dashboard.upcoming.col.route", "Ruta");
+        es.put("dashboard.upcoming.col.datetime", "Fecha / Hora");
+        es.put("dashboard.upcoming.col.status", "Estado");
+        es.put("dashboard.upcoming.empty", "No hay transferencias futuras agendadas.");
+        es.put("dashboard.error.load", "No se pudieron cargar los datos del panel.");
+        es.put("common.error.title", "Error");
+        es.put("servicos.form.title", "Detalles del servicio");
+        es.put("servicos.label.transfer", "Transfer #:");
+        es.put("servicos.label.os", "Orden de servicio:");
+        es.put("servicos.label.driver", "Conductor:");
+        es.put("servicos.label.route", "Ruta:");
+        es.put("servicos.label.passengers", "Pasajeros:");
+        es.put("servicos.os.group.one", "1 transferencia en esta OS. IDs: {ids}.");
+        es.put("servicos.os.group.many", "{n} transferencias en esta OS.\nIDs: {ids}.");
+        es.put("servicos.table.os.bracket", "{os} ({n}×)");
+        es.put("servicos.table.os.branch.mid", "├─");
+        es.put("servicos.table.os.branch.last", "└─");
+        es.put("servicos.table.os.tooltip", "{os} — {n} transferencias en esta OS");
+        es.put("servicos.label.status", "Estado:");
+        es.put("servicos.table.title", "Servicios activos (transferencias en OS)");
+        es.put("servicos.table.hint", "💡 Seleccione un servicio para cambiar estado, descargar PDF de la OS o eliminar la transferencia.");
+        es.put("servicos.button.pdf", "Descargar PDF de la OS");
+        es.put("servicos.button.delete", "Eliminar servicio");
+        es.put("servicos.table.col.id", "ID");
+        es.put("servicos.table.col.os", "OS");
+        es.put("servicos.table.col.driver", "Conductor");
+        es.put("servicos.table.col.route", "Origen / Destino");
+        es.put("servicos.table.col.pax", "Pax");
+        es.put("servicos.table.col.status", "Estado");
+        es.put("login.access.title", "Acceso al sistema");
+        es.put("login.access.subtitle", "Ingrese su usuario y contraseña para continuar.");
+        es.put("login.create.account", "Crear cuenta");
+        es.put("ordem.title", "Montaje de OS — crear, vincular transferencias y optimizar ruta");
+        es.put("users.title", "Registro de usuario");
+        es.put("users.list.title", "Usuarios del sistema");
+        es.put("passengers.form.title", "Registro de pasajero");
+        es.put("drivers.form.title", "Registro de conductor");
+        es.put("drivers.label.fullname", "Nombre completo:");
+        es.put("vehicles.form.title", "Registro de vehículo");
+        es.put("common.save", "Guardar");
+        es.put("common.delete", "Eliminar");
+        es.put("common.clear", "Limpiar");
+        es.put("common.na", "N/D");
+        es.put("servicos.warn.select.os", "Seleccione un servicio vinculado a una OS.");
+        es.put("servicos.error.os.notfound", "OS no encontrada.");
+        es.put("servicos.warn.no.transfers", "La OS no tiene transferencias vinculadas para generar el PDF.");
+        es.put("servicos.pdf.saved", "PDF guardado en:\n{path}\n\n¿Abrir el archivo?");
+        es.put("servicos.pdf.title", "PDF generado");
+        es.put("servicos.pdf.error", "Error al generar PDF: {msg}");
+        es.put("servicos.error.transfer.notfound", "Transferencia no encontrada.");
+        es.put("servicos.status.updated", "Estado actualizado a: {status}");
+        es.put("servicos.error.update", "Error al actualizar: {msg}");
+        es.put("servicos.delete.confirm", "¿Eliminar la transferencia #{id} de la base de datos?\nEsta acción no se puede deshacer.");
+        es.put("servicos.delete.success", "Servicio eliminado de la base.");
+        es.put("servicos.error.delete", "Error al eliminar: {msg}");
+        es.put("login.button.offline", "Entrar sin conexión (datos guardados)");
+        es.put("login.offline.need.user", "Indique el usuario para cargar la caché local.");
+        es.put("login.offline.no.cache", "No hay datos offline para este usuario. Conéctese la primera vez.");
+        es.put("login.offline.no.network", "Sin red — intentando modo offline...");
+        es.put("offline.status.online", "🟢 En línea — datos sincronizados");
+        es.put("offline.status.offline", "🟠 Modo offline — consultando datos del dispositivo");
+        es.put("offline.status.empty", "⚠ Sin datos locales. Conéctese y abra Servicios una vez.");
+        es.put("offline.status.synced", "última sync: {when}");
+        es.put("offline.status.pending", "{n} cambio(s) pendiente(s) de envío");
+
         translations.put(Language.PORTUGUESE, pt);
         translations.put(Language.ENGLISH, en);
         translations.put(Language.SPANISH, es);
     }
+
+    // --- lookup direto ---
 
     public String translate(String key) {
         Map<String, String> currentTranslations = translations.get(currentLanguage);
@@ -572,6 +934,23 @@ public class LanguageManager {
         return currentTranslations.getOrDefault(key, defaultValue);
     }
 
+    public String translate(String key, Map<String, String> params) {
+        String text = translate(key);
+        if (params != null) {
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                text = text.replace("{" + entry.getKey() + "}", entry.getValue());
+            }
+        }
+        return text;
+    }
+
+    public String translateStatus(StatusTransfer status) {
+        if (status == null) return "";
+        return translate("status.transfer." + status.name());
+    }
+
+    // --- lingua atual ---
+
     public Language getCurrentLanguage() {
         return currentLanguage;
     }
@@ -582,6 +961,8 @@ public class LanguageManager {
             notifyLanguageChanged();
         }
     }
+
+    // --- observers ---
 
     public void addLanguageChangeListener(LanguageChangeListener listener) {
         listeners.add(listener);
