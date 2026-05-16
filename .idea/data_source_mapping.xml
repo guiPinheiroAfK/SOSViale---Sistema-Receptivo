@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V10__Security_Hardening.sql" value="155a938e-d1d8-4d70-b54a-f4aa1a6ba919" />
+    <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V5__Criar_Parada_OS.sql" value="155a938e-d1d8-4d70-b54a-f4aa1a6ba919" />
+    <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V6__Corrigir_Tipos_Coordenadas.sql" value="155a938e-d1d8-4d70-b54a-f4aa1a6ba919" />
+    <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V7__Refatoracao_das_Paradas.sql" value="155a938e-d1d8-4d70-b54a-f4aa1a6ba919" />
+    <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V8__Novas_Colunas_e_Relacionamentos.sql" value="155a938e-d1d8-4d70-b54a-f4aa1a6ba919" />
+    <file url="file://$PROJECT_DIR$/Sistema-Receptivo/src/main/resources/db/migration/V9__Dados_Inicias_Para_Testes_Rapidos.sql" value="155a938e-d1d8-4d70-b54a-f4aa1a6ba919" />
+  </component>
+</project>

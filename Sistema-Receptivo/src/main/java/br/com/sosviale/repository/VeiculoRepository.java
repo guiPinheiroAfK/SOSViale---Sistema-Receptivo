@@ -5,9 +5,12 @@ import br.com.sosviale.model.Veiculo;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
+// frota
+
 public class VeiculoRepository {
 
     public void salvar(Veiculo veiculo) {
+        if (veiculo == null) throw new IllegalArgumentException("veículo não pode ser nulo.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -24,7 +27,62 @@ public class VeiculoRepository {
     public List<Veiculo> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery("SELECT v FROM Veiculo v", Veiculo.class).getResultList();
+            return em.createQuery("SELECT v FROM Veiculo v ORDER BY v.label ASC", Veiculo.class)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public Veiculo buscarPorId(Integer id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.find(Veiculo.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    public void atualizar(Veiculo veiculo) {
+        if (veiculo == null || veiculo.getId() == null)
+            throw new IllegalArgumentException("veículo inválido para atualização.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(veiculo);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public void excluir(Integer id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Veiculo v = em.find(Veiculo.class, id);
+            if (v != null) {
+                em.remove(v);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public long contar() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(v) FROM Veiculo v", Long.class)
+                    .getSingleResult();
         } finally {
             em.close();
         }

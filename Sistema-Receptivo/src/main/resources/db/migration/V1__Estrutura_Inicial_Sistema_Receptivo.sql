@@ -1,8 +1,11 @@
+SET search_path TO public;
+
 -- 1. Gestão de Passageiros (RF02)
 CREATE TABLE passageiros (
                              id SERIAL PRIMARY KEY,
                              nome VARCHAR(100) NOT NULL,
-                             documento VARCHAR(20) NOT NULL, -- RG ou Passaporte para fronteira
+                             tipo_documento VARCHAR(20) NOT NULL,
+                             documento VARCHAR(20) NOT NULL,
                              nacionalidade VARCHAR(50) DEFAULT 'Brasileira'
 );
 
@@ -10,7 +13,9 @@ CREATE TABLE passageiros (
 CREATE TABLE motoristas (
                             id SERIAL PRIMARY KEY,
                             nome VARCHAR(100) NOT NULL,
-                            cnh VARCHAR(20) UNIQUE NOT NULL
+                            cnh VARCHAR(20) UNIQUE NOT NULL,
+                            latitude_atual DOUBLE PRECISION,   -- posição atual do motorista
+                            longitude_atual DOUBLE PRECISION   -- pode ser NULL até ele atualizar
 );
 
 CREATE TABLE veiculos (
@@ -23,11 +28,13 @@ CREATE TABLE veiculos (
 -- 3. Agendamento de Transfers (RF01 e RF05)
 CREATE TABLE transfers (
                            id SERIAL PRIMARY KEY,
-                           data_hora TIMESTAMP NOT NULL,
+                           data_transfer DATE NOT NULL,          -- Apenas a data (AAAA-MM-DD)
+                           hora_transfer TIME NOT NULL,          -- Apenas o horário (HH:MM:SS)
                            origem VARCHAR(100) NOT NULL,
                            destino VARCHAR(100) NOT NULL,
-                           status VARCHAR(20) DEFAULT 'PENDENTE', -- PENDENTE, EM_TRANSITO, CONCLUIDO, CANCELADO
+                           status VARCHAR(20) DEFAULT 'AGUARDANDO_OS',
                            valor_base DECIMAL(10,2),
+                           moeda_origem VARCHAR(10),
                            motorista_id INT REFERENCES motoristas(id),
                            veiculo_id INT REFERENCES veiculos(id)
 );
@@ -38,7 +45,9 @@ CREATE TABLE pontos_coleta (
                                transfer_id INT REFERENCES transfers(id) ON DELETE CASCADE,
                                local_coleta VARCHAR(100) NOT NULL,
                                ordem_parada INT NOT NULL, -- Define a sequência lógica do pick-up
-                               horario_previsto TIME
+                               horario_previsto TIME,
+                               latitude DECIMAL(10,7) NOT NULL,   -- necessário pro PathFinding
+                               longitude DECIMAL(10,7) NOT NULL
 );
 
 -- 5. Tabela Associativa: Quem está em qual Transfer?

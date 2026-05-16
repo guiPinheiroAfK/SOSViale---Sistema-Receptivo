@@ -4,9 +4,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+// fabrica PU unica; quem pegar EM tem que dar close
+
 public class JPAUtil {
 
-    // Criacao de apenas UMA fábrica para o projeto todo (Static)
     private static final EntityManagerFactory FACTORY =
             Persistence.createEntityManagerFactory("sos-viale-pu");
 

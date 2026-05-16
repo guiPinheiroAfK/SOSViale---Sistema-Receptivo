@@ -1,5 +1,7 @@
 package br.com.sosviale.model;
 
+// entidade passageiro; tipo doc persiste pelo nome do enum pra legibilidade no SQL
+
 import jakarta.persistence.*;
 
 @Entity
@@ -16,21 +18,23 @@ public class Passageiro {
     @Column(nullable = false, length = 20)
     private String documento;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_documento", nullable = false)
+    private TipoDocumento tipoDocumento;
+
     @Column(length = 50)
     private String nacionalidade = "Brasileira";
 
-    // O JPA exige um construtor vazio
     public Passageiro() {
     }
 
-    // Construtor para facilitar a vida nos testes
-    public Passageiro(String nome, String documento, String nacionalidade) {
+    public Passageiro(String nome, String documento, TipoDocumento tipoDocumento, String nacionalidade) {
         this.nome = nome;
         this.documento = documento;
-        this.nacionalidade = nacionalidade;
+        this.tipoDocumento = tipoDocumento;
+        this.nacionalidade = (nacionalidade == null || nacionalidade.trim().isEmpty()) ? "Brasileira" : nacionalidade;
     }
 
-    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -40,6 +44,14 @@ public class Passageiro {
     public String getDocumento() { return documento; }
     public void setDocumento(String documento) { this.documento = documento; }
 
+    public TipoDocumento getTipoDocumento() { return tipoDocumento; }
+    public void setTipoDocumento(TipoDocumento tipoDocumento) { this.tipoDocumento = tipoDocumento; }
+
     public String getNacionalidade() { return nacionalidade; }
     public void setNacionalidade(String nacionalidade) { this.nacionalidade = nacionalidade; }
+
+    @Override
+    public String toString() {
+        return this.nome;
+    }
 }

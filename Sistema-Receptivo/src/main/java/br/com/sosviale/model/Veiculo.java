@@ -1,5 +1,7 @@
 package br.com.sosviale.model;
 
+// frota: label + placa (unica) + capacidade usada na montagem de OS
+
 import jakarta.persistence.*;
 
 @Entity
@@ -10,6 +12,9 @@ public class Veiculo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(length = 50)
+    private String marca;
+
     @Column(nullable = false, length = 50)
     private String label;
 
@@ -19,47 +24,40 @@ public class Veiculo {
     @Column(nullable = false)
     private Integer capacidade;
 
-    // Construtor padrão
+    @Column(length = 50)
+    private String tipo;
+
     public Veiculo() {
     }
 
-    // Construtor completo
+    // atalho pra seed / tela simples
     public Veiculo(String label, String placa, Integer capacidade) {
         this.label = label;
         this.placa = placa;
         this.capacidade = capacidade;
     }
 
-    // Getters e Setters
-    public Integer getId() {
-        return id;
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getLabel() { return label; }
+    public void setLabel(String label) { this.label = label; }
+
+    public String getPlaca() { return placa; }
+    public void setPlaca(String placa) { this.placa = placa; }
+
+    public Integer getCapacidade() { return capacidade; }
+    public void setCapacidade(Integer capacidade) { this.capacidade = capacidade; }
+
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
+
+    public String getMarca() { return marca; }
+    public void setMarca(String marca) { this.marca = marca; }
+
+    @Override
+    public String toString() {
+        return id + " - " + label + " (" + capacidade + " pax)";
     }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public String getPlaca() {
-        return placa;
-    }
-
-    public void setPlaca(String placa) {
-        this.placa = placa;
-    }
-
-    public Integer getCapacidade() {
-        return capacidade;
-    }
-
-    public void setCapacidade(Integer capacidade) {
-        this.capacidade = capacidade;
-    }
 }

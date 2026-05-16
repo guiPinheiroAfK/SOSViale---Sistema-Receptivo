@@ -1,8 +1,14 @@
 package br.com.sosviale.model;
 
+// transfer ponta-a-ponta; valor original digita na tela, base fecha relatorio quando der cambio/fees
+
+import br.com.sosviale.service.StatusTransfer;
+import jakarta.persistence.Transient;
+import br.com.sosviale.service.Moeda;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,12 +16,21 @@ import java.util.List;
 @Table(name = "transfers")
 public class Transfer {
 
+    @Transient
+    private boolean notificado = false;
+
+    public boolean isNotificado() { return notificado; }
+    public void setNotificado(boolean notificado) { this.notificado = notificado; }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "data_hora", nullable = false)
-    private LocalDateTime dataHora;
+    @Column(name = "data_transfer", nullable = false)
+    private LocalDate dataTransfer;
+
+    @Column(name = "hora_transfer", nullable = false)
+    private LocalTime horaTransfer;
 
     @Column(nullable = false, length = 100)
     private String origem;
@@ -23,48 +38,51 @@ public class Transfer {
     @Column(nullable = false, length = 100)
     private String destino;
 
-    @Column(length = 20)
-    private String status = "PENDENTE";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    private StatusTransfer status = StatusTransfer.AGUARDANDO_OS;
+
+    @Column(name = "valor_original", precision = 10, scale = 2)
+    private BigDecimal valorOriginal;
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
 
-    // Relacionamento: Muitos transfers para um motorista
-    @ManyToOne
-    @JoinColumn(name = "motorista_id") // Nome da coluna FK no banco
-    private Motorista motorista;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moeda_origem", length = 5, nullable = false)
+    private Moeda moedaOrigem = Moeda.BRL;
 
-    // Relacionamento: Muitos transfers para um veículo
-    @ManyToOne
-    @JoinColumn(name = "veiculo_id")
-    private Veiculo veiculo;
-
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "transfer_passageiros", // Nome da tabela associativa
+            name = "transfer_passageiro",
             joinColumns = @JoinColumn(name = "transfer_id"),
             inverseJoinColumns = @JoinColumn(name = "passageiro_id")
     )
     private List<Passageiro> passageiros = new ArrayList<>();
 
-    public Transfer() {
-    }
+    @ManyToOne
+    @JoinColumn(name = "os_id")
+    private OrdemServico ordemServico;
 
-    public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase, Motorista motorista, Veiculo veiculo) {
-        this.dataHora = dataHora;
+    public Transfer() {}
+
+    public Transfer(LocalDate dataTransfer, LocalTime horaTransfer, String origem, String destino, BigDecimal valorOriginal, Moeda moedaOrigem) {
+        this.dataTransfer = dataTransfer;
+        this.horaTransfer = horaTransfer;
         this.origem = origem;
         this.destino = destino;
-        this.valorBase = valorBase;
-        this.motorista = motorista;
-        this.veiculo = veiculo;
+        this.valorOriginal = valorOriginal;
+        this.moedaOrigem = moedaOrigem;
     }
 
-    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public LocalDateTime getDataHora() { return dataHora; }
-    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+    public LocalDate getDataTransfer() { return dataTransfer; }
+    public void setDataTransfer(LocalDate dataTransfer) { this.dataTransfer = dataTransfer; }
+
+    public LocalTime getHoraTransfer() { return horaTransfer; }
+    public void setHoraTransfer(LocalTime horaTransfer) { this.horaTransfer = horaTransfer; }
 
     public String getOrigem() { return origem; }
     public void setOrigem(String origem) { this.origem = origem; }
@@ -72,18 +90,25 @@ public class Transfer {
     public String getDestino() { return destino; }
     public void setDestino(String destino) { this.destino = destino; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public StatusTransfer getStatus() { return status; }
+    public void setStatus(StatusTransfer status) { this.status = status; }
+
+    public BigDecimal getValorOriginal() { return valorOriginal; }
+    public void setValorOriginal(BigDecimal valorOriginal) { this.valorOriginal = valorOriginal; }
 
     public BigDecimal getValorBase() { return valorBase; }
     public void setValorBase(BigDecimal valorBase) { this.valorBase = valorBase; }
 
-    public Motorista getMotorista() { return motorista; }
-    public void setMotorista(Motorista motorista) { this.motorista = motorista; }
-
-    public Veiculo getVeiculo() { return veiculo; }
-    public void setVeiculo(Veiculo veiculo) { this.veiculo = veiculo; }
+    public Moeda getMoedaOrigem() { return moedaOrigem; }
+    public void setMoedaOrigem(Moeda moedaOrigem) { this.moedaOrigem = moedaOrigem; }
 
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
+
+    public OrdemServico getOrdemServico() { return ordemServico; }
+    public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
+
+    public PontoColeta[] getPontosColeta() {
+        return null;
+    }
 }

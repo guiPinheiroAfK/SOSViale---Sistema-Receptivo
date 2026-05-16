@@ -5,9 +5,12 @@ import br.com.sosviale.model.PontoColeta;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
+// pontos de coleta por transfer
+
 public class PontoColetaRepository {
 
     public void salvar(PontoColeta ponto) {
+        if (ponto == null) throw new IllegalArgumentException("ponto de coleta não pode ser nulo.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -17,25 +20,61 @@ public class PontoColetaRepository {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            System.err.println("Erro ao salvar Ponto de Coleta: " + e.getMessage());
+            System.err.println("erro ao cadastrar ponto de coleta: " + e.getMessage());
             throw e;
         } finally {
             em.close();
         }
     }
 
-    /**
-     * Busca todos os pontos de coleta de um transfer específico,
-     * ordenados pela sequência de parada.
-     */
-    public List<PontoColeta> buscarPorTransfer(Integer transferId) {
+    public void atualizar(PontoColeta ponto) {
+        if (ponto == null || ponto.getId() == null)
+            throw new IllegalArgumentException("ponto de coleta inválido para atualização.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery(
-                            "SELECT p FROM PontoColeta p WHERE p.transfer.id = :tId ORDER BY p.ordemParada ASC",
-                            PontoColeta.class)
-                    .setParameter("tId", transferId)
-                    .getResultList();
+            em.getTransaction().begin();
+            em.merge(ponto);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public void excluir(Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            PontoColeta p = em.find(PontoColeta.class, id);
+            if (p != null) {
+                em.remove(p);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public PontoColeta buscarPorId(Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.find(PontoColeta.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<PontoColeta> listarTodos() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT p FROM PontoColeta p", PontoColeta.class).getResultList();
         } finally {
             em.close();
         }
