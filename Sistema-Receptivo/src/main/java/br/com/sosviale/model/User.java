@@ -1,5 +1,7 @@
 package br.com.sosviale.model;
 
+// usuario sistema; campo senha sempre hash bcrypt
+
 import jakarta.persistence.*;
 import java.util.Date;
 
@@ -31,8 +33,10 @@ public class User {
     @Column(length = 20, nullable = false)
     private Perfil perfil = Perfil.GERENTE;
 
+
     public User() {}
 
+    // preenchido automaticamente no primeiro insert via JPA
     @PrePersist
     public void prePersist() {
         this.criadoEm = new Date();

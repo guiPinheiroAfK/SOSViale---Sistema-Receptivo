@@ -3,9 +3,8 @@ package br.com.sosviale.model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/*
- * Notificação em memória (não persistida no banco).
- */
+// item so em memoria pro sino da ui (nem t0do mundo persiste notificação)
+
 public class NotificationItem {
 
     private final String id;

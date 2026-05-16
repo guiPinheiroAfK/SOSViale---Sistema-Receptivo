@@ -13,7 +13,7 @@ public class Motorista {
     @Column(nullable = false, length = 100)
     private String nome;
 
-    // CNH deve ser única no sistema
+    // cnh unica no sistema
     @Column(nullable = false, unique = true, length = 20)
     private String cnh;
 
@@ -26,17 +26,15 @@ public class Motorista {
     @Column(name = "longitude_atual")
     private Double longitudeAtual;
 
-    // construtor padrão obrigatório pelo JPA
     public Motorista() {
     }
 
-    // construtor auxiliar para facilitar a criação de objetos em testes e serviços
+    // atalho pra teste / seed
     public Motorista(String nome, String cnh) {
         this.nome = nome;
         this.cnh = cnh;
     }
 
-    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

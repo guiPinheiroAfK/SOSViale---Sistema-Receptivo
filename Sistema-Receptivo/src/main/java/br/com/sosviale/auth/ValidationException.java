@@ -1,6 +1,6 @@
 package br.com.sosviale.auth;
 
-// Exceção de validação
+// regra simples invalida (usuario curto demais etc)
 
 public class ValidationException extends Exception {
     public ValidationException(String message) {

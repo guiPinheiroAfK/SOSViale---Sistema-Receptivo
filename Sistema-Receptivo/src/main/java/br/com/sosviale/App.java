@@ -14,9 +14,12 @@ import javax.swing.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
+// ponto de entrada swing: tenta jdbc + flyway, senao modo offline se ja tiver snapshot
 public class App {
 
     private static boolean databaseDisponivel;
+
+    // --- ciclo de vida inicial ---
 
     public static void main(String[] args) {
         EnvLoader.load();
@@ -57,9 +60,13 @@ public class App {
         });
     }
 
+    // --- estado global leve pra login/dashboard ---
+
     public static boolean isDatabaseDisponivel() {
         return databaseDisponivel;
     }
+
+    // --- jdbc + flyway na subida ---
 
     private static boolean tentarConfigurarBanco() {
         try {

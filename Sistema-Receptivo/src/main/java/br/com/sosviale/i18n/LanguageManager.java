@@ -4,10 +4,8 @@ import br.com.sosviale.service.StatusTransfer;
 
 import java.util.*;
 
-/*
- * LanguageManager - Gerenciador centralizado de idiomas
- * Suporta: Português (PT), Inglês (EN) e Espanhol (ES)
- */
+// map statico chave → texto por idioma; telas só chamam translate / setLanguage
+
 public class LanguageManager {
 
     public enum Language {
@@ -46,7 +44,7 @@ public class LanguageManager {
     }
 
     private void loadTranslations() {
-        // Português
+        // locale pt
         Map<String, String> pt = new HashMap<>();
         pt.put("app.title", "SOS VIALE | Sistema Receptivo");
         pt.put("app.search.placeholder", "Buscar transfer, passageiro ou OS...");
@@ -93,6 +91,17 @@ public class LanguageManager {
         pt.put("register.confirm.label", "Confirmar Senha:");
         pt.put("register.button.register", "Criar Conta");
         pt.put("register.button.cancel", "Cancelar");
+        pt.put("register.fullname.label", "Nome completo:");
+        pt.put("register.profile.label", "Perfil:");
+        pt.put("register.adminPassword.label", "Senha do Admin:");
+        pt.put("register.button.back", "Voltar");
+        pt.put("register.validation.required", "Preencha todos os campos");
+        pt.put("register.success.message", "Conta criada com sucesso!");
+        pt.put("register.success.title", "Sucesso");
+        pt.put("login.validation.fill.credentials", "Preencha usuário e senha");
+        pt.put("perfil.ADMIN", "Administrador");
+        pt.put("perfil.GERENTE", "Gerente");
+        pt.put("perfil.MOTORISTA", "Motorista");
         pt.put("error.invalid.credentials", "Usuário ou senha inválidos");
         pt.put("error.user.exists", "Usuário já existe");
         pt.put("error.passwords.mismatch", "As senhas não correspondem");
@@ -326,7 +335,7 @@ public class LanguageManager {
         pt.put("offline.status.synced", "última sync: {when}");
         pt.put("offline.status.pending", "{n} alteração(ões) aguardando envio");
 
-        // Inglês
+        // locale en
         Map<String, String> en = new HashMap<>();
         en.put("app.title", "SOS VIALE | Receptive System");
         en.put("app.search.placeholder", "Search transfer, passenger or OS...");
@@ -373,6 +382,17 @@ public class LanguageManager {
         en.put("register.confirm.label", "Confirm Password:");
         en.put("register.button.register", "Create Account");
         en.put("register.button.cancel", "Cancel");
+        en.put("register.fullname.label", "Full name:");
+        en.put("register.profile.label", "Role:");
+        en.put("register.adminPassword.label", "Admin password:");
+        en.put("register.button.back", "Back");
+        en.put("register.validation.required", "Fill in all required fields");
+        en.put("register.success.message", "Account created successfully!");
+        en.put("register.success.title", "Success");
+        en.put("login.validation.fill.credentials", "Enter username and password");
+        en.put("perfil.ADMIN", "Administrator");
+        en.put("perfil.GERENTE", "Manager");
+        en.put("perfil.MOTORISTA", "Driver");
         en.put("error.invalid.credentials", "Invalid username or password");
         en.put("error.user.exists", "User already exists");
         en.put("error.passwords.mismatch", "Passwords do not match");
@@ -606,7 +626,7 @@ public class LanguageManager {
         en.put("offline.status.synced", "last sync: {when}");
         en.put("offline.status.pending", "{n} change(s) pending upload");
 
-        // Espanhol
+        // locale es
         Map<String, String> es = new HashMap<>();
         es.put("app.title", "SOS VIALE | Sistema Receptivo");
         es.put("app.search.placeholder", "Buscar transferencia, pasajero u OS...");
@@ -653,6 +673,17 @@ public class LanguageManager {
         es.put("register.confirm.label", "Confirmar Contraseña:");
         es.put("register.button.register", "Crear Cuenta");
         es.put("register.button.cancel", "Cancelar");
+        es.put("register.fullname.label", "Nombre completo:");
+        es.put("register.profile.label", "Perfil:");
+        es.put("register.adminPassword.label", "Contraseña de administrador:");
+        es.put("register.button.back", "Volver");
+        es.put("register.validation.required", "Complete todos los campos");
+        es.put("register.success.message", "¡Cuenta creada con éxito!");
+        es.put("register.success.title", "Éxito");
+        es.put("login.validation.fill.credentials", "Ingrese usuario y contraseña");
+        es.put("perfil.ADMIN", "Administrador");
+        es.put("perfil.GERENTE", "Gerente");
+        es.put("perfil.MOTORISTA", "Conductor");
         es.put("error.invalid.credentials", "Usuario o contraseña inválidos");
         es.put("error.user.exists", "El usuario ya existe");
         es.put("error.passwords.mismatch", "Las contraseñas no coinciden");
@@ -891,6 +922,8 @@ public class LanguageManager {
         translations.put(Language.SPANISH, es);
     }
 
+    // --- lookup direto ---
+
     public String translate(String key) {
         Map<String, String> currentTranslations = translations.get(currentLanguage);
         return currentTranslations.getOrDefault(key, key);
@@ -916,6 +949,8 @@ public class LanguageManager {
         return translate("status.transfer." + status.name());
     }
 
+    // --- lingua atual ---
+
     public Language getCurrentLanguage() {
         return currentLanguage;
     }
@@ -926,6 +961,8 @@ public class LanguageManager {
             notifyLanguageChanged();
         }
     }
+
+    // --- observers ---
 
     public void addLanguageChangeListener(LanguageChangeListener listener) {
         listeners.add(listener);

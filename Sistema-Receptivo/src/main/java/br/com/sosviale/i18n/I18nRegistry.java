@@ -3,9 +3,8 @@ package br.com.sosviale.i18n;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
- * Registra painéis para atualização automática ao trocar o idioma.
- */
+// runnables de tela registrados aqui; language manager dispara tudo quando troca lingua
+
 public final class I18nRegistry {
 
     private static final List<Runnable> refreshers = new ArrayList<>();
@@ -19,6 +18,8 @@ public final class I18nRegistry {
         attachListenerOnce();
         refresher.run();
     }
+
+    // ouve LanguageManager uma vez e espalha pros refreshers
 
     private static void attachListenerOnce() {
         if (listenerAttached) return;

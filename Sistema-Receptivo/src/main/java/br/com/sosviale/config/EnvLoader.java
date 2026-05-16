@@ -8,10 +8,8 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-/*
- * Carrega variáveis de um arquivo {@code .env} na raiz do projeto (desenvolvimento local).
- * Variáveis já definidas no sistema operacional têm prioridade.
- */
+// .env opcional perto da pasta de trabalho; SO ganha sempre de arquivo
+
 public final class EnvLoader {
 
     private static final Map<String, String> fromFile = new HashMap<>();
@@ -35,9 +33,8 @@ public final class EnvLoader {
         }
     }
 
-    /**
-     * Valor da variável: SO &gt; .env &gt; ausente ({@code null}).
-     */
+    // primeiro env do SO depois arquivo; null se nem um tiver
+
     public static String get(String key) {
         load();
         String os = System.getenv(key);
@@ -46,6 +43,8 @@ public final class EnvLoader {
         }
         return fromFile.get(key);
     }
+
+    // sobe pela arvore procurando .env desde user.dir
 
     private static Path locateEnvFile() {
         Path start = Paths.get(System.getProperty("user.dir", ".")).toAbsolutePath().normalize();

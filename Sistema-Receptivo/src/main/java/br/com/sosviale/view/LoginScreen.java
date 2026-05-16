@@ -51,6 +51,17 @@ public class LoginScreen extends JFrame {
     private JLabel usernameFieldLabel;
     private JLabel passwordFieldLabel;
 
+    private JLabel registerTitleLabel;
+    private JLabel registerSubtitleLabel;
+    private JLabel registerFullnameLabel;
+    private JLabel registerUsernameLabel;
+    private JLabel registerPasswordLabel;
+    private JLabel registerProfileLabel;
+    private JLabel registerAdminPasswordLabel;
+    private JButton registerSubmitButton;
+    private JButton registerBackButton;
+    private JComboBox<Perfil> registerPerfilCombo;
+
     public LoginScreen(AuthenticationService authService, boolean databaseDisponivel) {
         this.authService = authService;
         this.databaseDisponivel = databaseDisponivel;
@@ -101,6 +112,36 @@ public class LoginScreen extends JFrame {
         }
         if (registerButton != null) {
             registerButton.setText(lm.translate("login.create.account"));
+        }
+        if (registerTitleLabel != null) {
+            registerTitleLabel.setText(lm.translate("register.title"));
+        }
+        if (registerSubtitleLabel != null) {
+            registerSubtitleLabel.setText(lm.translate("register.subtitle"));
+        }
+        if (registerFullnameLabel != null) {
+            registerFullnameLabel.setText(lm.translate("register.fullname.label"));
+        }
+        if (registerUsernameLabel != null) {
+            registerUsernameLabel.setText(lm.translate("register.username.label"));
+        }
+        if (registerPasswordLabel != null) {
+            registerPasswordLabel.setText(lm.translate("register.password.label"));
+        }
+        if (registerProfileLabel != null) {
+            registerProfileLabel.setText(lm.translate("register.profile.label"));
+        }
+        if (registerAdminPasswordLabel != null) {
+            registerAdminPasswordLabel.setText(lm.translate("register.adminPassword.label"));
+        }
+        if (registerSubmitButton != null) {
+            registerSubmitButton.setText(lm.translate("register.button.register"));
+        }
+        if (registerBackButton != null) {
+            registerBackButton.setText(lm.translate("register.button.back"));
+        }
+        if (registerPerfilCombo != null) {
+            registerPerfilCombo.repaint();
         }
     }
 
@@ -160,39 +201,53 @@ public class LoginScreen extends JFrame {
 
         JPanel registerCard = createCard();
 
+        LanguageManager lm = LanguageManager.getInstance();
+
         JTextField nameField = createTextField();
-        addField(registerCard, "Nome completo:", nameField, 0);
+        registerFullnameLabel = addField(registerCard, lm.translate("register.fullname.label"), nameField, 0);
 
         JTextField regUsernameField = createTextField();
-        addField(registerCard, "Usuário:", regUsernameField, 1);
+        registerUsernameLabel = addField(registerCard, lm.translate("register.username.label"), regUsernameField, 1);
 
         JPasswordField regPasswordField = createPasswordField(BORDER);
-        addField(registerCard, "Senha:", regPasswordField, 2);
+        registerPasswordLabel = addField(registerCard, lm.translate("register.password.label"), regPasswordField, 2);
 
-        JComboBox<Perfil> perfilCombo = new JComboBox<>(new Perfil[]{
+        registerPerfilCombo = new JComboBox<>(new Perfil[]{
                 Perfil.ADMIN, Perfil.GERENTE, Perfil.MOTORISTA
         });
-        perfilCombo.setFont(TEXT_FONT);
-        perfilCombo.setBackground(WHITE);
-        perfilCombo.setPreferredSize(new Dimension(520, 40));
-        addField(registerCard, "Perfil:", perfilCombo, 3);
+        registerPerfilCombo.setFont(TEXT_FONT);
+        registerPerfilCombo.setBackground(WHITE);
+        registerPerfilCombo.setPreferredSize(new Dimension(520, 40));
+        registerPerfilCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                           boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Perfil perfil) {
+                    setText(LanguageManager.getInstance().translate("perfil." + perfil.name()));
+                }
+                return this;
+            }
+        });
+        registerProfileLabel = addField(registerCard, lm.translate("register.profile.label"), registerPerfilCombo, 3);
 
         JPasswordField adminPasswordField = createPasswordField(ERROR);
-        addField(registerCard, "Senha do Admin:", adminPasswordField, 4, ERROR);
+        registerAdminPasswordLabel = addField(
+                registerCard, lm.translate("register.adminPassword.label"), adminPasswordField, 4, ERROR);
 
         JLabel registerErrorLabel = createMessageLabel();
         addMessage(registerCard, registerErrorLabel, 5);
 
         JPanel buttonPanel = createButtonPanel();
 
-        JButton registerSubmitButton = createPrimaryButton("Criar Conta");
+        registerSubmitButton = createPrimaryButton(lm.translate("register.button.register"));
         registerSubmitButton.addActionListener(e -> performRegistration(
-                nameField, regUsernameField, regPasswordField, adminPasswordField, perfilCombo, registerErrorLabel));
+                nameField, regUsernameField, regPasswordField, adminPasswordField, registerPerfilCombo, registerErrorLabel));
         buttonPanel.add(registerSubmitButton);
 
-        JButton backButton = createSecondaryButton("Voltar");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "login"));
-        buttonPanel.add(backButton);
+        registerBackButton = createSecondaryButton(lm.translate("register.button.back"));
+        registerBackButton.addActionListener(e -> cardLayout.show(mainPanel, "login"));
+        buttonPanel.add(registerBackButton);
 
         content.add(registerCard);
         content.add(Box.createVerticalStrut(20));
@@ -219,7 +274,7 @@ public class LoginScreen extends JFrame {
             Perfil perfil = (Perfil) perfilCombo.getSelectedItem();
 
             if (name.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                registerErrorLabel.setText("Preencha todos os campos");
+                registerErrorLabel.setText(LanguageManager.getInstance().translate("register.validation.required"));
                 return;
             }
 
@@ -227,8 +282,8 @@ public class LoginScreen extends JFrame {
 
             JOptionPane.showMessageDialog(
                     LoginScreen.this,
-                    "Conta criada com sucesso!",
-                    "Sucesso",
+                    LanguageManager.getInstance().translate("register.success.message"),
+                    LanguageManager.getInstance().translate("register.success.title"),
                     JOptionPane.INFORMATION_MESSAGE
             );
 
@@ -276,7 +331,7 @@ public class LoginScreen extends JFrame {
         String password = new String(passwordField.getPassword()).trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            errorLabel.setText("Preencha usuário e senha");
+            errorLabel.setText(LanguageManager.getInstance().translate("login.validation.fill.credentials"));
             return;
         }
 
@@ -361,19 +416,19 @@ public class LoginScreen extends JFrame {
         content.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.setMaximumSize(new Dimension(620, Integer.MAX_VALUE));
 
-        JLabel titleLabel = new JLabel(LanguageManager.getInstance().translate("register.title"));
-        titleLabel.setFont(TITLE_FONT);
-        titleLabel.setForeground(TEXT);
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        registerTitleLabel = new JLabel(LanguageManager.getInstance().translate("register.title"));
+        registerTitleLabel.setFont(TITLE_FONT);
+        registerTitleLabel.setForeground(TEXT);
+        registerTitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel subtitleLabel = new JLabel(LanguageManager.getInstance().translate("register.subtitle"));
-        subtitleLabel.setFont(SUBTITLE_FONT);
-        subtitleLabel.setForeground(MUTED_TEXT);
-        subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        registerSubtitleLabel = new JLabel(LanguageManager.getInstance().translate("register.subtitle"));
+        registerSubtitleLabel.setFont(SUBTITLE_FONT);
+        registerSubtitleLabel.setForeground(MUTED_TEXT);
+        registerSubtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        content.add(titleLabel);
+        content.add(registerTitleLabel);
         content.add(Box.createVerticalStrut(6));
-        content.add(subtitleLabel);
+        content.add(registerSubtitleLabel);
         content.add(Box.createVerticalStrut(20));
         return content;
     }

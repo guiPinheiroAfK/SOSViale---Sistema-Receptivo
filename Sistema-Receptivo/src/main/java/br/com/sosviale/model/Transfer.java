@@ -1,5 +1,7 @@
 package br.com.sosviale.model;
 
+// transfer ponta-a-ponta; valor original digita na tela, base fecha relatorio quando der cambio/fees
+
 import br.com.sosviale.service.StatusTransfer;
 import jakarta.persistence.Transient;
 import br.com.sosviale.service.Moeda;
@@ -40,11 +42,9 @@ public class Transfer {
     @Column(name = "status", length = 20, nullable = false)
     private StatusTransfer status = StatusTransfer.AGUARDANDO_OS;
 
-    // Este será o valor digitado pelo usuário no painel
     @Column(name = "valor_original", precision = 10, scale = 2)
     private BigDecimal valorOriginal;
 
-    // Este será o valor convertido + taxas, que usaremos para relatórios em BRL
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
 
@@ -75,7 +75,6 @@ public class Transfer {
         this.moedaOrigem = moedaOrigem;
     }
 
-    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

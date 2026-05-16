@@ -3,6 +3,8 @@ package br.com.sosviale.model;
 import jakarta.persistence.*;
 import java.time.LocalTime;
 
+// ponto de parada geografico previsto pra transfer (coordenadas podem ficar null)
+
 @Entity
 @Table(name = "pontos_coleta")
 public class PontoColeta {
@@ -17,24 +19,21 @@ public class PontoColeta {
     @Column(name = "horario_previsto")
     private LocalTime horarioPrevisto;
 
-    // coordenadas para futura integração com pathfinding
     @Column(name = "latitude", columnDefinition = "numeric")
     private Double latitude;
 
     @Column(name = "longitude", columnDefinition = "numeric")
     private Double longitude;
 
-    // construtor padrão obrigatório pelo JPA
     public PontoColeta() {
     }
 
-    // construtor auxiliar sem coordenadas (preenchidas depois ou via geocodificação)
+    // ordem ignorada ate alguém plugar ordenacao aqui (?)
     public PontoColeta(String localColeta, Integer ordemParada, LocalTime horarioPrevisto) {
         this.localColeta = localColeta;
         this.horarioPrevisto = horarioPrevisto;
     }
 
-    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

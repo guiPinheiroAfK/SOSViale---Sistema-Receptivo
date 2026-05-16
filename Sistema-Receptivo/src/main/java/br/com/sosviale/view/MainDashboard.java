@@ -288,9 +288,6 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         cardPanel.add(new PontosColetaPanel(), "pontosColeta");
         cardPanel.add(new TransfersPanel(),    "transfers");
         cardPanel.add(new OrdemServicoUnifiedPanel(),       "ordens");
-
-        cardPanel.add(new AtribuirOS_TransferPanel(), "OrdensVerdadeiras");
-
         cardPanel.add(new MotoristasPanel(),   "motoristas");
         cardPanel.add(new VeiculosPanel(),     "veiculos");
         servicosPanel = new ServicosPanel();

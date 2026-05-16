@@ -2,10 +2,8 @@ package br.com.sosviale.config;
 
 import java.nio.charset.StandardCharsets;
 
-/*
- * Segredos da aplicação (JWT e criptografia de documentos).
- * Valores vêm de variáveis de ambiente ou do arquivo {@code .env}; avisos são emitidos no máximo uma vez.
- */
+// jwt + crypto key vindo do env; dev cai nos defaults gritando uma vez no stderr
+
 public final class SecretsConfig {
 
     public static final String ENV_JWT_SECRET = "RECEPTIVO_JWT_SECRET";
@@ -43,6 +41,8 @@ public final class SecretsConfig {
         }
         return cryptoKeyChars;
     }
+
+    // acha valor ou volta pro default de dev (com warn unico por tipo)
 
     private static String resolve(String envKey, String devDefault, boolean jwt) {
         EnvLoader.load();

@@ -1,5 +1,7 @@
 package br.com.sosviale.model;
 
+// entidade passageiro; tipo doc persiste pelo nome do enum pra legibilidade no SQL
+
 import jakarta.persistence.*;
 
 @Entity
@@ -16,7 +18,6 @@ public class Passageiro {
     @Column(nullable = false, length = 20)
     private String documento;
 
-    // Aqui está o segredo: dizemos ao JPA para cadastrar o NOME do enum (ex: "CPF")
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_documento", nullable = false)
     private TipoDocumento tipoDocumento;
@@ -27,7 +28,6 @@ public class Passageiro {
     public Passageiro() {
     }
 
-    // Atualizamos o construtor para exigir o tipo do documento agora
     public Passageiro(String nome, String documento, TipoDocumento tipoDocumento, String nacionalidade) {
         this.nome = nome;
         this.documento = documento;

@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+// os com motorista/veículo + lista eager de transfers e paradas (subselect pra nao brigar fetch)
+
 @Entity
 @Table(name = "ordens_servico")
 public class OrdemServico {
@@ -29,13 +31,11 @@ public class OrdemServico {
     @Column(length = 20)
     private String status = "ABERTA";
 
-    // CORREÇÃO 1: Adicionado SUBSELECT para evitar conflito de múltiplas listas EAGER
     @OneToMany(mappedBy = "ordemServico", fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @OrderBy("horaTransfer ASC")
     private List<Transfer> transfers = new ArrayList<>();
 
-    // CORREÇÃO 2: Também usamos SUBSELECT aqui para garantir que não haja conflito com a lista de transfers
     @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @OrderBy("ordemParada ASC")
@@ -49,7 +49,6 @@ public class OrdemServico {
         this.paradasRota = paradasRota;
     }
 
-    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

@@ -3,9 +3,8 @@ package br.com.sosviale.i18n;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 
-/**
- * Atualiza automaticamente o texto de um componente quando o idioma muda.
- */
+// listener que empurra translate(key) de novo quando lingua muda
+
 public class TranslatableComponent implements LanguageManager.LanguageChangeListener {
 
     private final JComponent component;
