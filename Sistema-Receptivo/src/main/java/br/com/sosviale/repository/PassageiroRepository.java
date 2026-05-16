@@ -20,7 +20,7 @@ public class PassageiroRepository {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            System.err.println("erro ao salvar passageiro: " + e.getMessage());
+            System.err.println("erro ao cadastrar passageiro: " + e.getMessage());
             throw e;
         } finally {
             em.close();

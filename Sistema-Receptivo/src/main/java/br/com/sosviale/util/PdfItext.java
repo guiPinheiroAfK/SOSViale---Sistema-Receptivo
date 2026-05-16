@@ -3,68 +3,24 @@ package br.com.sosviale.util;
 import br.com.sosviale.model.OrdemServico;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.Transfer;
-import br.com.sosviale.repository.*;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
-import org.jline.reader.LineReader;
 
 import java.time.format.DateTimeFormatter;
 
-// utilitária para geração de PDF de Ordens de Serviço usando a biblioteca iText
+// Classe utilitária focada apenas na geração do arquivo PDF
 public class PdfItext {
-
-    // repositórios injetados pelo construtor
-    private PassageiroRepository passageiroRepo;
-    private VeiculoRepository veiculoRepo;
-    private TransferRepository transferRepo;
-    private MotoristaRepository motoristaRepo;
-    private final PontoColetaRepository pontoColetaRepo;
-    private OrdemServicoRepository osRepo;
-
-    // construtor que recebe os repositórios instanciados pela Main
-    public PdfItext(PassageiroRepository passageiroRepo, VeiculoRepository veiculoRepo,
-                        TransferRepository transferRepo, MotoristaRepository motoristaRepo,
-                        PontoColetaRepository pontoColetaRepo, OrdemServicoRepository osRepo) {
-        this.passageiroRepo = passageiroRepo;
-        this.veiculoRepo = veiculoRepo;
-        this.transferRepo = transferRepo;
-        this.motoristaRepo = motoristaRepo;
-        this.pontoColetaRepo = pontoColetaRepo;
-        this.osRepo = osRepo;
-    }
-
-    public void menuGerarPdf(LineReader reader) {
-        System.out.println("\n\u001B[36m--- EXPORTAR OS PARA PDF --- \u001B[0m");
-        try {
-            Long idOs = AuxiliarUtils.lerIdValido(reader, "Digite o ID da Ordem de Serviço: ");
-            OrdemServico os = osRepo.buscarPorId(idOs.intValue());
-
-            if (os == null) {
-                System.out.println("\u001B[31mOrdem de Serviço não encontrada!\u001B[0m");
-                return;
-            }
-
-            System.out.println("\u001B[33mGerando documento...\u001B[0m");
-            br.com.sosviale.util.PdfItext.gerarPdfOs(os);
-            System.out.println("\u001B[32m✔ PDF da OS #" + os.getId() + " gerado com sucesso na pasta do projeto!\u001B[0m");
-
-        } catch (Exception e) {
-            System.out.println("\u001B[31m[ERRO AO GERAR PDF]: " + e.getMessage() + "\u001B[0m");
-            e.printStackTrace();
-        }
-    }
 
     /*
      * Gera um arquivo PDF com os dados completos da OS informada.
-     * O arquivo é salvo na pasta raiz do projeto com o nome: OS_<id>_<nome_motorista>.pdf
+     * O arquivo é salvo na pasta raiz do projeto.
      *
-     * @param os a ordem de serviço a ser exportada (não pode ser nula)
-     * @throws IllegalArgumentException se a OS ou seus dados obrigatórios estiverem nulos
-     * @throws Exception se ocorrer falha ao criar ou gravar o arquivo PDF
+     * @param os a ordem de serviço a ser exportada
+     * @return O caminho do arquivo gerado
      */
-    public static void gerarPdfOs(OrdemServico os) throws Exception {
+    public static String gerarPdfOs(OrdemServico os) throws Exception {
         if (os == null) throw new IllegalArgumentException("OS não pode ser nula.");
         if (os.getMotorista() == null) throw new IllegalArgumentException("OS sem motorista definido.");
         if (os.getVeiculo() == null) throw new IllegalArgumentException("OS sem veículo definido.");
@@ -123,7 +79,9 @@ public class PdfItext {
         document.add(new Paragraph(""));
         document.add(new Paragraph("Assinatura do Motorista: _______________________________"));
 
-        // fecha o documento — obrigatório para gravar os bytes no arquivo
+        // fecha o documento
         document.close();
+
+        return path;
     }
 }

@@ -20,7 +20,7 @@ public class TransferRepository {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            System.err.println("erro ao salvar transfer: " + e.getMessage());
+            System.err.println("erro ao cadastrar transfer: " + e.getMessage());
             throw e;
         } finally {
             em.close();

@@ -1,12 +1,14 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.auth.AuthenticationService;
+import br.com.sosviale.i18n.LanguageManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -14,9 +16,8 @@ import java.util.Map;
 
 /*
  * MainDashboard - Interface principal do SOS VIALE
- * Integrada com autenticação JWT e design moderno
  */
-public class ProtipoMainDashboard extends JFrame {
+public class ProtipoMainDashboard extends JFrame implements LanguageManager.LanguageChangeListener {
 
     private static final Color APP_BACKGROUND = new Color(244, 245, 247);
     private static final Color PANEL_BACKGROUND = Color.WHITE;
@@ -37,6 +38,16 @@ public class ProtipoMainDashboard extends JFrame {
     private final JLabel userLabel = new JLabel();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
 
+    // Componentes que serão atualizados quando o idioma muda
+    private JLabel productLabel;
+    private JTextField searchField;
+    private JButton logoutButton;
+    private JLabel menuLabel;
+    private JLabel versionLabel;
+    private JLabel adminLabel;
+    private Map<String, String> navLabels = new LinkedHashMap<>();
+    private Map<String, String> navSubtitles = new LinkedHashMap<>();
+
     public ProtipoMainDashboard(AuthenticationService authService) {
         this.authService = authService;
         configureLookAndFeel();
@@ -47,7 +58,10 @@ public class ProtipoMainDashboard extends JFrame {
         setContentPane(buildShell());
         setLocationRelativeTo(null);
 
-        selectPage("dashboard", "Painel Inicial", "Resumo operacional do dia");
+        // Registrar como listener de mudanças de idioma
+        LanguageManager.getInstance().addLanguageChangeListener(this);
+
+        selectPage("dashboard", "menu.dashboard", "menu.dashboard.subtitle");
     }
 
     private JComponent buildShell() {
@@ -67,14 +81,14 @@ public class ProtipoMainDashboard extends JFrame {
                 new EmptyBorder(14, 18, 14, 18)
         ));
 
-        JLabel product = new JLabel("SOS VIALE | Sistema Receptivo");
-        product.setFont(new Font("SansSerif", Font.BOLD, 18));
-        product.setForeground(TEXT_COLOR);
+        productLabel = new JLabel(LanguageManager.getInstance().translate("app.title"));
+        productLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        productLabel.setForeground(TEXT_COLOR);
 
-        JTextField search = new JTextField(" Buscar transfer, passageiro ou OS...");
-        search.setPreferredSize(new Dimension(360, 34));
-        search.setForeground(MUTED_TEXT);
-        search.setBorder(BorderFactory.createCompoundBorder(
+        searchField = new JTextField(" " + LanguageManager.getInstance().translate("app.search.placeholder"));
+        searchField.setPreferredSize(new Dimension(360, 34));
+        searchField.setForeground(MUTED_TEXT);
+        searchField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR),
                 new EmptyBorder(0, 8, 0, 8)
         ));
@@ -87,7 +101,11 @@ public class ProtipoMainDashboard extends JFrame {
         userLabel.setForeground(MUTED_TEXT);
         right.add(userLabel);
 
-        JButton logoutButton = new JButton("Sair");
+        // Adicionar seletor de idioma
+        JPanel languagePanel = createLanguageSelector();
+        right.add(languagePanel);
+
+        logoutButton = new JButton(LanguageManager.getInstance().translate("button.logout"));
         logoutButton.setFont(BASE_FONT);
         logoutButton.setBackground(new Color(200, 50, 50));
         logoutButton.setForeground(Color.WHITE);
@@ -96,11 +114,42 @@ public class ProtipoMainDashboard extends JFrame {
         logoutButton.addActionListener(e -> performLogout());
         right.add(logoutButton);
 
-        header.add(product, BorderLayout.WEST);
-        header.add(search, BorderLayout.CENTER);
+        header.add(productLabel, BorderLayout.WEST);
+        header.add(searchField, BorderLayout.CENTER);
         header.add(right, BorderLayout.EAST);
 
         return header;
+    }
+
+    private JPanel createLanguageSelector() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        panel.setOpaque(false);
+
+        JLabel langLabel = new JLabel(LanguageManager.getInstance().translate("language.label") + ":");
+        langLabel.setFont(BASE_FONT);
+        langLabel.setForeground(MUTED_TEXT);
+        panel.add(langLabel);
+
+        JComboBox<String> languageCombo = new JComboBox<>(new String[]{
+                LanguageManager.getInstance().translate("language.pt"),
+                LanguageManager.getInstance().translate("language.en"),
+                LanguageManager.getInstance().translate("language.es")
+        });
+        languageCombo.setFont(BASE_FONT);
+        languageCombo.setBackground(PANEL_BACKGROUND);
+        languageCombo.setPreferredSize(new Dimension(120, 28));
+
+        // Definir seleção inicial baseado no idioma atual
+        languageCombo.setSelectedIndex(LanguageManager.getInstance().getCurrentLanguage().ordinal());
+
+        languageCombo.addActionListener(e -> {
+            int selectedIndex = languageCombo.getSelectedIndex();
+            LanguageManager.Language[] languages = LanguageManager.Language.values();
+            LanguageManager.getInstance().setLanguage(languages[selectedIndex]);
+        });
+
+        panel.add(languageCombo);
+        return panel;
     }
 
     private JComponent buildNavigation() {
@@ -110,45 +159,52 @@ public class ProtipoMainDashboard extends JFrame {
         nav.setBackground(new Color(233, 236, 241));
         nav.setBorder(new EmptyBorder(18, 14, 18, 14));
 
-        JLabel menuLabel = new JLabel("MÓDULOS");
+        menuLabel = new JLabel(LanguageManager.getInstance().translate("menu.modules"));
         menuLabel.setForeground(MUTED_TEXT);
         menuLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
         menuLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         nav.add(menuLabel);
         nav.add(Box.createVerticalStrut(10));
 
-        addNavButton(nav, "dashboard", "📊 Painel Inicial", "Resumo operacional do dia");
-        addNavButton(nav, "transfers", "🚗 Transfers", "Cadastro e acompanhamento");
-        addNavButton(nav, "passageiros", "👥 Passageiros", "Cadastro de passageiros");
-        addNavButton(nav, "motoristas", "🧑‍✈️ Motoristas", "Gestão de motoristas");
-        addNavButton(nav, "veiculos", "🚙 Veículos", "Controle da frota");
-        addNavButton(nav, "ordens", "📋 Ordens de Serviço", "Montagem de OS");
+        addNavButton(nav, "dashboard", "menu.dashboard", "menu.dashboard.subtitle");
+        addNavButton(nav, "transfers", "menu.transfers", "menu.transfers.subtitle");
+        addNavButton(nav, "passageiros", "menu.passengers", "menu.passengers.subtitle");
+        addNavButton(nav, "motoristas", "menu.drivers", "menu.drivers.subtitle");
+        addNavButton(nav, "veiculos", "menu.vehicles", "menu.vehicles.subtitle");
+        addNavButton(nav, "ordens", "menu.orders", "menu.orders.subtitle");
 
         if (authService.isAdmin()) {
             nav.add(Box.createVerticalStrut(14));
-            JLabel adminLabel = new JLabel("ADMIN");
+            adminLabel = new JLabel(LanguageManager.getInstance().translate("menu.admin"));
             adminLabel.setForeground(new Color(200, 50, 50));
             adminLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
             adminLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             nav.add(adminLabel);
             nav.add(Box.createVerticalStrut(10));
-            addNavButton(nav, "admin", "⚙️ Usuários", "Gestão de usuários do sistema");
+            addNavButton(nav, "admin", "menu.users", "menu.users.subtitle");
         }
 
         nav.add(Box.createVerticalGlue());
         nav.add(new JSeparator());
         nav.add(Box.createVerticalStrut(12));
 
-        JLabel version = new JLabel("v2.0 Refatorado");
-        version.setForeground(MUTED_TEXT);
-        version.setFont(new Font("SansSerif", Font.ITALIC, 10));
-        version.setAlignmentX(Component.LEFT_ALIGNMENT);
-        nav.add(version);
+        versionLabel = new JLabel(LanguageManager.getInstance().translate("version"));
+        versionLabel.setForeground(MUTED_TEXT);
+        versionLabel.setFont(new Font("SansSerif", Font.ITALIC, 10));
+        versionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        nav.add(versionLabel);
 
         return nav;
     }
 
-    private void addNavButton(JPanel nav, String key, String label, String subtitle) {
+    private void addNavButton(JPanel nav, String key, String labelKey, String subtitleKey) {
+        String label = LanguageManager.getInstance().translate(labelKey);
+        String subtitle = LanguageManager.getInstance().translate(subtitleKey);
+
+        // Armazenar para atualização posterior
+        navLabels.put(key, labelKey);
+        navSubtitles.put(key, subtitleKey);
+
         JButton button = new JButton(label);
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
@@ -160,7 +216,12 @@ public class ProtipoMainDashboard extends JFrame {
         button.setBackground(PANEL_BACKGROUND);
         button.setForeground(TEXT_COLOR);
         button.setFont(BASE_FONT);
-        button.addActionListener(event -> selectPage(key, label.replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim(), subtitle));
+        button.addActionListener(event -> {
+            String cleanedLabel = LanguageManager.getInstance().translate(labelKey)
+                    .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim();
+            String cleanedSubtitle = LanguageManager.getInstance().translate(subtitleKey);
+            selectPage(key, labelKey, subtitleKey);
+        });
         navButtons.put(key, button);
         nav.add(button);
         nav.add(Box.createVerticalStrut(8));
@@ -226,24 +287,7 @@ public class ProtipoMainDashboard extends JFrame {
     }
 
     private JComponent buildOrdersPage() {
-        JPanel form = formPanel("Gerar Ordem de Serviço");
-        addField(form, "Data", textField(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))), 0);
-        addField(form, "Motorista", combo("Roberto Silva", "Marcos Lima"), 1);
-        addField(form, "Veículo", combo("Mercedes Sprinter - ABC1D23", "Renault Master - XYZ4A56"), 2);
-        addField(form, "Status", combo("ABERTA", "EM ROTA", "CONCLUÍDA"), 3);
-
-        JButton generate = primaryButton("Gerar OS");
-        generate.addActionListener(e -> showMessage("OS gerada (simulada)"));
-        addActions(form, generate, outlineButton("Visualizar"));
-
-        JPanel table = new JPanel(new BorderLayout());
-        table.add(tablePanel("Transfers sem OS", new String[]{"ID", "Data", "Rota", "Passageiros"},
-                new Object[][]{
-                        {"T-1042", "29/04", "Aeroporto > Hotel", "4"},
-                        {"T-1044", "30/04", "Hotel > Aeroporto", "2"}
-                }), BorderLayout.CENTER);
-
-        return splitPage(form, table);
+        return new OrdensPanel();
     }
 
     private JComponent buildAdminPage() {
@@ -443,7 +487,11 @@ public class ProtipoMainDashboard extends JFrame {
         return button;
     }
 
-    private void selectPage(String key, String title, String subtitle) {
+    private void selectPage(String key, String titleKey, String subtitleKey) {
+        String title = LanguageManager.getInstance().translate(titleKey)
+                .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim();
+        String subtitle = LanguageManager.getInstance().translate(subtitleKey);
+
         pageTitle.setText(title);
         pageSubtitle.setText(subtitle);
         cardLayout.show(cardPanel, key);
@@ -455,15 +503,69 @@ public class ProtipoMainDashboard extends JFrame {
         });
     }
 
+    @Override
+    public void onLanguageChanged(LanguageManager.Language newLanguage) {
+        updateUIText();
+    }
+
+    private void updateUIText() {
+        // Atualizar header
+        productLabel.setText(LanguageManager.getInstance().translate("app.title"));
+        searchField.setText(" " + LanguageManager.getInstance().translate("app.search.placeholder"));
+        logoutButton.setText(LanguageManager.getInstance().translate("button.logout"));
+
+        // Atualizar menu labels
+        menuLabel.setText(LanguageManager.getInstance().translate("menu.modules"));
+        if (adminLabel != null) {
+            adminLabel.setText(LanguageManager.getInstance().translate("menu.admin"));
+        }
+        versionLabel.setText(LanguageManager.getInstance().translate("version"));
+
+        // Atualizar botões de navegação
+        for (Map.Entry<String, JButton> entry : navButtons.entrySet()) {
+            String key = entry.getKey();
+            JButton button = entry.getValue();
+            String labelKey = navLabels.get(key);
+            if (labelKey != null) {
+                String newLabel = LanguageManager.getInstance().translate(labelKey);
+                button.setText(newLabel);
+            }
+        }
+
+        // Atualizar página atual
+        String currentNavKey = null;
+        Component[] components = cardPanel.getComponents();
+        for (String key : navButtons.keySet()) {
+            JButton btn = navButtons.get(key);
+            if (btn.getBackground().equals(ACTIVE_NAV)) {
+                currentNavKey = key;
+                break;
+            }
+        }
+        if (currentNavKey != null) {
+            String titleKey = navLabels.get(currentNavKey);
+            String subtitleKey = navSubtitles.get(currentNavKey);
+            if (titleKey != null && subtitleKey != null) {
+                String title = LanguageManager.getInstance().translate(titleKey)
+                        .replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim();
+                String subtitle = LanguageManager.getInstance().translate(subtitleKey);
+                pageTitle.setText(title);
+                pageSubtitle.setText(subtitle);
+            }
+        }
+    }
+
     private void performLogout() {
+        LanguageManager lm = LanguageManager.getInstance();
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Tem certeza que deseja sair?",
-                "Confirmação",
+                lm.translate("dialog.confirm.logout"),
+                lm.translate("dialog.confirm.title"),
                 JOptionPane.YES_NO_OPTION
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
+            lm.removeLanguageChangeListener(this);
             authService.logout();
             dispose();
             new LoginScreen(authService).setVisible(true);

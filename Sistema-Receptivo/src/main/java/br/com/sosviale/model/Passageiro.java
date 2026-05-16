@@ -16,22 +16,25 @@ public class Passageiro {
     @Column(nullable = false, length = 20)
     private String documento;
 
-    // nacionalidade padrão para passageiros sem informação explícita
+    // Aqui está o segredo: dizemos ao JPA para cadastrar o NOME do enum (ex: "CPF")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_documento", nullable = false)
+    private TipoDocumento tipoDocumento;
+
     @Column(length = 50)
     private String nacionalidade = "Brasileira";
 
-    // construtor padrão obrigatório pelo JPA
     public Passageiro() {
     }
 
-    // construtor auxiliar para facilitar criação em testes e serviços
-    public Passageiro(String nome, String documento, String nacionalidade) {
+    // Atualizamos o construtor para exigir o tipo do documento agora
+    public Passageiro(String nome, String documento, TipoDocumento tipoDocumento, String nacionalidade) {
         this.nome = nome;
         this.documento = documento;
-        this.nacionalidade = nacionalidade;
+        this.tipoDocumento = tipoDocumento;
+        this.nacionalidade = (nacionalidade == null || nacionalidade.trim().isEmpty()) ? "Brasileira" : nacionalidade;
     }
 
-    // getters e setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -40,6 +43,9 @@ public class Passageiro {
 
     public String getDocumento() { return documento; }
     public void setDocumento(String documento) { this.documento = documento; }
+
+    public TipoDocumento getTipoDocumento() { return tipoDocumento; }
+    public void setTipoDocumento(TipoDocumento tipoDocumento) { this.tipoDocumento = tipoDocumento; }
 
     public String getNacionalidade() { return nacionalidade; }
     public void setNacionalidade(String nacionalidade) { this.nacionalidade = nacionalidade; }

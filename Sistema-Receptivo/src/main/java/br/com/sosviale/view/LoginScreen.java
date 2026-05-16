@@ -3,6 +3,7 @@ package br.com.sosviale.view;
 import br.com.sosviale.auth.AuthenticationException;
 import br.com.sosviale.auth.AuthenticationService;
 import br.com.sosviale.auth.ValidationException;
+import br.com.sosviale.i18n.LanguageManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -38,7 +39,7 @@ public class LoginScreen extends JFrame {
     private void initializeUI() {
         setTitle("SOS VIALE - Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(450, 550);
+        setSize(450, 600);
         setLocationRelativeTo(null);
         setResizable(false);
 

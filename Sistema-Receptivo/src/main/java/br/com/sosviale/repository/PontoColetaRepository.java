@@ -20,7 +20,7 @@ public class PontoColetaRepository {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            System.err.println("erro ao salvar ponto de coleta: " + e.getMessage());
+            System.err.println("erro ao cadastrar ponto de coleta: " + e.getMessage());
             throw e;
         } finally {
             em.close();
