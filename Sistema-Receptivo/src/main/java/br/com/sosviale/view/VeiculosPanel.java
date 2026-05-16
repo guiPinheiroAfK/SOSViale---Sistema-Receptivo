@@ -1,7 +1,7 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.model.Veiculo;
-import br.com.sosviale.repository.VeiculoRepository;
+import br.com.sosviale.service.VeiculoService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,7 +21,7 @@ public class VeiculosPanel extends JPanel {
     private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
 
-    private final VeiculoRepository repository = new VeiculoRepository();
+    private final VeiculoService service = new VeiculoService();
     private DefaultTableModel tableModel;
     private JTable table;
     private JTextField labelField;
@@ -59,7 +59,6 @@ public class VeiculosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 14, 0);
         form.add(title, gbc);
 
-        // Modelo
         JLabel labelLabel = new JLabel("Modelo (ex: Mercedes Sprinter):");
         labelLabel.setFont(BASE_FONT);
         labelLabel.setForeground(MUTED_TEXT);
@@ -78,7 +77,6 @@ public class VeiculosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(labelField, gbc);
 
-        // Placa
         JLabel placaLabel = new JLabel("Placa (padrão Mercosul, ex: ABC1D23):");
         placaLabel.setFont(BASE_FONT);
         placaLabel.setForeground(MUTED_TEXT);
@@ -97,7 +95,6 @@ public class VeiculosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(placaField, gbc);
 
-        // Capacidade
         JLabel capacidadeLabel = new JLabel("Capacidade de passageiros:");
         capacidadeLabel.setFont(BASE_FONT);
         capacidadeLabel.setForeground(MUTED_TEXT);
@@ -116,7 +113,6 @@ public class VeiculosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(capacidadeField, gbc);
 
-        // Botões
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
@@ -249,12 +245,10 @@ public class VeiculosPanel extends JPanel {
 
         try {
             if (idSelecionado == null) {
-                repository.salvar(new Veiculo(label, placa, capacidade));
+                service.salvar(label, placa, capacidade);
                 JOptionPane.showMessageDialog(this, "Veículo cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                Veiculo v = new Veiculo(label, placa, capacidade);
-                v.setId(idSelecionado);
-                repository.atualizar(v);
+                service.atualizar(idSelecionado, label, placa, capacidade);
                 JOptionPane.showMessageDialog(this, "Veículo atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
@@ -274,7 +268,7 @@ public class VeiculosPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                repository.excluir(idSelecionado);
+                service.excluir(idSelecionado);
                 limparForm();
                 carregarVeiculos();
                 JOptionPane.showMessageDialog(this, "Veículo excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -287,7 +281,7 @@ public class VeiculosPanel extends JPanel {
     private void carregarVeiculos() {
         tableModel.setRowCount(0);
         try {
-            List<Veiculo> veiculos = repository.listarTodos();
+            List<Veiculo> veiculos = service.listarTodos();
             for (Veiculo v : veiculos) {
                 tableModel.addRow(new Object[]{v.getId(), v.getLabel(), v.getPlaca(), v.getCapacidade()});
             }
