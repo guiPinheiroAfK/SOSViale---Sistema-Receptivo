@@ -17,6 +17,9 @@ public class Motorista {
     @Column(nullable = false, unique = true, length = 20)
     private String cnh;
 
+    @Column(length = 20)
+    private String telefone;
+
     @Column(name = "latitude_atual")
     private Double latitudeAtual;
 
@@ -48,4 +51,12 @@ public class Motorista {
 
     public Double getLongitudeAtual() { return longitudeAtual; }
     public void setLongitudeAtual(Double longitudeAtual) { this.longitudeAtual = longitudeAtual; }
+
+    public String getTelefone() { return telefone; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
+
+    @Override
+    public String toString() {
+        return id + " - " + nome;
+    }
 }

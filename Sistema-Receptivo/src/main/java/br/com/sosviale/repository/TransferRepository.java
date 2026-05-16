@@ -85,7 +85,7 @@ public class TransferRepository {
         try {
             Long total = em.createQuery(
                             "SELECT COUNT(p) FROM Transfer t JOIN t.passageiros p " +
-                                    "WHERE t.ordemServico.veiculo.id = :veiculoId AND t.status = 'AGENDADO'",
+                                    "WHERE t.ordemServico.veiculo.id = :veiculoId AND t.status = 'NA_OS'",
                             Long.class)
                     .setParameter("veiculoId", veiculoId)
                     .getSingleResult();

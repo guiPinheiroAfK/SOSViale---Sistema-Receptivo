@@ -61,115 +61,43 @@ public class PassageirosPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 14, 0);
         form.add(title, gbc);
 
-        JLabel nomeLabel = new JLabel("Nome completo:");
-        nomeLabel.setFont(BASE_FONT);
-        nomeLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 4, 0);
-        form.add(nomeLabel, gbc);
+        // Nome
+        gbc.gridy++; form.add(label("Nome completo:"), gbc);
+        nomeField = field();
+        gbc.gridy++; form.add(nomeField, gbc);
 
-        nomeField = new JTextField();
-        nomeField.setFont(BASE_FONT);
-        nomeField.setPreferredSize(new Dimension(0, 34));
-        nomeField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 2;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(nomeField, gbc);
-
-        // NOVO: Label para o Tipo de Documento
-        JLabel tipoLabel = new JLabel("Tipo de Documento:");
-        tipoLabel.setFont(BASE_FONT);
-        tipoLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 3;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(tipoLabel, gbc);
-
-        // NOVO: ComboBox preenchido com o Enum
+        // Tipo de Documento
+        gbc.gridy++; form.add(label("Tipo de Documento:"), gbc);
         tipoDocumentoCombo = new JComboBox<>(TipoDocumento.values());
         tipoDocumentoCombo.setFont(BASE_FONT);
         tipoDocumentoCombo.setBackground(Color.WHITE);
         tipoDocumentoCombo.setPreferredSize(new Dimension(0, 34));
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(tipoDocumentoCombo, gbc);
+        gbc.gridy++; form.add(tipoDocumentoCombo, gbc);
 
-        JLabel documentoLabel = new JLabel("Número do Documento:");
-        documentoLabel.setFont(BASE_FONT);
-        documentoLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 5;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(documentoLabel, gbc);
+        // Número do Documento
+        gbc.gridy++; form.add(label("Número do Documento:"), gbc);
+        documentoField = field();
+        gbc.gridy++; form.add(documentoField, gbc);
 
-        documentoField = new JTextField();
-        documentoField.setFont(BASE_FONT);
-        documentoField.setPreferredSize(new Dimension(0, 34));
-        documentoField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 6;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(documentoField, gbc);
+        // Nacionalidade
+        gbc.gridy++; form.add(label("Nacionalidade:"), gbc);
+        nacionalidadeField = field();
+        nacionalidadeField.setText("Brasileira");
+        gbc.gridy++; form.add(nacionalidadeField, gbc);
 
-        JLabel nacionalidadeLabel = new JLabel("Nacionalidade:");
-        nacionalidadeLabel.setFont(BASE_FONT);
-        nacionalidadeLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 7;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(nacionalidadeLabel, gbc);
-
-        nacionalidadeField = new JTextField("Brasileira");
-        nacionalidadeField.setFont(BASE_FONT);
-        nacionalidadeField.setPreferredSize(new Dimension(0, 34));
-        nacionalidadeField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 8;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(nacionalidadeField, gbc);
-
+        // Ações
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
-        salvarButton = new JButton("Adicionar");
-        salvarButton.setBackground(PRIMARY_BLUE);
-        salvarButton.setForeground(Color.WHITE);
-        salvarButton.setFocusPainted(false);
-        salvarButton.setOpaque(true);
-        salvarButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(PRIMARY_BLUE),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        salvarButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        salvarButton = styledButton("Adicionar", PRIMARY_BLUE);
         salvarButton.addActionListener(e -> salvarOuAtualizar());
 
-        excluirButton = new JButton("Excluir");
-        excluirButton.setBackground(DANGER_RED);
-        excluirButton.setForeground(Color.WHITE);
-        excluirButton.setFocusPainted(false);
-        excluirButton.setOpaque(true);
-        excluirButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DANGER_RED),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        excluirButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        excluirButton = styledButton("Excluir", DANGER_RED);
         excluirButton.setVisible(false);
         excluirButton.addActionListener(e -> excluirPassageiro());
 
-        JButton limpar = new JButton("Limpar");
-        limpar.setBackground(PANEL_BACKGROUND);
+        JButton limpar = styledButton("Limpar", Color.LIGHT_GRAY);
         limpar.setForeground(TEXT_COLOR);
-        limpar.setFocusPainted(false);
-        limpar.setOpaque(true);
-        limpar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        limpar.setFont(BASE_FONT);
         limpar.addActionListener(e -> limparForm());
 
         actions.add(salvarButton);
@@ -183,66 +111,6 @@ public class PassageirosPanel extends JPanel {
         form.add(actions, gbc);
 
         return form;
-    }
-
-    private JComponent buildTable() {
-        JPanel panel = new JPanel(new BorderLayout(0, 12));
-        panel.setBackground(PANEL_BACKGROUND);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(14, 14, 14, 14)
-        ));
-
-        JLabel title = new JLabel("Passageiros cadastrados");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
-
-        // ATUALIZADO: Adicionada a coluna "Tipo"
-        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "Tipo", "Documento", "Nacionalidade"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        table = new JTable(tableModel);
-        table.setFillsViewportHeight(true);
-        table.setRowHeight(28);
-        table.setShowGrid(true);
-        table.setGridColor(new Color(230, 232, 236));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setReorderingAllowed(false);
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        table.setFont(BASE_FONT);
-
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setBorder(new EmptyBorder(0, 8, 0, 8));
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
-
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
-                int row = table.getSelectedRow();
-                idSelecionado = (Integer) tableModel.getValueAt(row, 0);
-                nomeField.setText((String) tableModel.getValueAt(row, 1));
-                tipoDocumentoCombo.setSelectedItem(tableModel.getValueAt(row, 2));
-                documentoField.setText((String) tableModel.getValueAt(row, 3));
-                nacionalidadeField.setText((String) tableModel.getValueAt(row, 4));
-                salvarButton.setText("Salvar alteração");
-                excluirButton.setVisible(true);
-            }
-        });
-
-        JLabel dica = new JLabel("💡 Clique em um passageiro para editar ou excluir.");
-        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        dica.setForeground(MUTED_TEXT);
-
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(dica, BorderLayout.SOUTH);
-        carregarPassageiros();
-        return panel;
     }
 
     private void salvarOuAtualizar() {
@@ -268,41 +136,85 @@ public class PassageirosPanel extends JPanel {
         }
     }
 
-    private void excluirPassageiro() {
-        if (idSelecionado == null) return;
+    // --- MÉTODOS AUXILIARES (LABEL E STYLED BUTTON) ---
+    private JLabel label(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(BASE_FONT);
+        l.setForeground(MUTED_TEXT);
+        return l;
+    }
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja excluir este passageiro?",
-                "Confirmar exclusão",
-                JOptionPane.YES_NO_OPTION);
+    private JTextField field() {
+        JTextField f = new JTextField();
+        f.setFont(BASE_FONT);
+        f.setPreferredSize(new Dimension(0, 34));
+        f.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        return f;
+    }
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                service.excluir(idSelecionado);
-                limparForm();
-                carregarPassageiros();
-                JOptionPane.showMessageDialog(this, "Passageiro excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+    private JButton styledButton(String text, Color bg) {
+        JButton b = new JButton(text);
+        b.setBackground(bg);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setFont(new Font("SansSerif", Font.BOLD, 12));
+        return b;
+    }
+
+    // --- RESTANTE DA CLASSE (BUILD TABLE, CARREGAR, LIMPAR, ETC) ---
+    private JComponent buildTable() {
+        JPanel panel = new JPanel(new BorderLayout(0, 12));
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+
+        JLabel title = new JLabel("Passageiros cadastrados");
+        title.setFont(SECTION_FONT);
+        title.setForeground(TEXT_COLOR);
+        panel.add(title, BorderLayout.NORTH);
+
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "Tipo", "Documento", "Nacionalidade"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+
+        table = new JTable(tableModel);
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(28);
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
+                int row = table.getSelectedRow();
+                idSelecionado = (Integer) tableModel.getValueAt(row, 0);
+                nomeField.setText((String) tableModel.getValueAt(row, 1));
+                tipoDocumentoCombo.setSelectedItem(tableModel.getValueAt(row, 2));
+                documentoField.setText((String) tableModel.getValueAt(row, 3));
+                nacionalidadeField.setText((String) tableModel.getValueAt(row, 4));
+                salvarButton.setText("Salvar alteração");
+                excluirButton.setVisible(true);
             }
-        }
+        });
+
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        carregarPassageiros();
+        return panel;
     }
 
     private void carregarPassageiros() {
         tableModel.setRowCount(0);
-        try {
-            List<Passageiro> passageiros = service.listarTodos();
-            for (Passageiro p : passageiros) {
-                tableModel.addRow(new Object[]{
-                        p.getId(),
-                        p.getNome(),
-                        p.getTipoDocumento(),
-                        p.getDocumento(),
-                        p.getNacionalidade()
-                });
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        service.listarTodos().forEach(p -> tableModel.addRow(new Object[]{
+                p.getId(), p.getNome(), p.getTipoDocumento(), p.getDocumento(), p.getNacionalidade()
+        }));
+    }
+
+    private void excluirPassageiro() {
+        if (idSelecionado != null) {
+            service.excluir(idSelecionado);
+            limparForm();
+            carregarPassageiros();
         }
     }
 
@@ -315,6 +227,5 @@ public class PassageirosPanel extends JPanel {
         salvarButton.setText("Adicionar");
         excluirButton.setVisible(false);
         table.clearSelection();
-        nomeField.requestFocus();
     }
 }

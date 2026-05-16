@@ -65,4 +65,12 @@ public class PassageiroService {
     public List<Passageiro> listarTodos() {
         return repository.listarTodos();
     }
+
+    public Passageiro buscarPorId(Integer id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("ID do passageiro inválido.");
+        }
+        return repository.buscarPorId(id);
+    }
+
 }

@@ -32,7 +32,7 @@ CREATE TABLE transfers (
                            hora_transfer TIME NOT NULL,          -- Apenas o horário (HH:MM:SS)
                            origem VARCHAR(100) NOT NULL,
                            destino VARCHAR(100) NOT NULL,
-                           status VARCHAR(20) DEFAULT 'PENDENTE',
+                           status VARCHAR(20) DEFAULT 'AGUARDANDO_OS',
                            valor_base DECIMAL(10,2),
                            moeda_origem VARCHAR(10),
                            motorista_id INT REFERENCES motoristas(id),

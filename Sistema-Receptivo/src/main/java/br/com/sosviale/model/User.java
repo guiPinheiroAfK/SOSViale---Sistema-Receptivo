@@ -29,7 +29,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private Perfil perfil = Perfil.ATENDENTE;
+    private Perfil perfil = Perfil.GERENTE;
 
     public User() {}
 
