@@ -56,7 +56,7 @@ public class PdfItext {
                 Transfer t = os.getTransfers().get(i);
 
                 document.add(new Paragraph("-> PARADA " + (i + 1) + " (Transfer #" + t.getId() + ")"));
-                document.add(new Paragraph("   Horário: " + t.getDataHora().format(formatadorHora)));
+                document.add(new Paragraph("   Horário: " + t.getHoraTransfer().format(formatadorHora)));
                 document.add(new Paragraph("   De: " + t.getOrigem() + "  |  Para: " + t.getDestino()));
 
                 // monta a lista de nomes dos passageiros do transfer

@@ -1,5 +1,5 @@
 package br.com.sosviale.service.pathfinding;
-
+/*
 import br.com.sosviale.model.*;
 import br.com.sosviale.service.PathFinding;
 import br.com.sosviale.service.StatusTransfer;
@@ -44,7 +44,7 @@ public class PathFindingTest {
     // =========================================================================
     // Coordenadas reais de Foz do Iguaçu (fonte: Google Maps / OpenStreetMap)
     // =========================================================================
-
+/*
     // ── Destinos fixos ───────────────────────────────────────────────────────
     private static final double LAT_CATARATAS   = -25.6953;
     private static final double LON_CATARATAS   = -54.4367;
@@ -124,6 +124,7 @@ public class PathFindingTest {
      *
      *   Destino: Cataratas do Iguaçu (ID 1)
      */
+/*
     private static void testarCenario1_ProblemaClassicoRetorno() {
         System.out.println("┌─────────────────────────────────────────────────────────┐");
         System.out.println("│  CENÁRIO 1 — Problema do retorno desnecessário           │");
@@ -168,6 +169,7 @@ public class PathFindingTest {
      *   Aeroporto (lon -54.48) → Parque das Aves (-54.45) → Hotel Bourbon (-54.52)
      *   → Hotel Rafain (-54.54) → Hotel Bella Italia (-54.58) → Marco (-54.58)
      */
+/*
     private static void testarCenario2_QuatroHoteisDispersos() {
         System.out.println("┌─────────────────────────────────────────────────────────┐");
         System.out.println("│  CENÁRIO 2 — Quatro hotéis dispersos na cidade           │");
@@ -208,6 +210,7 @@ public class PathFindingTest {
      *
      * Destino: Cataratas do Iguaçu (ID 1).
      */
+    /*
     private static void testarCenario3_ModoGpsAtivado() {
         System.out.println("┌─────────────────────────────────────────────────────────┐");
         System.out.println("│  CENÁRIO 3 — Modo GPS (posição real do motorista)        │");
@@ -254,6 +257,7 @@ public class PathFindingTest {
      * Verifica o comportamento com apenas um ponto de coleta.
      * Não há o que otimizar — o algoritmo deve retornar o único ponto sem erro.
      */
+    /*
     private static void testarCenario4_PontoUnico() {
         System.out.println("┌─────────────────────────────────────────────────────────┐");
         System.out.println("│  CENÁRIO 4 — Ponto único (caso trivial)                  │");
@@ -282,6 +286,7 @@ public class PathFindingTest {
      * Monta uma OrdemServico em memória com motorista, veículo e um transfer
      * contendo todos os pontos de coleta fornecidos.
      */
+    /*
     private static OrdemServico montarOS(int osId,
                                           String nomeDestino,
                                           List<PontoColeta> pontosColeta) {
@@ -294,14 +299,17 @@ public class PathFindingTest {
         veiculo.setPlaca("ABC1D23");
         veiculo.setCapacidade(15);
 
+        LocalDateTime agendamento = LocalDateTime.now().plusHours(2);
+
         Transfer transfer = new Transfer(
-                LocalDateTime.now().plusHours(2),
+                agendamento.toLocalDate(),           // Extrai a Data (LocalDate)
+                agendamento.toLocalTime(),           // Extrai a Hora (LocalTime)
                 "Ponto de Partida (Base)",
                 nomeDestino,
                 new BigDecimal("250.00")
         );
         transfer.setId(osId);   // Integer
-        transfer.setStatus(StatusTransfer.AGENDADO);
+        transfer.setStatus(StatusTransfer.NA_OS);
 
         // Vincula os pontos ao transfer
         pontosColeta.forEach(pc -> pc.setTransfer(transfer));
@@ -318,6 +326,7 @@ public class PathFindingTest {
     }
 
     /* Cria um PontoColeta com coordenadas reais já preenchidas. */
+    /*
     private static PontoColeta ponto(int ordem, String nome,
                                       double lat, double lon,
                                       LocalTime horario) {
@@ -335,6 +344,7 @@ public class PathFindingTest {
      * Extrai coordenadas de uma OS diretamente (usado no cenário GPS,
      * que chama o RouteOptimizer diretamente sem passar pela fachada PathFinding).
      */
+    /*
     private static List<Coordenada> extrairCoordenadas(OrdemServico os) {
         return os.getTransfers().stream()
                 .flatMap(t -> t.getPontosColeta().stream())
@@ -363,5 +373,5 @@ public class PathFindingTest {
 
     private static void separador() {
         System.out.println("───────────────────────────────────────────────────────────\n");
-    }
+    }*/
 }

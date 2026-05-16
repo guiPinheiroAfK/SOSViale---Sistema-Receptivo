@@ -1,12 +1,13 @@
 package br.com.sosviale.model;
 
 import br.com.sosviale.service.StatusTransfer;
+import br.com.sosviale.service.Moeda;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import br.com.sosviale.service.Moeda;
 
 @Entity
 @Table(name = "transfers")
@@ -16,8 +17,11 @@ public class Transfer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "data_hora", nullable = false)
-    private LocalDateTime dataHora;
+    @Column(name = "data_transfer", nullable = false)
+    private LocalDate dataTransfer;
+
+    @Column(name = "hora_transfer", nullable = false)
+    private LocalTime horaTransfer;
 
     @Column(nullable = false, length = 100)
     private String origem;
@@ -25,10 +29,9 @@ public class Transfer {
     @Column(nullable = false, length = 100)
     private String destino;
 
-    // status inicial de tod0 transfer recém-criado (tive que coloco tod0 por causa do tree)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
-    private StatusTransfer status = StatusTransfer.AGENDADO;
+    private StatusTransfer status = StatusTransfer.NA_OS;
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
@@ -37,16 +40,14 @@ public class Transfer {
     @Column(name = "moeda_origem", length = 5, nullable = false)
     private Moeda moedaOrigem = Moeda.BRL;
 
-    // pontos de coleta são gerenciados pelo PontoColeta via @JoinColumn
-    @OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @OrderBy("ordemParada ASC")
+    /*@OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OrderBy(" ASC")
     private List<PontoColeta> pontosColeta = new ArrayList<>();
-
+    */
     @ManyToOne
     @JoinColumn(name = "os_id")
     private OrdemServico ordemServico;
 
-    // tabela de junção com passageiros (relação N:N)
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "transfer_passageiros",
@@ -55,25 +56,27 @@ public class Transfer {
     )
     private List<Passageiro> passageiros = new ArrayList<>();
 
-    // construtor padrão obrigatório pelo JPA
-    public Transfer() {
-    }
+    // Construtor padrão (JPA)
+    public Transfer() {}
 
-    // construtor enxuto com apenas os dados essenciais do agendamento;
-    // motorista e veículo são definidos depois via OS
-    public Transfer(LocalDateTime dataHora, String origem, String destino, BigDecimal valorBase) {
-        this.dataHora = dataHora;
+    // Construtor para novos agendamentos
+    public Transfer(LocalDate dataTransfer, LocalTime horaTransfer, String origem, String destino, BigDecimal valorBase) {
+        this.dataTransfer = dataTransfer;
+        this.horaTransfer = horaTransfer;
         this.origem = origem;
         this.destino = destino;
         this.valorBase = valorBase;
     }
 
-    // getters e setters
+    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public LocalDateTime getDataHora() { return dataHora; }
-    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+    public LocalDate getDataTransfer() { return dataTransfer; }
+    public void setDataTransfer(LocalDate dataTransfer) { this.dataTransfer = dataTransfer; }
+
+    public LocalTime getHoraTransfer() { return horaTransfer; }
+    public void setHoraTransfer(LocalTime horaTransfer) { this.horaTransfer = horaTransfer; }
 
     public String getOrigem() { return origem; }
     public void setOrigem(String origem) { this.origem = origem; }
@@ -89,13 +92,17 @@ public class Transfer {
 
     public List<Passageiro> getPassageiros() { return passageiros; }
     public void setPassageiros(List<Passageiro> passageiros) { this.passageiros = passageiros; }
-
+/*
     public List<PontoColeta> getPontosColeta() { return pontosColeta; }
     public void setPontosColeta(List<PontoColeta> pontosColeta) { this.pontosColeta = pontosColeta; }
-
+*/
     public OrdemServico getOrdemServico() { return ordemServico; }
     public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
 
     public Moeda getMoedaOrigem() { return moedaOrigem; }
     public void setMoedaOrigem(Moeda moedaOrigem) { this.moedaOrigem = moedaOrigem; }
+
+    public PontoColeta[] getPontosColeta() {
+    return null;
+    }
 }

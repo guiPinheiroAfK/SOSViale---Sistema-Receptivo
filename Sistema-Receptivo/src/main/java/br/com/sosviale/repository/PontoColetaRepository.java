@@ -27,22 +27,6 @@ public class PontoColetaRepository {
         }
     }
 
-    // busca todos os pontos de coleta de um transfer específico, ordenados pela sequência de parada
-    public List<PontoColeta> buscarPorTransfer(Integer transferId) {
-        if (transferId == null || transferId <= 0)
-            throw new IllegalArgumentException("ID de transfer inválido.");
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            return em.createQuery(
-                            "SELECT p FROM PontoColeta p WHERE p.transfer.id = :tId ORDER BY p.ordemParada ASC",
-                            PontoColeta.class)
-                    .setParameter("tId", transferId)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
-    }
-
     // atualiza os dados de um ponto de coleta existente
     public void atualizar(PontoColeta ponto) {
         if (ponto == null || ponto.getId() == null)
@@ -85,6 +69,15 @@ public class PontoColetaRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.find(PontoColeta.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<PontoColeta> listarTodos() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT p FROM PontoColeta p", PontoColeta.class).getResultList();
         } finally {
             em.close();
         }

@@ -28,10 +28,11 @@ CREATE TABLE veiculos (
 -- 3. Agendamento de Transfers (RF01 e RF05)
 CREATE TABLE transfers (
                            id SERIAL PRIMARY KEY,
-                           data_hora TIMESTAMP NOT NULL,
+                           data_transfer DATE NOT NULL,          -- Apenas a data (AAAA-MM-DD)
+                           hora_transfer TIME NOT NULL,          -- Apenas o horário (HH:MM:SS)
                            origem VARCHAR(100) NOT NULL,
                            destino VARCHAR(100) NOT NULL,
-                           status VARCHAR(20) DEFAULT 'PENDENTE', -- PENDENTE, EM_TRANSITO, CONCLUIDO, CANCELADO
+                           status VARCHAR(20) DEFAULT 'PENDENTE',
                            valor_base DECIMAL(10,2),
                            moeda_origem VARCHAR(10),
                            motorista_id INT REFERENCES motoristas(id),

@@ -3,7 +3,7 @@ package br.com.sosviale.i18n;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 
-/**
+/*
  * TranslatableComponent - Wrapper para componentes que precisam ser traduzidos
  */
 public class TranslatableComponent implements LanguageManager.LanguageChangeListener {

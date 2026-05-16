@@ -8,7 +8,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate; //
+import java.time.LocalTime; //
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -29,12 +30,14 @@ public class TransfersPanel extends JPanel {
     private JTable table;
     private JTextField origemField;
     private JTextField destinoField;
-    private JTextField dataHoraField;
+    private JTextField dataField; //
+    private JTextField horaField; //
     private JButton salvarButton;
     private JButton excluirButton;
     private Integer idSelecionado = null;
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy"); //
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm"); //
 
     public TransfersPanel() {
         setLayout(new BorderLayout(14, 0));
@@ -102,24 +105,41 @@ public class TransfersPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         form.add(destinoField, gbc);
 
-        // Data/Hora
-        JLabel dataLabel = new JLabel("Data/Hora (dd/MM/yyyy HH:mm):");
+        // Data //
+        JLabel dataLabel = new JLabel("Data (dd/MM/yyyy):");
         dataLabel.setFont(BASE_FONT);
         dataLabel.setForeground(MUTED_TEXT);
         gbc.gridy = 5;
         gbc.insets = new Insets(10, 0, 4, 0);
         form.add(dataLabel, gbc);
 
-        dataHoraField = new JTextField();
-        dataHoraField.setFont(BASE_FONT);
-        dataHoraField.setPreferredSize(new Dimension(0, 34));
-        dataHoraField.setBorder(BorderFactory.createCompoundBorder(
+        dataField = new JTextField(); //
+        dataField.setFont(BASE_FONT);
+        dataField.setPreferredSize(new Dimension(0, 34));
+        dataField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR),
                 new EmptyBorder(0, 8, 0, 8)
         ));
         gbc.gridy = 6;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        form.add(dataHoraField, gbc);
+        form.add(dataField, gbc);
+
+        // Hora //
+        JLabel horaLabel = new JLabel("Hora (HH:mm):");
+        horaLabel.setFont(BASE_FONT);
+        horaLabel.setForeground(MUTED_TEXT);
+        gbc.gridy = 7;
+        gbc.insets = new Insets(10, 0, 4, 0);
+        form.add(horaLabel, gbc);
+
+        horaField = new JTextField(); //
+        horaField.setFont(BASE_FONT);
+        horaField.setPreferredSize(new Dimension(0, 34));
+        horaField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        gbc.gridy = 8;
+        form.add(horaField, gbc);
 
         // Botões
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
@@ -189,7 +209,7 @@ public class TransfersPanel extends JPanel {
         panel.add(title, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(
-                new String[]{"ID", "Origem", "Destino", "Data/Hora", "Status", "Motorista"}, 0) {
+                new String[]{"ID", "Origem", "Destino", "Data", "Hora", "Status", "Motorista"}, 0) { //
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -218,7 +238,8 @@ public class TransfersPanel extends JPanel {
                 idSelecionado = (Integer) tableModel.getValueAt(row, 0);
                 origemField.setText((String) tableModel.getValueAt(row, 1));
                 destinoField.setText((String) tableModel.getValueAt(row, 2));
-                dataHoraField.setText((String) tableModel.getValueAt(row, 3));
+                dataField.setText((String) tableModel.getValueAt(row, 3)); //
+                horaField.setText((String) tableModel.getValueAt(row, 4)); //
                 salvarButton.setText("Salvar alteração");
                 excluirButton.setVisible(true);
             }
@@ -237,19 +258,22 @@ public class TransfersPanel extends JPanel {
     private void salvarOuAtualizar() {
         String origem = origemField.getText().trim();
         String destino = destinoField.getText().trim();
-        String dataHoraStr = dataHoraField.getText().trim();
+        String dataStr = dataField.getText().trim(); //
+        String horaStr = horaField.getText().trim(); //
 
-        if (origem.isEmpty() || destino.isEmpty() || dataHoraStr.isEmpty()) {
+        if (origem.isEmpty() || destino.isEmpty() || dataStr.isEmpty() || horaStr.isEmpty()) { //
             JOptionPane.showMessageDialog(this, "Preencha todos os campos!", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        LocalDateTime dataHora;
+        LocalDate data; //
+        LocalTime hora; //
         try {
-            dataHora = LocalDateTime.parse(dataHoraStr, FORMATTER);
+            data = LocalDate.parse(dataStr, DATE_FORMATTER); //
+            hora = LocalTime.parse(horaStr, TIME_FORMATTER); //
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(this,
-                    "Formato de data inválido!\nUse: dd/MM/yyyy HH:mm",
+                    "Formato inválido!\nData: dd/MM/yyyy\nHora: HH:mm",
                     "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -258,7 +282,8 @@ public class TransfersPanel extends JPanel {
             Transfer t = new Transfer();
             t.setOrigem(origem);
             t.setDestino(destino);
-            t.setDataHora(dataHora);
+            t.setDataTransfer(data); //
+            t.setHoraTransfer(hora); //
 
             if (idSelecionado == null) {
                 service.cadastrar(t);
@@ -285,7 +310,7 @@ public class TransfersPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                service.excluir(Long.valueOf(idSelecionado));
+                service.excluir(idSelecionado); //
                 limparForm();
                 carregarTransfers();
                 JOptionPane.showMessageDialog(this, "Transfer excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -307,7 +332,8 @@ public class TransfersPanel extends JPanel {
                         t.getId(),
                         t.getOrigem(),
                         t.getDestino(),
-                        t.getDataHora().format(FORMATTER),
+                        t.getDataTransfer().format(DATE_FORMATTER), //
+                        t.getHoraTransfer().format(TIME_FORMATTER), //
                         t.getStatus(),
                         motorista
                 });
@@ -321,7 +347,8 @@ public class TransfersPanel extends JPanel {
         idSelecionado = null;
         origemField.setText("");
         destinoField.setText("");
-        dataHoraField.setText("");
+        dataField.setText(""); //
+        horaField.setText(""); //
         salvarButton.setText("Agendar");
         excluirButton.setVisible(false);
         table.clearSelection();
