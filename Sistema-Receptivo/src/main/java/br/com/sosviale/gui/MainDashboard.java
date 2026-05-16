@@ -1,0 +1,648 @@
+package br.com.sosviale.gui;
+
+import br.com.sosviale.auth.AuthenticationService;
+import br.com.sosviale.auth.AuthenticationException;
+import br.com.sosviale.auth.ValidationException;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/*
+ * MainDashboard - Interface principal do SOS VIALE
+ * Integrada com autenticação JWT e design moderno
+ */
+public class MainDashboard extends JFrame {
+
+    private static final Color APP_BACKGROUND = new Color(244, 245, 247);
+    private static final Color PANEL_BACKGROUND = Color.WHITE;
+    private static final Color BORDER_COLOR = new Color(210, 214, 220);
+    private static final Color TEXT_COLOR = new Color(38, 43, 51);
+    private static final Color MUTED_TEXT = new Color(98, 108, 122);
+    private static final Color ACTIVE_NAV = new Color(218, 231, 245);
+    private static final Color PRIMARY_BLUE = new Color(50, 91, 140);
+    private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
+    private static final Font TITLE_FONT = new Font("SansSerif", Font.BOLD, 20);
+    private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
+
+    private final AuthenticationService authService;
+    private final CardLayout cardLayout = new CardLayout();
+    private final JPanel cardPanel = new JPanel(cardLayout);
+    private final JLabel pageTitle = new JLabel();
+    private final JLabel pageSubtitle = new JLabel();
+    private final JLabel userLabel = new JLabel();
+    private final Map<String, JButton> navButtons = new LinkedHashMap<>();
+
+    public MainDashboard(AuthenticationService authService) {
+        this.authService = authService;
+        configureLookAndFeel();
+
+        setTitle("SOS VIALE - Sistema Receptivo");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setMinimumSize(new Dimension(1200, 750));
+        setContentPane(buildShell());
+        setLocationRelativeTo(null);
+
+        selectPage("dashboard", "Painel Inicial", "Resumo operacional do dia");
+    }
+
+    private JComponent buildShell() {
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(APP_BACKGROUND);
+        root.add(buildHeader(), BorderLayout.NORTH);
+        root.add(buildNavigation(), BorderLayout.WEST);
+        root.add(buildMainArea(), BorderLayout.CENTER);
+        return root;
+    }
+
+    private JComponent buildHeader() {
+        JPanel header = new JPanel(new BorderLayout(16, 0));
+        header.setBackground(PANEL_BACKGROUND);
+        header.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER_COLOR),
+                new EmptyBorder(14, 18, 14, 18)
+        ));
+
+        JLabel product = new JLabel("SOS VIALE | Sistema Receptivo");
+        product.setFont(new Font("SansSerif", Font.BOLD, 18));
+        product.setForeground(TEXT_COLOR);
+
+        JTextField search = new JTextField(" Buscar transfer, passageiro ou OS...");
+        search.setPreferredSize(new Dimension(360, 34));
+        search.setForeground(MUTED_TEXT);
+        search.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        right.setOpaque(false);
+
+        userLabel.setText("👤 " + authService.getCurrentUser());
+        userLabel.setFont(BASE_FONT);
+        userLabel.setForeground(MUTED_TEXT);
+        right.add(userLabel);
+
+        JButton logoutButton = new JButton("Sair");
+        logoutButton.setFont(BASE_FONT);
+        logoutButton.setBackground(new Color(200, 50, 50));
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setFocusPainted(false);
+        logoutButton.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        logoutButton.addActionListener(e -> performLogout());
+        right.add(logoutButton);
+
+        header.add(product, BorderLayout.WEST);
+        header.add(search, BorderLayout.CENTER);
+        header.add(right, BorderLayout.EAST);
+
+        return header;
+    }
+
+    private JComponent buildNavigation() {
+        JPanel nav = new JPanel();
+        nav.setLayout(new BoxLayout(nav, BoxLayout.Y_AXIS));
+        nav.setPreferredSize(new Dimension(225, 0));
+        nav.setBackground(new Color(233, 236, 241));
+        nav.setBorder(new EmptyBorder(18, 14, 18, 14));
+
+        JLabel menuLabel = new JLabel("MÓDULOS");
+        menuLabel.setForeground(MUTED_TEXT);
+        menuLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+        menuLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        nav.add(menuLabel);
+        nav.add(Box.createVerticalStrut(10));
+
+        addNavButton(nav, "dashboard", "📊 Painel Inicial", "Resumo operacional do dia");
+        addNavButton(nav, "transfers", "🚗 Transfers", "Cadastro e acompanhamento");
+        addNavButton(nav, "passageiros", "👥 Passageiros", "Cadastro de passageiros");
+        addNavButton(nav, "motoristas", "🧑‍✈️ Motoristas", "Gestão de motoristas");
+        addNavButton(nav, "veiculos", "🚙 Veículos", "Controle da frota");
+        addNavButton(nav, "ordens", "📋 Ordens de Serviço", "Montagem de OS");
+
+        if (authService.isAdmin()) {
+            nav.add(Box.createVerticalStrut(14));
+            JLabel adminLabel = new JLabel("ADMIN");
+            adminLabel.setForeground(new Color(200, 50, 50));
+            adminLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+            adminLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            nav.add(adminLabel);
+            nav.add(Box.createVerticalStrut(10));
+            addNavButton(nav, "admin", "⚙️ Usuários", "Gestão de usuários do sistema");
+        }
+
+        nav.add(Box.createVerticalGlue());
+        nav.add(new JSeparator());
+        nav.add(Box.createVerticalStrut(12));
+
+        JLabel version = new JLabel("v2.0 Refatorado");
+        version.setForeground(MUTED_TEXT);
+        version.setFont(new Font("SansSerif", Font.ITALIC, 10));
+        version.setAlignmentX(Component.LEFT_ALIGNMENT);
+        nav.add(version);
+
+        return nav;
+    }
+
+    private void addNavButton(JPanel nav, String key, String label, String subtitle) {
+        JButton button = new JButton(label);
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(8, 10, 8, 10)
+        ));
+        button.setBackground(PANEL_BACKGROUND);
+        button.setForeground(TEXT_COLOR);
+        button.setFont(BASE_FONT);
+        button.addActionListener(event -> selectPage(key, label.replaceAll("[🚗👥🧑‍✈️🚙📋⚙️📊]", "").trim(), subtitle));
+        navButtons.put(key, button);
+        nav.add(button);
+        nav.add(Box.createVerticalStrut(8));
+    }
+
+    private JComponent buildMainArea() {
+        JPanel main = new JPanel(new BorderLayout(0, 14));
+        main.setBackground(APP_BACKGROUND);
+        main.setBorder(new EmptyBorder(18, 18, 18, 18));
+
+        JPanel heading = new JPanel(new BorderLayout());
+        heading.setOpaque(false);
+        pageTitle.setFont(TITLE_FONT);
+        pageTitle.setForeground(TEXT_COLOR);
+        pageSubtitle.setFont(BASE_FONT);
+        pageSubtitle.setForeground(MUTED_TEXT);
+
+        JPanel titleStack = new JPanel();
+        titleStack.setLayout(new BoxLayout(titleStack, BoxLayout.Y_AXIS));
+        titleStack.setOpaque(false);
+        titleStack.add(pageTitle);
+        titleStack.add(Box.createVerticalStrut(4));
+        titleStack.add(pageSubtitle);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        actions.setOpaque(false);
+        actions.add(outlineButton("Exportar"));
+        actions.add(primaryButton("+ Novo"));
+
+        heading.add(titleStack, BorderLayout.WEST);
+        heading.add(actions, BorderLayout.EAST);
+
+        // Adiciona painéis ao cardPanel
+        cardPanel.setBackground(APP_BACKGROUND);
+        cardPanel.add(buildDashboardPage(), "dashboard");
+        cardPanel.add(buildTransfersPage(), "transfers");
+        cardPanel.add(buildPassengersPage(), "passageiros");
+        cardPanel.add(buildDriversPage(), "motoristas");
+        cardPanel.add(buildVehiclesPage(), "veiculos");
+        cardPanel.add(buildOrdersPage(), "ordens");
+        if (authService.isAdmin()) {
+            cardPanel.add(buildAdminPage(), "admin");
+        }
+
+        main.add(heading, BorderLayout.NORTH);
+        main.add(cardPanel, BorderLayout.CENTER);
+        return main;
+    }
+
+    // ===== PÁGINAS =====
+
+    private JComponent buildDashboardPage() {
+        JPanel page = new JPanel(new BorderLayout(14, 14));
+        page.setOpaque(false);
+
+        JPanel metrics = new JPanel(new GridLayout(1, 4, 12, 0));
+        metrics.setOpaque(false);
+        metrics.add(metric("Transfers hoje", "18", "6 pendentes"));
+        metrics.add(metric("Passageiros", "74", "embarques"));
+        metrics.add(metric("Frota disponível", "9/12", "3 em manutenção"));
+        metrics.add(metric("OS abertas", "5", "aguardando motorista"));
+
+        JPanel center = new JPanel(new GridLayout(1, 2, 14, 0));
+        center.setOpaque(false);
+        center.add(tablePanel("Agenda do dia", new String[]{"Hora", "Origem", "Destino", "Status"},
+                new Object[][]{
+                        {"08:30", "Aeroporto IGU", "Hotel Centro", "AGENDADO"},
+                        {"10:15", "Hotel Cataratas", "Marco 3 Fronteiras", "EM ANDAMENTO"},
+                        {"13:00", "Rodoviária", "Hotel Resort", "AGENDADO"}
+                }));
+        center.add(workflowPanel());
+
+        page.add(metrics, BorderLayout.NORTH);
+        page.add(center, BorderLayout.CENTER);
+        return page;
+    }
+
+    private JComponent buildTransfersPage() {
+        DefaultTableModel model = createTableModel(
+                new String[]{"ID", "Data/Hora", "Origem", "Destino", "Status"},
+                new Object[][]{
+                        {"T-1042", "29/04 08:30", "Aeroporto IGU", "Hotel Centro", "AGENDADO"},
+                        {"T-1043", "29/04 10:15", "Hotel Cataratas", "Parque Nacional", "EM ANDAMENTO"}
+                }
+        );
+
+        JPanel form = formPanel("Novo Transfer");
+        addField(form, "Origem", textField("Aeroporto IGU"), 0);
+        addField(form, "Destino", textField("Hotel Centro"), 1);
+        addField(form, "Data/Hora", textField("29/04/2026 08:30"), 2);
+        addField(form, "Valor base", textField("180.00"), 3);
+        addField(form, "Status", combo("AGENDADO", "EM ANDAMENTO", "CONCLUIDO"), 4);
+
+        JButton save = primaryButton("Salvar");
+        save.addActionListener(e -> showMessage("Transfer salvo (simulado)"));
+        addActions(form, save, outlineButton("Limpar"));
+
+        return splitPage(form, tablePanel("Transfers", model));
+    }
+
+    private JComponent buildPassengersPage() {
+        DefaultTableModel model = createTableModel(
+                new String[]{"ID", "Nome", "Documento", "Nacionalidade"},
+                new Object[][]{
+                        {"P-001", "Ana Martins", "BR123456", "Brasileira"},
+                        {"P-002", "Carlos Gomez", "PY998812", "Paraguaia"}
+                }
+        );
+
+        JPanel form = formPanel("Cadastro de Passageiro");
+        addField(form, "Nome", textField("Nome completo"), 0);
+        addField(form, "Documento", textField("RG/Passaporte"), 1);
+        addField(form, "Nacionalidade", textField("Brasileira"), 2);
+
+        JButton save = primaryButton("Adicionar");
+        save.addActionListener(e -> showMessage("Passageiro adicionado (simulado)"));
+        addActions(form, save, outlineButton("Cancelar"));
+
+        return splitPage(form, tablePanel("Passageiros", model));
+    }
+
+    private JComponent buildDriversPage() {
+        DefaultTableModel model = createTableModel(
+                new String[]{"ID", "Nome", "CNH", "Status", "Localização"},
+                new Object[][]{
+                        {"M-011", "Roberto Silva", "12345678901", "DISPONÍVEL", "Base"},
+                        {"M-012", "Marcos Lima", "88991234567", "EM ROTA", "Aeroporto IGU"}
+                }
+        );
+
+        JPanel form = formPanel("Cadastro de Motorista");
+        addField(form, "Nome", textField("Nome do motorista"), 0);
+        addField(form, "CNH", textField("11 dígitos"), 1);
+        addField(form, "Status", combo("DISPONÍVEL", "EM ROTA", "FOLGA"), 2);
+
+        JButton save = primaryButton("Adicionar");
+        save.addActionListener(e -> showMessage("Motorista adicionado (simulado)"));
+        addActions(form, save, outlineButton("Cancelar"));
+
+        return splitPage(form, tablePanel("Motoristas", model));
+    }
+
+    private JComponent buildVehiclesPage() {
+        DefaultTableModel model = createTableModel(
+                new String[]{"ID", "Modelo", "Placa", "Capacidade", "Status"},
+                new Object[][]{
+                        {"V-021", "Mercedes Sprinter", "ABC1D23", "15", "DISPONÍVEL"},
+                        {"V-022", "Renault Master", "XYZ4A56", "13", "EM ROTA"}
+                }
+        );
+
+        JPanel form = formPanel("Cadastro de Veículo");
+        addField(form, "Modelo", textField("Modelo"), 0);
+        addField(form, "Placa", textField("ABC1D23"), 1);
+        addField(form, "Capacidade", textField("15"), 2);
+
+        JButton save = primaryButton("Adicionar");
+        save.addActionListener(e -> showMessage("Veículo adicionado (simulado)"));
+        addActions(form, save, outlineButton("Cancelar"));
+
+        return splitPage(form, tablePanel("Frota", model));
+    }
+
+    private JComponent buildOrdersPage() {
+        JPanel form = formPanel("Gerar Ordem de Serviço");
+        addField(form, "Data", textField(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))), 0);
+        addField(form, "Motorista", combo("Roberto Silva", "Marcos Lima"), 1);
+        addField(form, "Veículo", combo("Mercedes Sprinter - ABC1D23", "Renault Master - XYZ4A56"), 2);
+        addField(form, "Status", combo("ABERTA", "EM ROTA", "CONCLUÍDA"), 3);
+
+        JButton generate = primaryButton("Gerar OS");
+        generate.addActionListener(e -> showMessage("OS gerada (simulada)"));
+        addActions(form, generate, outlineButton("Visualizar"));
+
+        JPanel table = new JPanel(new BorderLayout());
+        table.add(tablePanel("Transfers sem OS", new String[]{"ID", "Data", "Rota", "Passageiros"},
+                new Object[][]{
+                        {"T-1042", "29/04", "Aeroporto > Hotel", "4"},
+                        {"T-1044", "30/04", "Hotel > Aeroporto", "2"}
+                }), BorderLayout.CENTER);
+
+        return splitPage(form, table);
+    }
+
+    private JComponent buildAdminPage() {
+        JPanel page = new JPanel(new BorderLayout(14, 14));
+        page.setOpaque(false);
+
+        DefaultTableModel model = createTableModel(
+                new String[]{"Usuário", "Nome", "Tipo", "Criado em"},
+                new Object[][]{
+                        {"admin", "Administrador", "ADMIN", "2024-01-15"}
+                }
+        );
+
+        JComponent table = tablePanel("Usuários do Sistema", model);
+        JButton refreshButton = outlineButton("Atualizar");
+        refreshButton.addActionListener(e -> showMessage("Usuários: 1 admin (você)"));
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        actions.setOpaque(false);
+        actions.add(refreshButton);
+        actions.add(outlineButton("Deletar usuário"));
+        actions.add(primaryButton("+ Novo usuário"));
+
+        page.add(actions, BorderLayout.NORTH);
+        page.add(table, BorderLayout.CENTER);
+
+        return page;
+    }
+
+    // ===== HELPER COMPONENTS =====
+
+    private JComponent workflowPanel() {
+        JPanel panel = panel("Fluxo Operacional");
+        JPanel content = new JPanel(new GridLayout(5, 1, 0, 8));
+        content.setOpaque(false);
+        content.add(step("1", "Cadastrar passageiro e documentos"));
+        content.add(step("2", "Agendar transfer com origem/destino"));
+        content.add(step("3", "Vincular motorista e veículo em OS"));
+        content.add(step("4", "Acompanhar status durante rota"));
+        content.add(step("5", "Concluir OS e emitir PDF"));
+        panel.add(content, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JComponent metric(String label, String value, String hint) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+
+        JLabel labelComponent = new JLabel(label);
+        labelComponent.setFont(BASE_FONT);
+        labelComponent.setForeground(MUTED_TEXT);
+
+        JLabel valueComponent = new JLabel(value);
+        valueComponent.setFont(new Font("SansSerif", Font.BOLD, 30));
+        valueComponent.setForeground(TEXT_COLOR);
+
+        JLabel hintComponent = new JLabel(hint);
+        hintComponent.setFont(BASE_FONT);
+        hintComponent.setForeground(MUTED_TEXT);
+
+        panel.add(labelComponent);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(valueComponent);
+        panel.add(Box.createVerticalStrut(4));
+        panel.add(hintComponent);
+        return panel;
+    }
+
+    private JComponent step(String marker, String text) {
+        JPanel row = new JPanel(new BorderLayout(10, 0));
+        row.setOpaque(false);
+
+        JLabel bullet = new JLabel(marker, SwingConstants.CENTER);
+        bullet.setOpaque(true);
+        bullet.setBackground(new Color(236, 239, 244));
+        bullet.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
+        bullet.setPreferredSize(new Dimension(34, 28));
+        bullet.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        JLabel content = new JLabel(text);
+        content.setFont(BASE_FONT);
+        content.setForeground(TEXT_COLOR);
+
+        row.add(bullet, BorderLayout.WEST);
+        row.add(content, BorderLayout.CENTER);
+        return row;
+    }
+
+    private JComponent splitPage(JComponent left, JComponent right) {
+        JPanel page = new JPanel(new BorderLayout(14, 0));
+        page.setOpaque(false);
+        left.setPreferredSize(new Dimension(345, 0));
+        page.add(left, BorderLayout.WEST);
+        page.add(right, BorderLayout.CENTER);
+        return page;
+    }
+
+    private JPanel formPanel(String title) {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(PANEL_BACKGROUND);
+        form.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+
+        JLabel label = new JLabel(title);
+        label.setFont(SECTION_FONT);
+        label.setForeground(TEXT_COLOR);
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(0, 0, 14, 0);
+        form.add(label, constraints);
+        return form;
+    }
+
+    private JPanel panel(String title) {
+        JPanel panel = new JPanel();
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+        panel.setLayout(new BorderLayout(0, 12));
+
+        JLabel label = new JLabel(title);
+        label.setFont(SECTION_FONT);
+        label.setForeground(TEXT_COLOR);
+        panel.add(label, BorderLayout.NORTH);
+        return panel;
+    }
+
+    private JComponent tablePanel(String title, DefaultTableModel model) {
+        JPanel panel = panel(title);
+        JTable table = new JTable(model);
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(28);
+        table.setShowGrid(true);
+        table.setGridColor(new Color(230, 232, 236));
+        table.getTableHeader().setReorderingAllowed(false);
+        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
+        table.setFont(BASE_FONT);
+
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setBorder(new EmptyBorder(0, 8, 0, 8));
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
+
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JComponent tablePanel(String title, String[] columns, Object[][] rows) {
+        return tablePanel(title, createTableModel(columns, rows));
+    }
+
+    private DefaultTableModel createTableModel(String[] columns, Object[][] rows) {
+        return new DefaultTableModel(rows, columns) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+    }
+
+    private void addField(JPanel form, String label, JComponent input, int row) {
+        GridBagConstraints labelConstraints = new GridBagConstraints();
+        labelConstraints.gridx = 0;
+        labelConstraints.gridy = row * 2 + 1;
+        labelConstraints.weightx = 1;
+        labelConstraints.fill = GridBagConstraints.HORIZONTAL;
+        labelConstraints.insets = new Insets(row == 0 ? 0 : 10, 0, 4, 0);
+
+        JLabel labelComponent = new JLabel(label);
+        labelComponent.setForeground(MUTED_TEXT);
+        labelComponent.setFont(BASE_FONT);
+        form.add(labelComponent, labelConstraints);
+
+        GridBagConstraints inputConstraints = new GridBagConstraints();
+        inputConstraints.gridx = 0;
+        inputConstraints.gridy = row * 2 + 2;
+        inputConstraints.weightx = 1;
+        inputConstraints.fill = GridBagConstraints.HORIZONTAL;
+        form.add(input, inputConstraints);
+    }
+
+    private void addActions(JPanel form, JButton primary, JButton secondary) {
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        actions.setOpaque(false);
+        actions.add(primary);
+        actions.add(secondary);
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 99;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+        constraints.anchor = GridBagConstraints.SOUTHWEST;
+        constraints.insets = new Insets(18, 0, 0, 0);
+        form.add(actions, constraints);
+    }
+
+    private JTextField textField(String value) {
+        JTextField field = new JTextField(value);
+        field.setFont(BASE_FONT);
+        field.setPreferredSize(new Dimension(0, 34));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        return field;
+    }
+
+    private JComboBox<String> combo(String... values) {
+        JComboBox<String> comboBox = new JComboBox<>(values);
+        comboBox.setFont(BASE_FONT);
+        comboBox.setPreferredSize(new Dimension(0, 34));
+        comboBox.setBackground(PANEL_BACKGROUND);
+        comboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        return comboBox;
+    }
+
+    private JButton primaryButton(String label) {
+        JButton button = new JButton(label);
+        button.setBackground(PRIMARY_BLUE);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PRIMARY_BLUE),
+                new EmptyBorder(8, 14, 8, 14)
+        ));
+        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        return button;
+    }
+
+    private JButton outlineButton(String label) {
+        JButton button = new JButton(label);
+        button.setBackground(PANEL_BACKGROUND);
+        button.setForeground(TEXT_COLOR);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(8, 14, 8, 14)
+        ));
+        button.setFont(BASE_FONT);
+        return button;
+    }
+
+    private void selectPage(String key, String title, String subtitle) {
+        pageTitle.setText(title);
+        pageSubtitle.setText(subtitle);
+        cardLayout.show(cardPanel, key);
+
+        navButtons.forEach((navKey, button) -> {
+            boolean active = navKey.equals(key);
+            button.setBackground(active ? ACTIVE_NAV : PANEL_BACKGROUND);
+            button.setForeground(active ? PRIMARY_BLUE : TEXT_COLOR);
+        });
+    }
+
+    private void performLogout() {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Tem certeza que deseja sair?",
+                "Confirmação",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            authService.logout();
+            dispose();
+            new LoginScreen(authService).setVisible(true);
+        }
+    }
+
+    private void showMessage(String message) {
+        JOptionPane.showMessageDialog(this, message, "SOS VIALE", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void configureLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.put("Button.font", BASE_FONT);
+            UIManager.put("Label.font", BASE_FONT);
+            UIManager.put("TextField.font", BASE_FONT);
+            UIManager.put("ComboBox.font", BASE_FONT);
+        } catch (Exception ignored) {
+        }
+    }
+}

@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import br.com.sosviale.service.Moeda;
 
 @Entity
 @Table(name = "transfers")
@@ -31,6 +32,10 @@ public class Transfer {
 
     @Column(name = "valor_base", precision = 10, scale = 2)
     private BigDecimal valorBase;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moeda_origem", length = 5, nullable = false)
+    private Moeda moedaOrigem = Moeda.BRL;
 
     // pontos de coleta são gerenciados pelo PontoColeta via @JoinColumn
     @OneToMany(mappedBy = "transfer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -90,4 +95,7 @@ public class Transfer {
 
     public OrdemServico getOrdemServico() { return ordemServico; }
     public void setOrdemServico(OrdemServico ordemServico) { this.ordemServico = ordemServico; }
+
+    public Moeda getMoedaOrigem() { return moedaOrigem; }
+    public void setMoedaOrigem(Moeda moedaOrigem) { this.moedaOrigem = moedaOrigem; }
 }
