@@ -1,6 +1,7 @@
 package br.com.sosviale;
 
 import br.com.sosviale.auth.AuthenticationService;
+import br.com.sosviale.service.TransferService;
 import br.com.sosviale.view.LoginScreen;
 import br.com.sosviale.view.MainDashboard;
 import org.flywaydb.core.Flyway;
@@ -10,7 +11,7 @@ import javax.swing.*;
 public class App {
 
     public static void main(String[] args) {
-        // Passo 1: Rodar as migrações do banco de dados antes de abrir a UI
+        //  Roda as migrações do banco de dados antes de abrir a UI
         try {
             configurarBancoDeDados();
         } catch (Exception e) {
@@ -22,14 +23,15 @@ public class App {
             System.exit(1);
         }
 
-        // Passo 2: Iniciar a Interface Gráfica
+        // Inicia a Interface Gráfica
         SwingUtilities.invokeLater(() -> {
             try {
                 AuthenticationService authService = new AuthenticationService();
                 LoginScreen loginScreen = new LoginScreen(authService);
 
                 loginScreen.setLoginCallback(username -> {
-                    MainDashboard dashboard = new MainDashboard(authService);
+                    TransferService transferService = new TransferService();
+                    MainDashboard dashboard = new MainDashboard(authService, transferService);
                     dashboard.setVisible(true);
                 });
 
@@ -41,11 +43,9 @@ public class App {
     }
 
     private static void configurarBancoDeDados() {
-        // Usando EXATAMENTE os dados do seu persistence.xml
+
         Flyway flyway = Flyway.configure()
                 .dataSource("jdbc:postgresql://localhost:5600/sos_viale_db", "viale_user", "viale_password")
-                // Se seus arquivos estiverem em local diferente de src/main/resources/db/migration,
-                // você precisaria adicionar .locations("caminho/aqui")
                 .load();
 
         System.out.println("Verificando atualizações no banco de dados...");

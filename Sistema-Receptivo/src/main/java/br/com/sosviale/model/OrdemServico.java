@@ -1,6 +1,8 @@
 package br.com.sosviale.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,20 +26,21 @@ public class OrdemServico {
     @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;
 
-    // status padrão ao criar uma nova OS
     @Column(length = 20)
     private String status = "ABERTA";
 
-    // transfers já vêm ordenados por horário para facilitar a exibição da rota
+    // CORREÇÃO 1: Adicionado SUBSELECT para evitar conflito de múltiplas listas EAGER
     @OneToMany(mappedBy = "ordemServico", fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     @OrderBy("horaTransfer ASC")
     private List<Transfer> transfers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
+    // CORREÇÃO 2: Também usamos SUBSELECT aqui para garantir que não haja conflito com a lista de transfers
+    @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     @OrderBy("ordemParada ASC")
     private List<ParadaOS> paradasRota = new ArrayList<>();
 
-    // Não esqueça de gerar os métodos na parte de baixo da classe:
     public List<ParadaOS> getParadasRota() {
         return paradasRota;
     }

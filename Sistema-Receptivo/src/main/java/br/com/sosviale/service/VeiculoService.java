@@ -10,17 +10,35 @@ public class VeiculoService {
     private final VeiculoRepository repository = new VeiculoRepository();
 
     public void salvar(String label, String placa, Integer capacidade) {
+        salvar(label, placa, capacidade, null, null);
+    }
+
+    public void salvar(String label, String placa, Integer capacidade, String marca, String tipo) {
         validarCampos(label, placa, capacidade);
-        repository.salvar(new Veiculo(label.trim(), placa.trim().toUpperCase(), capacidade));
+        Veiculo v = new Veiculo(label.trim(), placa.trim().toUpperCase(), capacidade);
+        v.setMarca(textoOpcional(marca));
+        v.setTipo(textoOpcional(tipo));
+        repository.salvar(v);
     }
 
     public void atualizar(Integer id, String label, String placa, Integer capacidade) {
+        atualizar(id, label, placa, capacidade, null, null);
+    }
+
+    public void atualizar(Integer id, String label, String placa, Integer capacidade, String marca, String tipo) {
         if (id == null) throw new IllegalArgumentException("ID inválido.");
         validarCampos(label, placa, capacidade);
 
         Veiculo v = new Veiculo(label.trim(), placa.trim().toUpperCase(), capacidade);
         v.setId(id);
+        v.setMarca(textoOpcional(marca));
+        v.setTipo(textoOpcional(tipo));
         repository.atualizar(v);
+    }
+
+    private String textoOpcional(String valor) {
+        if (valor == null || valor.isBlank()) return null;
+        return valor.trim();
     }
 
     public void excluir(Integer id) {

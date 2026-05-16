@@ -5,21 +5,19 @@ import br.com.sosviale.service.MotoristaService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.List;
 
 public class MotoristasPanel extends JPanel {
 
     private static final Color PANEL_BACKGROUND = Color.WHITE;
-    private static final Color BORDER_COLOR = new Color(210, 214, 220);
-    private static final Color TEXT_COLOR = new Color(38, 43, 51);
-    private static final Color MUTED_TEXT = new Color(98, 108, 122);
-    private static final Color PRIMARY_BLUE = new Color(50, 91, 140);
-    private static final Color DANGER_RED = new Color(200, 50, 50);
-    private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
-    private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
+    private static final Color BORDER_COLOR     = new Color(210, 214, 220);
+    private static final Color TEXT_COLOR       = new Color(38, 43, 51);
+    private static final Color MUTED_TEXT       = new Color(98, 108, 122);
+    private static final Color PRIMARY_BLUE     = new Color(50, 91, 140);
+    private static final Color DANGER_RED       = new Color(200, 50, 50);
+    private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
+    private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
 
     private final MotoristaService service = new MotoristaService();
     private DefaultTableModel tableModel;
@@ -36,7 +34,6 @@ public class MotoristasPanel extends JPanel {
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
-        carregarMotoristas();
     }
 
     private JComponent buildForm() {
@@ -60,90 +57,36 @@ public class MotoristasPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 14, 0);
         form.add(title, gbc);
 
-        JLabel nomeLabel = new JLabel("Nome completo:");
-        nomeLabel.setFont(BASE_FONT);
-        nomeLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 4, 0);
-        form.add(nomeLabel, gbc);
-
-        nomeField = new JTextField();
-        nomeField.setFont(BASE_FONT);
-        nomeField.setPreferredSize(new Dimension(0, 34));
-        nomeField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 2;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridy++;
+        form.add(label("Nome completo:"), gbc);
+        nomeField = field();
+        gbc.gridy++;
         form.add(nomeField, gbc);
 
-        JLabel cnhLabel = new JLabel("CNH:");
-        cnhLabel.setFont(BASE_FONT);
-        cnhLabel.setForeground(MUTED_TEXT);
-        gbc.gridy = 3;
-        gbc.insets = new Insets(10, 0, 4, 0);
-        form.add(cnhLabel, gbc);
-
-        cnhField = new JTextField();
-        cnhField.setFont(BASE_FONT);
-        cnhField.setPreferredSize(new Dimension(0, 34));
-        cnhField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridy++;
+        form.add(label("CNH:"), gbc);
+        cnhField = field();
+        gbc.gridy++;
         form.add(cnhField, gbc);
 
-        gbc.gridy++; form.add(label("Telefone:"), gbc);
-        telefoneField = new JTextField();
-        telefoneField.setFont(BASE_FONT);
-        telefoneField.setPreferredSize(new Dimension(0, 34));
-        telefoneField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(0, 8, 0, 8)
-        ));
-        gbc.gridy++; form.add(telefoneField, gbc);
+        gbc.gridy++;
+        form.add(label("Telefone:"), gbc);
+        telefoneField = field();
+        gbc.gridy++;
+        form.add(telefoneField, gbc);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
-        salvarButton = new JButton("Adicionar");
-        salvarButton.setBackground(PRIMARY_BLUE);
-        salvarButton.setForeground(Color.WHITE);
-        salvarButton.setFocusPainted(false);
-        salvarButton.setOpaque(true);
-        salvarButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(PRIMARY_BLUE),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        salvarButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        salvarButton = styledButton("Adicionar", PRIMARY_BLUE);
         salvarButton.addActionListener(e -> salvarOuAtualizar());
 
-        excluirButton = new JButton("Excluir");
-        excluirButton.setBackground(DANGER_RED);
-        excluirButton.setForeground(Color.WHITE);
-        excluirButton.setFocusPainted(false);
-        excluirButton.setOpaque(true);
-        excluirButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DANGER_RED),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        excluirButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        excluirButton = styledButton("Excluir", DANGER_RED);
         excluirButton.setVisible(false);
         excluirButton.addActionListener(e -> excluirMotorista());
 
-        JButton limpar = new JButton("Limpar");
-        limpar.setBackground(PANEL_BACKGROUND);
+        JButton limpar = styledButton("Limpar", Color.LIGHT_GRAY);
         limpar.setForeground(TEXT_COLOR);
-        limpar.setFocusPainted(false);
-        limpar.setOpaque(true);
-        limpar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(8, 14, 8, 14)
-        ));
-        limpar.setFont(BASE_FONT);
         limpar.addActionListener(e -> limparForm());
 
         actions.add(salvarButton);
@@ -172,35 +115,21 @@ public class MotoristasPanel extends JPanel {
         title.setForeground(TEXT_COLOR);
         panel.add(title, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "CNH"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "CNH", "Telefone"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
         table = new JTable(tableModel);
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
-        table.setShowGrid(true);
-        table.setGridColor(new Color(230, 232, 236));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setReorderingAllowed(false);
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        table.setFont(BASE_FONT);
-
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setBorder(new EmptyBorder(0, 8, 0, 8));
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
-
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 int row = table.getSelectedRow();
                 idSelecionado = (Integer) tableModel.getValueAt(row, 0);
                 nomeField.setText((String) tableModel.getValueAt(row, 1));
                 cnhField.setText((String) tableModel.getValueAt(row, 2));
+                Object tel = tableModel.getValueAt(row, 3);
+                telefoneField.setText(tel != null ? tel.toString() : "");
                 salvarButton.setText("Salvar alteração");
                 excluirButton.setVisible(true);
             }
@@ -221,30 +150,20 @@ public class MotoristasPanel extends JPanel {
         String cnh = cnhField.getText().trim();
         String telefone = telefoneField.getText().trim();
 
-        if (nome.isEmpty() || cnh.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Preencha todos os campos!", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
         try {
             if (idSelecionado == null) {
-                // Criamos o objeto completo
-                Motorista novoMotorista = new Motorista(nome, cnh);
-                novoMotorista.setTelefone(telefone);
-
-                // DICA: Se o seu service ainda só aceita (nome, cnh),
-                // você vai precisar atualizar o MotoristaService.java para aceitar o objeto Motorista!
-                service.salvar(novoMotorista.getNome(), novoMotorista.getCnh());
-
+                service.salvar(nome, cnh, telefone);
                 JOptionPane.showMessageDialog(this, "Motorista cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                service.atualizar(idSelecionado, nome, cnh);
+                service.atualizar(idSelecionado, nome, cnh, telefone);
                 JOptionPane.showMessageDialog(this, "Motorista atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
             carregarMotoristas();
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Aviso", JOptionPane.WARNING_MESSAGE);
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro crítico: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -256,44 +175,62 @@ public class MotoristasPanel extends JPanel {
                 "Confirmar exclusão",
                 JOptionPane.YES_NO_OPTION);
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                service.excluir(idSelecionado);
-                limparForm();
-                carregarMotoristas();
-                JOptionPane.showMessageDialog(this, "Motorista excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            }
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try {
+            service.excluir(idSelecionado);
+            limparForm();
+            carregarMotoristas();
+            JOptionPane.showMessageDialog(this, "Motorista excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void carregarMotoristas() {
         tableModel.setRowCount(0);
-        try {
-            List<Motorista> motoristas = service.listarTodos();
-            for (Motorista m : motoristas) {
-                tableModel.addRow(new Object[]{m.getId(), m.getNome(), m.getCnh()});
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        service.listarTodos().forEach(m -> tableModel.addRow(new Object[]{
+                m.getId(),
+                m.getNome(),
+                m.getCnh(),
+                m.getTelefone() != null ? m.getTelefone() : ""
+        }));
     }
 
     private void limparForm() {
         idSelecionado = null;
         nomeField.setText("");
         cnhField.setText("");
+        telefoneField.setText("");
         salvarButton.setText("Adicionar");
         excluirButton.setVisible(false);
         table.clearSelection();
-        nomeField.requestFocus();
     }
 
-    private JLabel label(String t) {
-        JLabel l = new JLabel(t);
+    private JLabel label(String text) {
+        JLabel l = new JLabel(text);
         l.setFont(BASE_FONT);
         l.setForeground(MUTED_TEXT);
         return l;
+    }
+
+    private JTextField field() {
+        JTextField f = new JTextField();
+        f.setFont(BASE_FONT);
+        f.setPreferredSize(new Dimension(0, 34));
+        f.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        return f;
+    }
+
+    private JButton styledButton(String text, Color bg) {
+        JButton b = new JButton(text);
+        b.setBackground(bg);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setFont(new Font("SansSerif", Font.BOLD, 12));
+        return b;
     }
 }

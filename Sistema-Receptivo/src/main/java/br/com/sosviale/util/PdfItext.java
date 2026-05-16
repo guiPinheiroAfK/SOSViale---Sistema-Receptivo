@@ -8,27 +8,44 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 
+import java.io.File;
 import java.time.format.DateTimeFormatter;
 
 // Classe utilitária focada apenas na geração do arquivo PDF
 public class PdfItext {
 
-    /*
-     * Gera um arquivo PDF com os dados completos da OS informada.
-     * O arquivo é salvo na pasta raiz do projeto.
-     *
-     * @param os a ordem de serviço a ser exportada
-     * @return O caminho do arquivo gerado
-     */
+    public static String nomeArquivoPadrao(OrdemServico os) {
+        String motorista = os.getMotorista() != null
+                ? os.getMotorista().getNome().replaceAll("[^a-zA-Z0-9_-]", "_")
+                : "sem_motorista";
+        return "OS_" + os.getId() + "_" + motorista + ".pdf";
+    }
+
+    /** Gera PDF na pasta de trabalho atual (compatibilidade com chamadas antigas). */
     public static String gerarPdfOs(OrdemServico os) throws Exception {
+        return gerarPdfOs(os, nomeArquivoPadrao(os));
+    }
+
+    /**
+     * Gera PDF da OS no caminho informado (uso com seletor de download na UI).
+     *
+     * @param os              ordem de serviço com motorista, veículo e transfers carregados
+     * @param caminhoDestino  caminho absoluto do arquivo .pdf
+     * @return caminho do arquivo gerado
+     */
+    public static String gerarPdfOs(OrdemServico os, String caminhoDestino) throws Exception {
         if (os == null) throw new IllegalArgumentException("OS não pode ser nula.");
+        if (caminhoDestino == null || caminhoDestino.isBlank()) {
+            throw new IllegalArgumentException("Caminho do PDF inválido.");
+        }
         if (os.getMotorista() == null) throw new IllegalArgumentException("OS sem motorista definido.");
         if (os.getVeiculo() == null) throw new IllegalArgumentException("OS sem veículo definido.");
 
-        // nome do arquivo gerado dinamicamente com base no ID e nome do motorista
-        String path = "OS_" + os.getId() + "_" + os.getMotorista().getNome().replace(" ", "_") + ".pdf";
+        File destino = new File(caminhoDestino);
+        File pai = destino.getParentFile();
+        if (pai != null && !pai.exists()) pai.mkdirs();
 
-        PdfWriter writer = new PdfWriter(path);
+        PdfWriter writer = new PdfWriter(destino.getAbsolutePath());
         PdfDocument pdf = new PdfDocument(writer);
         Document document = new Document(pdf);
 
@@ -82,6 +99,6 @@ public class PdfItext {
         // fecha o documento
         document.close();
 
-        return path;
+        return destino.getAbsolutePath();
     }
 }

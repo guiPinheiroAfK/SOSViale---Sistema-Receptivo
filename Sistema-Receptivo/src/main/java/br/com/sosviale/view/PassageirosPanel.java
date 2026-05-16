@@ -198,7 +198,12 @@ public class PassageirosPanel extends JPanel {
             }
         });
 
+        JLabel dica = new JLabel("💡 Clique em um passageiro para editar ou excluir.");
+        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        dica.setForeground(MUTED_TEXT);
+
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(dica, BorderLayout.SOUTH);
         carregarPassageiros();
         return panel;
     }
