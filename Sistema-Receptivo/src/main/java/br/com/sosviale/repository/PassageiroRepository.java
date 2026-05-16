@@ -39,7 +39,7 @@ public class PassageiroRepository {
     }
 
     // busca um passageiro pelo ID; retorna null se não encontrado
-    public Passageiro buscarPorId(Long id) {
+    public Passageiro buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -67,7 +67,7 @@ public class PassageiroRepository {
     }
 
     // remove o passageiro com o ID informado; ignorado silenciosamente se não existir
-    public void excluir(Long id) {
+    public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -80,6 +80,16 @@ public class PassageiroRepository {
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public long contar() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(p) FROM Passageiro p", Long.class)
+                    .getSingleResult();
         } finally {
             em.close();
         }

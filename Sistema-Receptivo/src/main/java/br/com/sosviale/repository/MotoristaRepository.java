@@ -36,7 +36,7 @@ public class MotoristaRepository {
     }
 
     // busca um motorista pelo ID; retorna null se não encontrado
-    public Motorista buscarPorId(Long id) {
+    public Motorista buscarPorId(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -64,15 +64,13 @@ public class MotoristaRepository {
     }
 
     // remove o motorista com o ID informado; ignorado silenciosamente se não existir
-    public void excluir(Long id) {
+    public void excluir(Integer id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("ID inválido para exclusão.");
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
             Motorista m = em.find(Motorista.class, id);
-            if (m != null) {
-                em.remove(m);
-            }
+            if (m != null) em.remove(m);
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -81,4 +79,15 @@ public class MotoristaRepository {
             em.close();
         }
     }
+
+    public long contar() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(m) FROM Motorista m", Long.class)
+                    .getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
+
 }
