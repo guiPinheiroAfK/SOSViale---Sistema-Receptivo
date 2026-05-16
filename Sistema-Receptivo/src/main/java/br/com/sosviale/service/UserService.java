@@ -9,41 +9,22 @@ import br.com.sosviale.util.PasswordUtil;
 
 import java.util.List;
 
-/*
- * Serviço de gestão de usuários — versão segura.
- *
- * TODAS as senhas são hasheadas com BCrypt antes de qualquer persistência.
- * NENHUMA comparação de senha é feita com String.equals().
- */
 public class UserService {
 
     private final UserRepository repository = new UserRepository();
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  CADASTRO
-    // ════════════════════════════════════════════════════════════════════════
-
-    /*
-     * Registra um novo usuário no sistema.
-     * Requer a senha do administrador para autorizar a operação.
-     *
-     * @param nome       Nome completo
-     * @param usuario    Login (único no sistema)
-     * @param senha      Senha em texto puro — será hasheada antes de persistir
-     * @param senhaAdmin Senha atual do administrador
-     * @param perfil     Perfil de acesso (ADMIN, GERENTE, MOTORISTA)
-     */
+    //cadastro
     public void registrar(String nome, String usuario, String senha,
                           String senhaAdmin, Perfil perfil)
             throws AuthenticationException, ValidationException {
 
-        // 1. Verificar autorização do admin com BCrypt
+        //verifica autorização do admin com BCrypt
         User admin = repository.buscarAdmin();
         if (admin == null || !PasswordUtil.verificarSenha(senhaAdmin, admin.getSenha())) {
             throw new AuthenticationException("Senha do administrador incorreta.");
         }
 
-        // 2. Validações
+        // validações
         if (usuario == null || usuario.trim().isEmpty())
             throw new ValidationException("Usuário não pode estar vazio.");
         if (senha == null || senha.length() < 6)
@@ -53,7 +34,7 @@ public class UserService {
         if (repository.buscarPorUsuario(usuario.trim()) != null)
             throw new ValidationException("Nome de usuário já está em uso.");
 
-        // 3. Hash da senha — NUNCA persistir texto puro
+        // hash da senha — NUNCA persistir texto puro
         String hashSenha = PasswordUtil.hashSenha(senha);
 
         User novoUser = new User(nome.trim(), usuario.trim(), hashSenha, false);
@@ -61,18 +42,8 @@ public class UserService {
         repository.salvar(novoUser);
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  ALTERAÇÃO DE SENHA
-    // ════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Altera a senha de um usuário.
-     * Requer a senha atual (ou senha do admin se for reset administrativo).
-     *
-     * @param usuario       Login do usuário que terá a senha alterada
-     * @param senhaAtual    Senha atual (para confirmar identidade)
-     * @param novaSenha     Nova senha desejada
-     */
+    //  alteracao de senha
     public void alterarSenha(String usuario, String senhaAtual, String novaSenha)
             throws AuthenticationException, ValidationException {
 
@@ -97,13 +68,6 @@ public class UserService {
         repository.atualizarSenha(usuario, novoHash);
     }
 
-    /**
-     * Reset administrativo de senha (admin redefine a senha de outro usuário).
-     *
-     * @param usuarioAlvo Login do usuário que terá a senha resetada
-     * @param novaSenha   Nova senha
-     * @param senhaAdmin  Senha do administrador para autorizar
-     */
     public void resetarSenhaAdmin(String usuarioAlvo, String novaSenha, String senhaAdmin)
             throws AuthenticationException, ValidationException {
 
@@ -124,14 +88,6 @@ public class UserService {
         repository.atualizarSenha(usuarioAlvo, PasswordUtil.hashSenha(novaSenha));
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  EXCLUSÃO
-    // ════════════════════════════════════════════════════════════════════════
-
-    // ════════════════════════════════════════════════════════════════════════
-    //  EXCLUSÃO
-    // ════════════════════════════════════════════════════════════════════════
-
     public void excluir(String usuario)
             throws AuthenticationException, ValidationException {
 
@@ -142,9 +98,8 @@ public class UserService {
         repository.excluir(usuario);
     }
 
-    /**
-     * Atualiza nome e perfil. Usuário de login não é alterado.
-     */
+    // atualiza nome e perfil, usuário de login não é alterad
+
     public void atualizar(String usuario, String nome, Perfil perfil, String senhaAdmin)
             throws AuthenticationException, ValidationException {
         User admin = repository.buscarAdmin();
@@ -169,9 +124,7 @@ public class UserService {
         repository.atualizar(alvo);
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  CONSULTAS
-    // ════════════════════════════════════════════════════════════════════════
+    // consultas
 
     public List<User> listarTodos() {
         return repository.listarTodos();

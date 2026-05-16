@@ -19,7 +19,7 @@ import java.util.List;
 
 public class OrdemServicoUnifiedPanel extends JPanel {
 
-    // ───────────────── CORES
+    //CORES
     private static final Color PRIMARY_BLUE   = new Color(50, 91, 140);
     private static final Color SUCCESS_GREEN  = new Color(34, 139, 34);
     private static final Color WARNING_ORANGE = new Color(200, 120, 40);
@@ -30,18 +30,18 @@ public class OrdemServicoUnifiedPanel extends JPanel {
     private static final Color TEXT_COLOR     = new Color(38,43,51);
     private static final Color MUTED_TEXT     = new Color(98,108,122);
 
-    // ───────────────── FONTES
+    // FONTES
     private static final Font TITLE_FONT   = new Font("SansSerif", Font.BOLD, 16);
     private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 14);
     private static final Font BASE_FONT    = new Font("SansSerif", Font.PLAIN, 12);
 
-    // ───────────────── SERVICES
+    //SERVICES
     private final OrdemServicoService osService = new OrdemServicoService();
     private final MotoristaService motoristaService = new MotoristaService();
     private final VeiculoService veiculoService = new VeiculoService();
     private final TransferService transferService = new TransferService();
 
-    // ───────────────── COMPONENTES
+    // COMPONENTES
     private JComboBox<Motorista> comboMotoristas;
     private JComboBox<Veiculo> comboVeiculos;
 
@@ -65,7 +65,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
     private OrdemServico osSelecionada;
     private JLabel headerTitleLabel;
 
-    // ───────────────── CONSTRUTOR
+    // CONSTRUTOR
     public OrdemServicoUnifiedPanel() {
 
         setLayout(new BorderLayout(10,10));
@@ -92,7 +92,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         });
     }
 
-    // ───────────────── HEADER
+    //  HEADER
     private JPanel buildHeader() {
 
         JPanel panel = new JPanel(new BorderLayout());
@@ -107,7 +107,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         return panel;
     }
 
-    // ───────────────── TOPO
+    //TOPO
     private JPanel buildTopRow() {
 
         JPanel row = new JPanel(new GridLayout(1,2,10,0));
@@ -121,7 +121,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         return row;
     }
 
-    // ───────────────── BASE
+    // BASE
     private JPanel buildBottomRow() {
 
         JPanel row = new JPanel(new GridLayout(1,2,10,0));
@@ -135,7 +135,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         return row;
     }
 
-    // ───────────────── CRIAR OS
+    // CRIAR OS
     private JPanel buildCreateOsPanel() {
 
         JPanel card = cardPanel("Criar Nova OS");
@@ -182,7 +182,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         return card;
     }
 
-    // ───────────────── OS VINCULADA
+    //OS VINCULADA
     private JPanel buildTransfersVinculadosPanel() {
 
         JPanel card = cardPanel("Transfers vinculados à OS");
@@ -237,7 +237,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         return card;
     }
 
-    // ───────────────── LISTA OS
+    // LISTA OS
     private JPanel buildOsListPanel() {
 
         JPanel card = cardPanel("Ordens Abertas");
@@ -267,7 +267,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         return card;
     }
 
-    // ───────────────── TRANSFERS
+    //TRANSFERS
     private JPanel buildTransferPanel() {
 
         JPanel card = cardPanel("Transfers Disponíveis");
@@ -309,7 +309,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
     }
 
 
-    // ───────────────── DADOS
+    // DADOS
     private void carregarDados() {
 
         comboMotoristas.removeAllItems();

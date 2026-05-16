@@ -7,9 +7,9 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
-/**
- * Utilitário para hash e verificação segura de senhas usando PBKDF2 puro do JDK.
- * Zero dependências externas, garantindo compatibilidade e facilidade para a equipe.
+/*
+ * Utilitário para hash e verificação segura de senhas usando PBKDF2 puro do JDK
+ * zero dependências externas, garantindo compatibilidade e facilidade para a equipe
  */
 public final class PasswordUtil {
 

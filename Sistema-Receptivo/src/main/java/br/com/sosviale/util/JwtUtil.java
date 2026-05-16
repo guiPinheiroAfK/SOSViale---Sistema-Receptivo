@@ -10,27 +10,15 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 
-/*
- * Implementação leve de JWT (JSON Web Token) usando HMAC-SHA256.
- *
- * POR QUE JWT?
- *   - Stateless: o servidor não precisa manter tabela de sessões em memória
- *     ou no banco. O token carrega tudo (perfil, expiração, id do usuário).
- *   - Verificável: qualquer parte do sistema pode validar o token com a
- *     chave secreta, sem ir ao banco.
- *   - Seguro contra falsificação: a assinatura HMAC-SHA256 garante que
- *     ninguém pode alterar o payload sem invalidar a assinatura.
- *
- * ESTRUTURA DO TOKEN:
- *   Base64Url(header) + "." + Base64Url(payload) + "." + Base64Url(assinatura)
- *
- * PAYLOAD gerado:
- *   { "sub": "usuario", "perfil": "ADMIN", "isAdmin": true,
- *     "iat": 1234567890, "exp": 1234571490 }
- *
- * IMPORTANTE: Esta implementação usa apenas a biblioteca padrão do Java (javax.crypto).
- * Para projetos maiores, considere a lib io.jsonwebtoken:jjwt.
- */
+/*implementação leve de JWT (JSON Web Token) usando HMAC-SHA256.
+  pq JWT?
+    - Stateless: o servidor não precisa manter tabela de sessões em memória
+     ou no banco. O token carrega tudo (perfil, expiração, id do usuário)
+    - Verificável: qualquer parte do sistema pode validar o token com a
+      chave secreta, sem ir ao banco
+    - Seguro contra falsificação: a assinatura HMAC-SHA256 garante que
+      ninguém pode alterar o payload sem invalidar a assinatura*/
+
 public final class JwtUtil {
 
     // ── Configuração ──────────────────────────────────────────────────────────
@@ -41,17 +29,8 @@ public final class JwtUtil {
             "{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
 
     private JwtUtil() {}
-
-    // ════════════════════════════════════════════════════════════════════════
     //  API PÚBLICA
-    // ════════════════════════════════════════════════════════════════════════
-
-    /*
-     * Gera um token JWT para o usuário autenticado.
-     *
-     * @param user Usuário que acabou de fazer login com sucesso
-     * @return Token JWT assinado, válido por EXPIRACAO_MS milissegundos
-     */
+    //Gera um token JWT para o usuário autenticado.
     public static String gerarToken(User user) {
         long agora = Instant.now().toEpochMilli() / 1000;
         long exp   = agora + (EXPIRACAO_MS / 1000);
@@ -73,13 +52,8 @@ public final class JwtUtil {
         return cabecalho + "." + assinatura;
     }
 
-    /*
-     * Valida um token JWT e retorna suas claims se válido.
-     *
-     * @param token Token JWT recebido
-     * @return Claims extraídas do token
-     * @throws TokenInvalidoException se o token for inválido, expirado ou falsificado
-     */
+    // valida um token JWT e retorna suas claims se válido.
+
     public static Claims validarToken(String token) {
         if (token == null || token.isBlank()) {
             throw new TokenInvalidoException("Token não fornecido.");
@@ -90,24 +64,24 @@ public final class JwtUtil {
             throw new TokenInvalidoException("Formato de token inválido.");
         }
 
-        // 1. Verificar assinatura (timing-safe)
+        // verifica assinatura (timing-safe)
         String cabecalho   = partes[0] + "." + partes[1];
         String assinaturaEsperada = assinar(cabecalho);
         if (!comparacaoSegura(assinaturaEsperada, partes[2])) {
             throw new TokenInvalidoException("Assinatura do token inválida. Possível adulteração.");
         }
 
-        // 2. Decodificar payload
+        // decodifica payload
         String payloadJson = new String(
                 Base64.getUrlDecoder().decode(partes[1]), StandardCharsets.UTF_8);
 
-        // 3. Verificar expiração
+        // verifica expiração
         long exp = extrairLong(payloadJson, "exp");
         if (Instant.now().getEpochSecond() > exp) {
             throw new TokenInvalidoException("Token expirado. Faça login novamente.");
         }
 
-        // 4. Extrair e retornar claims
+        // extrai e retornar claims
         return new Claims(
                 extrairString(payloadJson, "sub"),
                 extrairString(payloadJson, "nome"),
@@ -117,11 +91,10 @@ public final class JwtUtil {
         );
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  RECORD DE CLAIMS
-    // ════════════════════════════════════════════════════════════════════════
 
-    /** Dados extraídos de um token JWT válido. */
+    //  RECORD DE CLAIM
+
+    //Dados extraídos de um token JWT válido.
     public static class Claims {
         public final String  usuario;
         public final String  nome;
@@ -143,10 +116,8 @@ public final class JwtUtil {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  MÉTODOS PRIVADOS
-    // ════════════════════════════════════════════════════════════════════════
 
+    //  metodos privados
     private static String assinar(String dados) {
         try {
             Mac mac = Mac.getInstance(HMAC_ALGO);
@@ -158,7 +129,7 @@ public final class JwtUtil {
         }
     }
 
-    /** Comparação em tempo constante para evitar timing attacks. */
+    // Comparação em tempo constante para evitar timing attacks.
     private static boolean comparacaoSegura(String a, String b) {
         if (a == null || b == null) return false;
         byte[] ba = a.getBytes(StandardCharsets.UTF_8);
@@ -184,7 +155,7 @@ public final class JwtUtil {
         return s == null ? "" : s.replace("\"", "\\\"");
     }
 
-    // ── Extratores simples de JSON (evita dependência de lib JSON) ──────────
+    // extratores simples de JSON (evita dependência de lib JSON)
     private static String extrairString(String json, String chave) {
         String pattern = "\"" + chave + "\":\"";
         int inicio = json.indexOf(pattern);
@@ -212,7 +183,7 @@ public final class JwtUtil {
         return json.startsWith("true", inicio + pattern.length());
     }
 
-    // ── Exceção ──────────────────────────────────────────────────────────────
+    // Exceçao
     public static class TokenInvalidoException extends RuntimeException {
         public TokenInvalidoException(String message) { super(message); }
     }

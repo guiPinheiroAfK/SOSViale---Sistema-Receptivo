@@ -10,32 +10,19 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.logging.Logger;
 
-/*
- * Calcula a distância entre dois pontos geográficos.
- *
- * Dois motores disponíveis:
- *
- *   HAVERSINE — cálculo matemático da distância em linha reta entre dois pontos
- *               na superfície esférica da Terra. Sem dependências externas.
- *               Suficiente para ordenar rotas urbanas curtas (margem ~5%).
- *
- *   OSRM      — Open Source Routing Machine (https://router.project-osrm.org).
- *               API pública e gratuita que retorna a distância real de estrada,
- *               respeitando o traçado viário. Requer conexão com a internet.
- *               Usado quando o admin ativa o modo GPS/localização real.
- *               Em caso de timeout ou falha de rede, faz fallback para Haversine.
- */
+// calcula a distância entre dois pontos geográficos.
+
 public final class DistanceCalculator {
 
     private static final Logger LOG = Logger.getLogger(DistanceCalculator.class.getName());
 
-    /* Raio médio da Terra em km (WGS-84). */
+    // raio médio da Terra em km
     private static final double EARTH_RADIUS_KM = 6371.0;
 
-    /* Timeout de 4 segundos para chamadas OSRM — evita travar o algoritmo. */
+    // Timeout de 4 segundos para chamadas OSRM — evita travar o algoritmo.
     private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(4);
 
-    /* URL base da API pública OSRM. Pode ser substituída por instância self-hosted. */
+    // URL base da API pública OSRM
     private static final String OSRM_BASE_URL =
             "https://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=false";
 
@@ -47,14 +34,8 @@ public final class DistanceCalculator {
 
     private DistanceCalculator() {}
 
-    // -------------------------------------------------------------------------
-    // API pública
-    // -------------------------------------------------------------------------
-
-    /*
-     * Calcula a distância em km usando Haversine (linha reta).
-     * Sempre disponível, sem requisitos de rede.
-     */
+     // calcula a distância em km usando Haversine (linha reta).
+     // sempre disponível, sem requisitos de rede.
     public static double haversine(Coordenada origem, Coordenada destino) {
         double latRad1 = Math.toRadians(origem.getLatitude());
         double latRad2 = Math.toRadians(destino.getLatitude());
@@ -68,19 +49,8 @@ public final class DistanceCalculator {
         return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    /*
-     * Calcula a distância real de estrada em km via API OSRM.
-     *
-     * Se a API falhar (sem rede, timeout, resposta inválida), registra o erro
-     * e retorna o valor Haversine como fallback — o algoritmo nunca para.
-     *
-     * @param origem    ponto de partida
-     * @param destino   ponto de chegada
-     * @return distância real em km, ou Haversine em caso de falha
-     */
+    // calcula a distância real de estrada em km via API OSRM.
     public static double osrm(Coordenada origem, Coordenada destino) {
-        // Locale.US obrigatório: em pt-BR, String.format usa vírgula como separador
-        // decimal (ex: -54,49), o que causa HTTP 400 na API do OSRM.
         String url = String.format(
                 java.util.Locale.US,
                 OSRM_BASE_URL,

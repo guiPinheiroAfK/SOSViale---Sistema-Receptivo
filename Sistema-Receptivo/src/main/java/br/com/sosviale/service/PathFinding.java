@@ -12,73 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-/*
- * Fachada pública do sistema de otimização de rotas.
- *
- * ─── Problema resolvido ───────────────────────────────────────────────────────
- *
- *   Dado o exemplo clássico que NÃO pode acontecer:
- *
- *     Passageiro no Ponto A  (ex: Aeroporto)
- *     Passageiro no Ponto B  (ex: Hotel Centro, próximo ao destino)
- *     Motorista está perto do Ponto A
- *     OS original mandava: Motorista → B → A → B  ← retorno desnecessário!
- *
- *   Esta classe produz a ordem correta:  Motorista → A → B  (sem retorno)
- *
- * ─── Dois modos de operação ───────────────────────────────────────────────────
- *
- *   MODO BÁSICO (padrão, sempre disponível):
- *     Ordena os pontos de coleta usando Haversine (distância linha reta).
- *     Não requer internet nem posição GPS do motorista.
- *     Suficiente para rotas urbanas em Foz do Iguaçu.
- *
- *   MODO GPS + ESTRADA (extra, ativado pelo admin via {@link #otimizarComGps}):
- *     Parte da posição GPS real do motorista (latitude_atual/longitude_atual).
- *     Usa distâncias reais de estrada via API OSRM (requer internet).
- *     Se o OSRM falhar, faz fallback automático para Haversine.
- *     Se o motorista não tiver posição GPS cadastrada, também usa Haversine.
- *
- * ─── Pré-requisito: coordenadas nos PontosColeta ─────────────────────────────
- *
- *   O algoritmo precisa de latitude/longitude em cada PontoColeta.
- *   Se um ponto tiver coordenadas zeradas (0.0, 0.0), o sistema tenta
- *   resolvê-las automaticamente via Nominatim/OpenStreetMap usando o nome
- *   do local ({@link GeocodingService}). Se falhar, o ponto é incluído
- *   na rota sem otimização (mantido na posição original) e um aviso é emitido.
- *
- * ─── Uso típico ───────────────────────────────────────────────────────────────
- *
- *   // Modo básico (sem GPS do motorista)
- *   RouteResult resultado = PathFinding.otimizar(ordemServico);
- *   System.out.println(resultado.resumo());
- *
- *   // Modo GPS + estrada (admin habilitou GPS e OSRM)
- *   RouteResult resultado = PathFinding.otimizarComGps(ordemServico, motoristaRepo, pontoColetaRepo);
- *   System.out.println(resultado.resumo());
- *
- *   // Aplicar a ordem otimizada de volta no banco
- *   PathFinding.aplicarOrdemOtimizada(resultado, pontoColetaRepo);
- */
 public final class PathFinding {
 
     private static final Logger LOG = Logger.getLogger(PathFinding.class.getName());
 
     private PathFinding() {}
+    // API pública
 
-    // =========================================================================
-    // API pública — modos de otimização
-    // =========================================================================
-
-    /*
-     * MODO BÁSICO: otimiza os pontos de coleta de uma OS usando Haversine.
-     *
-     * Coleta todos os PontosColeta de todos os Transfers da OS,
-     * resolve coordenadas faltantes via geocodificação e retorna a rota otimizada.
-     *
-     * @param os a Ordem de Serviço com os transfers e pontos de coleta
-     * @return resultado com rota otimizada e log de decisões
-     */
     public static RouteResult otimizar(OrdemServico os) {
         if (os == null) {
             return resultadoVazio("OS não pode ser nula.");
@@ -99,18 +39,11 @@ public final class PathFinding {
         return resultado;
     }
 
-    /*
-     * MODO GPS + ESTRADA: otimiza usando a posição real do motorista como ponto
-     * de partida e distâncias reais de estrada via OSRM.
-     *
-     * Se o motorista não tiver GPS cadastrado, usa Haversine sem ponto de partida.
-     * Se o OSRM falhar, faz fallback automático para Haversine.
-     *
-     * @param os            a Ordem de Serviço
-     * @param motoristaRepo repositório para buscar a posição GPS atualizada do motorista
-     * @param pcRepo        repositório de pontos de coleta (para persistir atualizações)
-     * @return resultado com rota otimizada e log de decisões
-     */
+
+     /*MODO GPS + ESTRADA: otimiza usando a posição real do motorista como ponto
+     de partida e distâncias reais de estrada via OSRM
+     se o motorista não tiver GPS cadastrado, usa Haversine sem ponto de partida
+     se o OSRM falhar, faz fallback automático para Haversine*/
     public static RouteResult otimizarComGps(OrdemServico os,
                                              MotoristaRepository motoristaRepo,
                                              PontoColetaRepository pcRepo) {
@@ -142,15 +75,8 @@ public final class PathFinding {
         return resultado;
     }
 
-    /*
-     * Aplica a ordem otimizada de volta nos PontosColeta no banco de dados.
-     *
-     * Após chamar este metodo, a OS terá seus pontos de coleta renumerados
-     * na sequência correta para o motorista seguir.
-     *
-     * @param resultado  resultado retornado por {@link #otimizar} ou {@link #otimizarComGps}
-     * @param pcRepo     repositório de pontos de coleta
-     */
+    // splica a ordem otimizada de volta nos PontosColeta no banco de dados.
+
     public static void aplicarOrdemOtimizada(RouteResult resultado, PontoColetaRepository pcRepo) {
         if (resultado == null || resultado.getRotaOtimizada().isEmpty()) {
             LOG.warning("Nenhuma rota otimizada para aplicar.");
@@ -176,14 +102,9 @@ public final class PathFinding {
                 + rota.size() + " pontos renumerados no banco.");
     }
 
-    // =========================================================================
     // Helpers privados
-    // =========================================================================
+    // coleta todos os PontosColeta de todos os Transfers da OS e os converte em Coordenadas. pontos com coordenadas zeradas passam por geocodificação.
 
-    /*
-     * Coleta todos os PontosColeta de todos os Transfers da OS e os converte
-     * em Coordenadas. Pontos com coordenadas zeradas passam por geocodificação.
-     */
     private static List<Coordenada> coletarCoordenadas(OrdemServico os) {
         List<Coordenada> coordenadas = new ArrayList<>();
 
@@ -199,13 +120,8 @@ public final class PathFinding {
         return coordenadas;
     }
 
-    /*
-     * Converte um PontoColeta em Coordenada.
-     *
-     * Se as coordenadas forem inválidas (zeradas ou nulas), tenta resolver
-     * via geocodificação usando o nome do local. Se a geocodificação falhar,
-     * retorna null e o ponto é ignorado pelo algoritmo com um aviso.
-     */
+    //Converte um PontoColeta em Coordenada.
+
     private static Coordenada resolverCoordenada(PontoColeta pc) {
         boolean coordenadasValidas =
                 pc.getLatitude()  != null && pc.getLongitude() != null
@@ -216,7 +132,7 @@ public final class PathFinding {
             return new Coordenada(pc.getLatitude(), pc.getLongitude(), pc.getLocalColeta(), pc);
         }
 
-        // Coordenadas zeradas — tenta geocodificação automática
+        // coordenadas zeradas — tenta geocodificação automática
         LOG.info("PontoColeta #" + pc.getId() + " (" + pc.getLocalColeta()
                 + ") sem coordenadas. Tentando geocodificação via Nominatim...");
 
@@ -232,7 +148,7 @@ public final class PathFinding {
                 Thread.currentThread().interrupt();
             }
 
-            // Enriquece o PontoColeta em memória (o chamador pode persistir depois)
+            // melhora o PontoColeta em memória (o chamador pode persistir depois)
             pc.setLatitude(geocodificada.getLatitude());
             pc.setLongitude(geocodificada.getLongitude());
 
@@ -249,15 +165,13 @@ public final class PathFinding {
         }
     }
 
-    /*
-     * Busca a posição GPS atualizada do motorista no banco.
-     * Retorna null se não tiver GPS ou se as coordenadas forem zeradas.
-     */
+    /*busca a posição GPS atualizada do motorista no banco
+      retorna null se não tiver GPS ou se as coordenadas forem zerada*/
     private static Coordenada resolverPosicaoMotorista(Motorista motorista,
                                                        MotoristaRepository motoristaRepo) {
         if (motorista == null) return null;
 
-        // Rebusca do banco para garantir a posição mais recente
+        // rebusca do banco para garantir a posição mais recente
         Motorista atualizado = motoristaRepo.buscarPorId((int) motorista.getId().longValue());
 
         if (atualizado == null) return null;
@@ -274,10 +188,9 @@ public final class PathFinding {
                 "Posição atual de " + atualizado.getNome());
     }
 
-    /*
-     * Cria um RouteResult vazio com uma mensagem de aviso no log.
-     * Usado para retornar de forma limpa quando a entrada é inválida.
-     */
+      //cria um RouteResult vazio com uma mensagem de aviso no log.
+      //usado para retornar de forma limpa quando a entrada é inválida.
+
     private static RouteResult resultadoVazio(String motivo) {
         LOG.warning("PathFinding: " + motivo);
         return new RouteResult(

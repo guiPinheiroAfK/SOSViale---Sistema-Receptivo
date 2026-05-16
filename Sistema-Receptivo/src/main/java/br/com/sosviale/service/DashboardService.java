@@ -12,9 +12,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/*
- * Agrega métricas e listas exibidas no painel inicial (View → Service → Repository).
- */
+// Agrega métricas e listas exibidas no painel inicial (View → Service → Repository).
+
 public class DashboardService {
 
     private final PassageiroRepository passageiroRepository = new PassageiroRepository();

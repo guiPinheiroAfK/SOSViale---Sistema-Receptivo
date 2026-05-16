@@ -6,9 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Armazena notificações apenas em memória durante a sessão da aplicação.
- */
+// Armazena notificações apenas em memória durante a sessão da aplicação.
+
 public class NotificationCenter {
 
     private static NotificationCenter instance;

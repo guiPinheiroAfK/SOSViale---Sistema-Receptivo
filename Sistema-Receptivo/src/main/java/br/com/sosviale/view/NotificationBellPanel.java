@@ -10,9 +10,8 @@ import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/*
- * Ícone de notificações com painel popup (descartável, sem banco).
- */
+// icone de notificações com painel popup (descartável, sem banco).
+
 public class NotificationBellPanel extends JPanel
         implements LanguageManager.LanguageChangeListener {
 

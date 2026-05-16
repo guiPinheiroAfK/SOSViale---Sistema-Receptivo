@@ -10,25 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
 
-/*
- * Grava o resultado de cada execução do PathFinding em um arquivo de log rotativo.
- *
- * ─── Formato do arquivo ───────────────────────────────────────────────────────
- *   logs/pathfinding/pathfinding_2026-04-27.log
- *
- *   Um arquivo por dia. Múltiplas execuções no mesmo dia são ACUMULADAS
- *   (append), não sobrescritas — cada bloco é separado por linha divisória.
- *
- * ─── Por que .log e não .txt ou .dat? ────────────────────────────────────────
- *   .log é o formato padrão da indústria para arquivos de diagnóstico.
- *   É texto puro (leve, legível no bloco de notas), mas sinaliza claramente
- *   que é gerado pelo sistema — não um documento para editar.
- *   IDEs como IntelliJ têm syntax highlight nativo para .log.
- *
- * ─── Localização ─────────────────────────────────────────────────────────────
- *   A pasta "logs/pathfinding/" é criada automaticamente se não existir,
- *   relativa ao diretório de trabalho da aplicação (onde o .jar é executado).
- */
+// grava o resultado de cada execução do PathFinding em um arquivo de log rotativo.
 public final class RouteLogger {
 
     private static final Logger JAVA_LOG = Logger.getLogger(RouteLogger.class.getName());
@@ -39,16 +21,8 @@ public final class RouteLogger {
 
     private RouteLogger() {}
 
-    // -------------------------------------------------------------------------
     // API pública
-    // -------------------------------------------------------------------------
-
-    /*
-     * Grava o resultado de uma otimização no arquivo de log do dia.
-     *
-     * @param osId    ID da Ordem de Serviço otimizada (para rastreabilidade)
-     * @param resultado  resultado produzido pelo {@link RouteOptimizer}
-     */
+    // grava o resultado de uma otimização no arquivo de log do dia.
     public static void gravar(Integer osId, RouteResult resultado) {
         try {
             Path dir  = Paths.get(LOG_DIR);
@@ -67,15 +41,12 @@ public final class RouteLogger {
             JAVA_LOG.info("Log de rota gravado em: " + arquivo.toAbsolutePath());
 
         } catch (IOException e) {
-            // Falha de log nunca deve interromper a operação principal
+            // lalha de log nunca deve interromper a operação principal
             JAVA_LOG.warning("Nao foi possivel gravar o log de rota: " + e.getMessage());
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Construção do bloco de texto
-    // -------------------------------------------------------------------------
-
+    // construção do bloco de texto
     private static String montarBloco(Integer osId, RouteResult resultado) {
         LocalDateTime agora = LocalDateTime.now();
         StringBuilder sb = new StringBuilder();

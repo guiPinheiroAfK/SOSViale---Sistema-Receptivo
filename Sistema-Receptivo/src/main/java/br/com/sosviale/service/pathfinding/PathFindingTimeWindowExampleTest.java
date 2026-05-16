@@ -4,36 +4,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
- * Demonstração prática do VRP com Time Windows.
- *
- * Cenários testados:
- *   1. Problema clássico: B às 08:30, A às 08:45
- *      → Algoritmo corrige para B, depois A (respeita ordem cronológica)
- *
- *   2. Conflito detectado: 5 pontos em 50 km, 30 minutos
- *      → Impossível chegar em tempo
- *      → Sistema marca como ⚠ CONFLITO
- *      → Admin recebe avisos
- *
- *   3. Chegada cedo: motorista chega 20 min antes
- *      → Sistema registra "Aguardando até..." no log
- *      → Passageiro é buscado no horário prometido
- *
- * Como executar:
- *   mvn test -Dtest=PathFindingTimeWindowExampleTest
- *   OU direto pela IDE: Run → PathFindingTimeWindowExampleTest
- *
- * Output esperado:
- *   ═══ CENÁRIO 1 — Ordem Respeitada ═══
- *   ✓ Passo 1: ... → Hotel Bourbon (08:30)
- *   ✓ Passo 2: ... → Aeroporto (08:45)
- *   Sem conflitos!
- *
- *   ═══ CENÁRIO 2 — Conflito Detectado ═══
- *   ✗ Passo 4: ... → Ponto Final (impossível!)
- *   ⚠ AVISO: Conflito de horário detectado
- */
 public class PathFindingTimeWindowExampleTest {
 
     // Coordenadas reais de Foz do Iguaçu
@@ -63,9 +33,7 @@ public class PathFindingTimeWindowExampleTest {
         System.out.println("\n✓ Testes completados.\n");
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // TESTE 1: Cenário Clássico — Ordem Respeitada
-    // ═══════════════════════════════════════════════════════════════════════════
+    // TESTE 1: Cenário Clássico — Ordem Respeitad
 
     private static void teste1_CenarioClassico() {
         System.out.println("┌────────────────────────────────────────────────────────────┐");
@@ -73,7 +41,7 @@ public class PathFindingTimeWindowExampleTest {
         System.out.println("│  Esperado: Sistema RESPEITA ordem cronológica               │");
         System.out.println("└────────────────────────────────────────────────────────────┘\n");
 
-        // Problema original: cadastrado como B, depois A
+        // problea original: cadastrado como B, depois A
         List<TimeWindowCoordenada> pontos = new ArrayList<>();
         pontos.add(new TimeWindowCoordenada(
                 LAT_HOTEL_B, LON_HOTEL_B, "Hotel Bourbon",
@@ -89,22 +57,22 @@ public class PathFindingTimeWindowExampleTest {
         }
         System.out.println();
 
-        // Ponto de partida: motorista no centro
+        // ponto de partida: motorista no centro
         TimeWindowCoordenada motorista = new TimeWindowCoordenada(
                 LAT_CENTRO, LON_CENTRO, "Centro (Posição Motorista)");
 
         System.out.println("Posição do Motorista: " + motorista.getNome());
         System.out.println("Hora Inicial: 08:00\n");
 
-        // Função de tempo de viagem
+        // Funcão de tempo de viagem
         var tempoViagemFn = criarFuncaoTempoViagem();
 
-        // Otimiza
+        // otimiza
         System.out.println("Executando otimização com time windows...\n");
         RouteResult resultado = ConstraintAwareRouteOptimizer.otimizarComTimeWindows(
                 pontos, motorista, false, tempoViagemFn);
 
-        // Exibe resultado
+        // exibe resultado
         System.out.println("Ordem OTIMIZADA (respeitando time windows):");
         for (String linha : resultado.getLogDecisoes()) {
             System.out.println("  " + linha);

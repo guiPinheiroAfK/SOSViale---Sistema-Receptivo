@@ -15,51 +15,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-/*
- * Utilitário de resolução de rotas (Pathfinding) — camada de infraestrutura reutilizável.
- *
- * Esta classe extrai a lógica bruta do pathfinding do pacote {@code service} e a expõe
- * como uma ferramenta isolada e stateless, sem acoplamento a contextos de negócio específicos.
- * O resultado é livre de dependências cíclicas e pode ser chamado de qualquer camada da aplicação.
- *
- * Diferença em relação ao antigo {@code PathFinding} (service):
- *
- *   Sem dependência direta de {@link MotoristaRepository} — recebe {@link Motorista} já resolvido.
- *   Sem dependência direta de {@link PontoColetaRepository} — persistência é responsabilidade
- *       do chamador (Single Responsibility Principle).
- *   Métodos puramente funcionais: mesma entrada → mesmo resultado (exceto geocodificação externa).
- *
- * Uso típico dentro de OrdemServicoService
- *
- * // Modo básico (Haversine, sem GPS)
- * RouteResult r = PathFindingUtil.otimizar(os);
- *
- * // Modo GPS + OSRM
- * RouteResult r = PathFindingUtil.otimizarComGps(os, motoristaAtualizado);
- *
- * // Aplicar resultado no banco
- * PathFindingUtil.aplicarOrdemOtimizada(r, pcRepo);
- *
- */
+// utilitário de resolução de rotas (Pathfinding) — camada de infraestrutura reutilizável.
+
 public final class PathFindingUtil {
 
     private static final Logger LOG = Logger.getLogger(PathFindingUtil.class.getName());
 
     private PathFindingUtil() {}
-
-    // =========================================================================
     // API pública
-    // =========================================================================
-
-    /*
-     * Modo básico — otimiza a rota de uma OS usando Haversine (linha reta).
-     *
-     * Não requer internet nem posição GPS do motorista. Adequado para o uso padrão
-     * em rotas urbanas de curto/médio alcance.
-     *
-     * @param os a Ordem de Serviço com transfers e pontos de coleta associados
-     * @return resultado com rota otimizada, distância estimada e log de decisões
-     */
     public static RouteResult otimizar(OrdemServico os) {
         if (os == null) {
             return resultadoVazio("OS não pode ser nula.");
@@ -79,19 +42,6 @@ public final class PathFindingUtil {
         RouteLogger.gravar(os.getId(), resultado);
         return resultado;
     }
-
-    /*
-     * Modo GPS + estrada — otimiza usando a posição real do motorista como ponto
-     * de partida e distâncias reais de estrada via OSRM.
-     *
-     * Se o motorista não tiver GPS cadastrado ou se o OSRM falhar, o metodo
-     * faz fallback automático para Haversine sem interromper o fluxo.
-     *
-     * @param os               a Ordem de Serviço
-     * @param motoristaAtualizado o motorista com {@code latitudeAtual}/{@code longitudeAtual} preenchidos
-     *                            (deve ser buscado do banco pelo chamador para garantir dados frescos)
-     * @return resultado com rota otimizada, distância estimada e log de decisões
-     */
     public static RouteResult otimizarComGps(OrdemServico os, Motorista motoristaAtualizado) {
         if (os == null) {
             return resultadoVazio("OS não pode ser nula.");
@@ -120,12 +70,7 @@ public final class PathFindingUtil {
         return resultado;
     }
 
-    /*
-     * Converte um {@link PontoColeta} em {@link Coordenada}.
-     *
-     * <p>Se as coordenadas forem inválidas (null ou zeradas), tenta geocodificação
-     * via Nominatim. Se falhar, retorna {@code null} e o ponto é ignorado com aviso.
-     */
+    // Converte um PontoColet em Coordenada
     private static Coordenada resolverCoordenada(PontoColeta pc) {
         boolean coordenadasValidas =
                 pc.getLatitude()  != null && pc.getLongitude() != null
@@ -167,12 +112,6 @@ public final class PathFindingUtil {
         }
     }
 
-    /*
-     * Extrai a posição GPS do motorista como {@link Coordenada}.
-     *
-     * @param motorista motorista já carregado do banco (com posição atualizada)
-     * @return coordenada do motorista, ou {@code null} se GPS não cadastrado ou zerado
-     */
     private static Coordenada resolverPosicaoMotorista(Motorista motorista) {
         if (motorista == null) return null;
 
@@ -187,10 +126,6 @@ public final class PathFindingUtil {
         return new Coordenada(lat, lon, "Posição atual de " + motorista.getNome());
     }
 
-    /*
-     * Cria um {@link RouteResult} vazio com mensagem de aviso logada.
-     * Retorno limpo para entradas inválidas — nunca lança exceção para o chamador.
-     */
     private static RouteResult resultadoVazio(String motivo) {
         LOG.warning("PathFindingUtil | " + motivo);
         return new RouteResult(
@@ -202,17 +137,17 @@ public final class PathFindingUtil {
     }
 
     /*
-     * Converte o resultado do algoritmo em uma lista de Paradas da OS.
-     * Agrupa as paradas que caem no mesmo local físico para não gerar duplicações.
+    converte o resultado do algoritmo em uma lista de Paradas da OS.
+      Agrupa as paradas que caem no mesmo local físico para não gerar duplicações.
      */
     public static List<ParadaOS> gerarParadasOS(RouteResult resultado, OrdemServico os) {
         List<ParadaOS> paradas = new ArrayList<>();
 
-        // Usamos um Map para agrupar as coordenadas pelo Nome do Local
+        // usamos um Map para agrupar as coordenadas pelo Nome do Local
         Map<String, List<Coordenada>> locaisAgrupados = new LinkedHashMap<>();
 
         for (Coordenada c : resultado.getRotaOtimizada()) {
-            // Ignora a posição atual do motorista (ele não é um embarque)
+            // ignora a posição atual do motorista (ele não é um embarque)
             if (c.isPontoDePartida()) continue;
 
             String chaveLocal = c.getNome();
@@ -222,7 +157,7 @@ public final class PathFindingUtil {
             locaisAgrupados.get(chaveLocal).add(c);
         }
 
-        // Criar as Paradas físicas agrupadas
+        // Cria as Paradas físicas agrupadas
         int ordem = 1;
         for (String nomeLocal : locaisAgrupados.keySet()) {
             List<Coordenada> coordenadasDoLocal = locaisAgrupados.get(nomeLocal);
@@ -250,9 +185,7 @@ public final class PathFindingUtil {
         return paradas;
     }
 
-    // =========================================================================
     // Helpers privados atualizados
-    // =========================================================================
 
     private static List<Coordenada> coletarCoordenadas(OrdemServico os) {
         List<Coordenada> coordenadas = new ArrayList<>();

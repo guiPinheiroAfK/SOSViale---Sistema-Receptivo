@@ -11,7 +11,7 @@ public class Coordenada {
     private final PontoColeta pontoColeta;
     private final Transfer transfer; // Novo campo
 
-    // 1. CONSTRUTOR PRINCIPAL (5 parâmetros - O mais completo)
+    // construtor principal
     public Coordenada(double latitude, double longitude, String nome, PontoColeta pontoColeta, Transfer transfer) {
         this.latitude = latitude;
         this.longitude = longitude;
@@ -20,17 +20,17 @@ public class Coordenada {
         this.transfer = transfer;
     }
 
-    // 2. CONSTRUTOR DE COMPATIBILIDADE (4 parâmetros - Resolve o seu erro!)
+    // construtor de compatibilidade
     public Coordenada(double latitude, double longitude, String nome, PontoColeta pontoColeta) {
         this(latitude, longitude, nome, pontoColeta, null);
     }
 
-    // 3. CONSTRUTOR PARA MOTORISTA/PONTO VIRTUAL (3 parâmetros)
+    // construtor para motorista
     public Coordenada(double latitude, double longitude, String nome) {
         this(latitude, longitude, nome, null, null);
     }
 
-    // Getters
+    // getters
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
     public String getNome() { return nome; }

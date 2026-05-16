@@ -15,9 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Monitora horários de transfer e gera alertas 30 minutos antes do pick-up.
- */
+// monitora horários de transfer e gera alertas 30 minutos antes do pick-up.
+
 public class NotificationService {
 
     private static final long CHECK_INTERVAL_MS = 60_000L;

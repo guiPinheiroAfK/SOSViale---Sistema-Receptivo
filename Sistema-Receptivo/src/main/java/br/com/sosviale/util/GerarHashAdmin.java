@@ -1,4 +1,4 @@
-// Arquivo: GerarHashAdmin.java
+
 package br.com.sosviale.util;
 
 public class GerarHashAdmin {

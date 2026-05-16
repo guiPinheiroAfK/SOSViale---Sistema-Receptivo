@@ -5,29 +5,15 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.logging.Logger;
 
-/* Fluxo
- *
- *   1. Ordena pontos por horário (prioridade absoluta)
- *   2. Tenta construir rota greedy respeitando order
- *   3. Se houver conflitos (impossível chegar no horário), marca como INVÁLIDO
- *   4. Admin recebe aviso e pode:
- *      a) Mover alguns transfers para próxima OS
- *      b) Aumentar margem de tempo
- *      c) Ignorar conflito (motorista chegará atrasado com justificativa)
- */
+// ordena pontos por horário (prioridade absoluta)
+// depois tenta construir rota greedy respeitando order
+// aí se houver conflitos (impossível chegar no horário), marca como INVÁLIDO
+// o admin recebe aviso e pode mover alguns transfers para próxima OS, aumentar margem de tempo ou ignorar conflito (motorista chegará atrasado com justificativa)
 public final class ConstraintAwareRouteOptimizer {
 
     private static final Logger LOG = Logger.getLogger(ConstraintAwareRouteOptimizer.class.getName());
 
     private ConstraintAwareRouteOptimizer() {}
-    /* API Pública
-     *
-     * @param pontos         lista de TimeWindowCoordenada com horários
-     * @param pontoDePartida posição inicial do motorista (pode ser null)
-     * @param usarOsrm       true para distâncias reais, false para Haversine
-     * @param tempoViagemFn  função que calcula tempo de viagem em minutos
-     * @return resultado com rota otimizada, conflitos detectados e log
-     */
     public static RouteResult otimizarComTimeWindows(
             List<TimeWindowCoordenada> pontos,
             TimeWindowCoordenada pontoDePartida,
@@ -38,12 +24,12 @@ public final class ConstraintAwareRouteOptimizer {
             return resultadoVazio("Nenhum ponto para otimizar.");
         }
 
-        // Função de distância
+        // função de distância
         BiFunction<TimeWindowCoordenada, TimeWindowCoordenada, Double> distFn = usarOsrm
                 ? (o, d) -> (double) DistanceCalculator.osrm(o, d)
                 : (o, d) -> (double) DistanceCalculator.haversine(o, d);
 
-        // Ponto de partida: posição do motorista ou primeiro ponto
+        // ponto de partida: posição do motorista ou primeiro ponto
         TimeWindowCoordenada atual = pontoDePartida != null ? pontoDePartida : pontos.get(0);
         LocalTime horaAtual = LocalTime.now();
 
@@ -63,7 +49,7 @@ public final class ConstraintAwareRouteOptimizer {
 
 
         while (!naoVisitados.isEmpty()) {
-            // Filtra candidatos viáveis (que conseguem ser visitados no horário)
+            // filtra candidatos viáveis (que conseguem ser visitados no horário)
             TimeWindowCoordenada finalAtual = atual;
             LocalTime finalHoraAtual = horaAtual;
             List<TimeWindowCoordenada> candViaveis = naoVisitados.stream()
@@ -73,8 +59,7 @@ public final class ConstraintAwareRouteOptimizer {
             TimeWindowCoordenada proximo;
 
             if (candViaveis.isEmpty()) {
-                // CONFLITO: nenhum ponto é viável para o horário estimado
-                // Escolhe o que tem menor janela de tempo (mais urgente)
+                // escolhe o que tem menor janela de tempo (mais urgente)
                 proximo = naoVisitados.stream()
                         .min(Comparator.comparing(TimeWindowCoordenada::getHorarioPrevisto,
                                 Comparator.nullsLast(Comparator.naturalOrder())))
@@ -92,7 +77,7 @@ public final class ConstraintAwareRouteOptimizer {
                     ));
                 }
             } else {
-                // Escolhe o candidato viável mais próximo (Nearest Neighbor com constraints)
+                // escolhe o candidato viável mais próximo
                 TimeWindowCoordenada finalAtual1 = atual;
                 proximo = candViaveis.stream()
                         .min(Comparator.comparingDouble(c -> distFn.apply(finalAtual1, c)))
@@ -122,9 +107,9 @@ public final class ConstraintAwareRouteOptimizer {
                 rotaOtimizada.add(proximo);
                 naoVisitados.remove(proximo);
 
-                // Atualiza hora atual: máximo entre (hora chegada) e (hora prevista - para esperar se necessário)
+                // atualiza hora atual: máximo entre (hora chegada) e (hora prevista - para esperar se necessário)
                 if (proximo.getHorarioPrevisto() != null && proximo.getHorarioPrevisto().isAfter(chegada)) {
-                    // Chega cedo — espera até o horário previsto
+                    // chega cedo — espera até o horário previsto
                     horaAtual = proximo.getHorarioPrevisto();
                     log.add("   └─ Aguardando até " + horaAtual.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
                 } else {
@@ -137,10 +122,10 @@ public final class ConstraintAwareRouteOptimizer {
             }
         }
 
-        // Determina modo
+        // determina modo
         RouteResult.ModoCalculo modo = resolverModo(usarOsrm, pontoDePartida != null);
 
-        // Adiciona conflitos ao log se houver
+        // adiciona conflitos ao log se houver
         if (!conflitos.isEmpty()) {
             log.add("");
             log.add("⚠ AVISOS DE CONFLITO:");
@@ -150,10 +135,8 @@ public final class ConstraintAwareRouteOptimizer {
         return new RouteResult(rotaOtimizada, distanciaTotal, log, modo);
     }
 
-    // Helpers privados
-
-
-    //Verifica se é viável chegar a um ponto no horário esperado
+    // helpers privados
+    //verifica se é viável chegar a um ponto no horário esperado
     private static boolean isChegadaViavel(
             TimeWindowCoordenada atual,
             LocalTime horaAtual,
