@@ -10,10 +10,16 @@ import br.com.sosviale.util.PdfItext;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ServicosPanel extends JPanel implements LanguageManager.LanguageChangeListener {
 
@@ -25,6 +31,8 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
     private static final Color DANGER_RED       = new Color(200, 50, 50);
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
+
+    private static final int COL_OS = 1;
 
     private final MotoristaFieldService fieldService = new MotoristaFieldService();
 
@@ -38,6 +46,7 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
     private JLabel labelMotorista;
     private JLabel labelRota;
     private JLabel labelPax;
+    private JLabel labelOsTransfersSummary;
     private JLabel tableTitleLabel;
     private JLabel dicaLabel;
     private JLabel offlineStatusLabel;
@@ -52,14 +61,11 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         setLayout(new BorderLayout(0, 10));
         setOpaque(false);
 
-        JPanel topBar = new JPanel(new BorderLayout(8, 0));
-        topBar.setOpaque(false);
+        // Sem NotificationBellPanel — apenas o label de status online/offline
         offlineStatusLabel = new JLabel();
         offlineStatusLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
         offlineStatusLabel.setForeground(new Color(200, 120, 40));
-        topBar.add(offlineStatusLabel, BorderLayout.WEST);
-        topBar.add(new NotificationBellPanel(), BorderLayout.EAST);
-        add(topBar, BorderLayout.NORTH);
+        add(offlineStatusLabel, BorderLayout.NORTH);
 
         JPanel body = new JPanel(new BorderLayout(14, 0));
         body.setOpaque(false);
@@ -112,6 +118,15 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         form.add(labelOs, gbc);
 
         gbc.gridy++;
+        labelOsTransfersSummary = new JLabel(" ");
+        labelOsTransfersSummary.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        labelOsTransfersSummary.setForeground(MUTED_TEXT);
+        labelOsTransfersSummary.setVisible(false);
+        gbc.insets = new Insets(0, 0, 10, 0);
+        form.add(labelOsTransfersSummary, gbc);
+        gbc.insets = new Insets(0, 0, 0, 0);
+
+        gbc.gridy++;
         labelMotoristaKey = label("servicos.label.driver");
         form.add(labelMotoristaKey, gbc);
         labelMotorista = valueLabel("—");
@@ -143,7 +158,7 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         comboStatus.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                            boolean isSelected, boolean cellHasFocus) {
+                                                          boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof StatusTransfer st) {
                     setText(LanguageManager.getInstance().translateStatus(st));
@@ -202,6 +217,32 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         table = new JTable(tableModel);
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
+        TableColumnModel cm = table.getColumnModel();
+        cm.getColumn(0).setMinWidth(40);
+        cm.getColumn(0).setMaxWidth(60);        // ID
+        cm.getColumn(1).setPreferredWidth(80);
+        cm.getColumn(1).setMaxWidth(100);       // OS
+        cm.getColumn(2).setPreferredWidth(130); // Motorista
+        cm.getColumn(3).setPreferredWidth(320); // Origem/Destino — expande
+        cm.getColumn(4).setMinWidth(40);
+        cm.getColumn(4).setMaxWidth(55);        // Pax
+        cm.getColumn(5).setPreferredWidth(120); // Status
+
+        cm.getColumn(COL_OS).setCellRenderer(new OsGroupingRenderer());
+
+        // Renderer com tooltip para a coluna de rota
+        cm.getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object v,
+                                                           boolean sel, boolean foc, int row, int col) {
+                super.getTableCellRendererComponent(t, v, sel, foc, row, col);
+                setToolTipText(v != null ? v.toString() : null);
+                return this;
+            }
+        });
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 preencherDetalhes(table.getSelectedRow());
@@ -267,15 +308,78 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         comboStatus.setEnabled(true);
         excluirButton.setEnabled(true);
         btnGerarPdf.setEnabled(osIdSelecionado != null);
+
+        atualizarResumoTransfersNaOs(osIdSelecionado, str(tableModel.getValueAt(row, 1)));
+    }
+
+    private void atualizarResumoTransfersNaOs(Integer osId, String rotuloOsNaTabela) {
+        if (labelOsTransfersSummary == null) return;
+
+        LanguageManager lm = LanguageManager.getInstance();
+        List<Integer> ids = new ArrayList<>();
+
+        if (osId != null) {
+            try {
+                OrdemServico os = fieldService.buscarOsComTransfers(osId);
+                if (os != null && os.getTransfers() != null && !os.getTransfers().isEmpty()) {
+                    ids = os.getTransfers().stream().map(Transfer::getId).sorted().toList();
+                }
+            } catch (Exception ignored) {
+                // fallback abaixo
+            }
+        }
+
+        if (ids.isEmpty() && rotuloOsNaTabela != null && !rotuloOsNaTabela.isBlank()) {
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                if (rotuloOsNaTabela.equals(str(tableModel.getValueAt(i, 1)))) {
+                    Object idObj = tableModel.getValueAt(i, 0);
+                    if (idObj instanceof Integer idVal) {
+                        ids.add(idVal);
+                    }
+                }
+            }
+            ids.sort(Integer::compareTo);
+        }
+
+        if (ids.isEmpty()) {
+            labelOsTransfersSummary.setText(" ");
+            labelOsTransfersSummary.setVisible(false);
+            return;
+        }
+
+        String idsStr = ids.stream().map(String::valueOf).collect(Collectors.joining(", "));
+        String text = ids.size() == 1
+                ? lm.translate("servicos.os.group.one", Map.of("ids", idsStr))
+                : lm.translate("servicos.os.group.many", Map.of(
+                "n", String.valueOf(ids.size()),
+                "ids", idsStr));
+        labelOsTransfersSummary.setText("<html><body style='width:300px'>" + text + "</body></html>");
+        labelOsTransfersSummary.setVisible(true);
     }
 
     private Integer parseOsId(String osLabel) {
-        if (osLabel == null || !osLabel.startsWith("OS-")) return null;
-        try {
-            return Integer.parseInt(osLabel.substring(3).trim());
-        } catch (NumberFormatException e) {
-            return null;
+        return parseOsIdStatic(osLabel);
+    }
+
+    private static Integer parseOsIdStatic(String osLabel) {
+        if (osLabel == null) return null;
+        String s = osLabel.trim();
+        if (s.regionMatches(true, 0, "OS-", 0, 3)) {
+            try {
+                return Integer.parseInt(s.substring(3).trim());
+            } catch (NumberFormatException e) {
+                return null;
+            }
         }
+        if (s.length() >= 2 && s.regionMatches(true, 0, "OS", 0, 2)) {
+            String rest = s.substring(2).replace("-", " ").trim();
+            try {
+                return Integer.parseInt(rest.split("\\s+")[0]);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private void baixarPdfOs() {
@@ -399,6 +503,10 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         osIdSelecionado = null;
         labelId.setText("—");
         labelOs.setText("—");
+        if (labelOsTransfersSummary != null) {
+            labelOsTransfersSummary.setText(" ");
+            labelOsTransfersSummary.setVisible(false);
+        }
         labelMotorista.setText("—");
         labelRota.setText("—");
         labelPax.setText("—");
@@ -416,6 +524,7 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         tableModel.setRowCount(0);
         LanguageManager lm = LanguageManager.getInstance();
 
+        List<Object[]> rows = new ArrayList<>();
         for (Transfer t : fieldService.listarServicosAtivos()) {
             OrdemServico os = t.getOrdemServico();
             if (os == null) continue;
@@ -423,7 +532,7 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
             String motorista = os.getMotorista() != null
                     ? os.getMotorista().getNome()
                     : lm.translate("common.na");
-            tableModel.addRow(new Object[]{
+            rows.add(new Object[]{
                     t.getId(),
                     "OS-" + os.getId(),
                     motorista,
@@ -431,6 +540,18 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
                     t.getPassageiros() != null ? t.getPassageiros().size() : 0,
                     t.getStatus()
             });
+        }
+
+        rows.sort(Comparator
+                .comparing((Object[] r) -> {
+                    Object o = r[COL_OS];
+                    Integer oid = parseOsIdStatic(o != null ? o.toString() : null);
+                    return oid != null ? oid : Integer.MAX_VALUE;
+                })
+                .thenComparing(r -> (Integer) r[0]));
+
+        for (Object[] row : rows) {
+            tableModel.addRow(row);
         }
 
         atualizarIndicadorOffline();
@@ -493,5 +614,75 @@ public class ServicosPanel extends JPanel implements LanguageManager.LanguageCha
         b.setFocusPainted(false);
         b.setFont(new Font("SansSerif", Font.BOLD, 12));
         return b;
+    }
+
+    private static final class OsGroupingRenderer extends DefaultTableCellRenderer {
+
+        OsGroupingRenderer() {
+            setHorizontalAlignment(SwingConstants.LEFT);
+        }
+
+        private static int[] groupRange(DefaultTableModel m, int row) {
+            if (row < 0 || row >= m.getRowCount()) {
+                return new int[]{0, -1};
+            }
+            String key = cellStr(m, row, COL_OS);
+            int start = row;
+            while (start > 0 && key.equals(cellStr(m, start - 1, COL_OS))) {
+                start--;
+            }
+            int end = row;
+            while (end < m.getRowCount() - 1 && key.equals(cellStr(m, end + 1, COL_OS))) {
+                end++;
+            }
+            return new int[]{start, end};
+        }
+
+        private static String cellStr(DefaultTableModel m, int row, int col) {
+            Object v = m.getValueAt(row, col);
+            return v != null ? v.toString() : "";
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            DefaultTableModel m = (DefaultTableModel) table.getModel();
+            String os = value != null ? value.toString() : "—";
+            int[] range = groupRange(m, row);
+            int start = range[0];
+            int end = range[1];
+            int n = end - start + 1;
+            LanguageManager lm = LanguageManager.getInstance();
+            String display;
+            if (n <= 1) {
+                display = os;
+            } else {
+                int pos = row - start;
+                if (pos == 0) {
+                    display = lm.translate("servicos.table.os.bracket", Map.of(
+                            "os", os,
+                            "n", String.valueOf(n)));
+                } else if (pos == n - 1) {
+                    display = lm.translate("servicos.table.os.branch.last");
+                } else {
+                    display = lm.translate("servicos.table.os.branch.mid");
+                }
+            }
+
+            this.setText(display);
+            this.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+
+            if (n > 1 && row > start && !isSelected) {
+                this.setForeground(new Color(98, 108, 122));
+            }
+
+            this.setToolTipText(n > 1
+                    ? lm.translate("servicos.table.os.tooltip", Map.of("os", os, "n", String.valueOf(n)))
+                    : os);
+
+            return this;
+        }
     }
 }

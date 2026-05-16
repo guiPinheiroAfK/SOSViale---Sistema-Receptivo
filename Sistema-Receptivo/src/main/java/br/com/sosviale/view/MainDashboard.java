@@ -126,13 +126,12 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         productLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
         productLabel.setForeground(TEXT_COLOR);
 
-        JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        center.setOpaque(false);
-        notificationBell = new NotificationBellPanel();
-        center.add(notificationBell);
-
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         right.setOpaque(false);
+
+        notificationBell = new NotificationBellPanel();
+        right.add(notificationBell);
+
         var user = authService.getCurrentUser();
         String nome = user != null ? user.getNome() : SessionManager.getInstance().getNomeAtual();
         String perfilTxt = user != null && user.getPerfil() != null ? user.getPerfil().name() : "—";
@@ -152,7 +151,6 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         right.add(logoutButton);
 
         header.add(productLabel, BorderLayout.WEST);
-        header.add(center,       BorderLayout.CENTER);
         header.add(right,        BorderLayout.EAST);
         return header;
     }

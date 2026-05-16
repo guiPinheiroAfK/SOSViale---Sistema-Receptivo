@@ -278,6 +278,12 @@ public class LanguageManager {
         pt.put("servicos.table.hint", "💡 Selecione um serviço da OS para alterar status, baixar PDF da OS ou excluir o transfer.");
         pt.put("servicos.button.pdf", "Baixar PDF da OS");
         pt.put("servicos.button.delete", "Excluir serviço");
+        pt.put("servicos.os.group.one", "1 transfer nesta OS. IDs: {ids}.");
+        pt.put("servicos.os.group.many", "{n} transfers nesta OS.\nIDs: {ids}.");
+        pt.put("servicos.table.os.bracket", "{os} ({n}×)");
+        pt.put("servicos.table.os.branch.mid", "├─");
+        pt.put("servicos.table.os.branch.last", "└─");
+        pt.put("servicos.table.os.tooltip", "{os} — {n} transfers nesta OS");
         pt.put("servicos.table.col.id", "ID");
         pt.put("servicos.table.col.os", "OS");
         pt.put("servicos.table.col.driver", "Motorista");
@@ -552,6 +558,12 @@ public class LanguageManager {
         en.put("servicos.table.hint", "💡 Select a service to change status, download SO PDF or delete the transfer.");
         en.put("servicos.button.pdf", "Download SO PDF");
         en.put("servicos.button.delete", "Delete service");
+        en.put("servicos.os.group.one", "1 transfer on this SO. IDs: {ids}.");
+        en.put("servicos.os.group.many", "{n} transfers on this SO.\nIDs: {ids}.");
+        en.put("servicos.table.os.bracket", "{os} ({n}×)");
+        en.put("servicos.table.os.branch.mid", "├─");
+        en.put("servicos.table.os.branch.last", "└─");
+        en.put("servicos.table.os.tooltip", "{os} — {n} transfers on this SO");
         en.put("servicos.table.col.id", "ID");
         en.put("servicos.table.col.os", "SO");
         en.put("servicos.table.col.driver", "Driver");
@@ -821,6 +833,12 @@ public class LanguageManager {
         es.put("servicos.label.driver", "Conductor:");
         es.put("servicos.label.route", "Ruta:");
         es.put("servicos.label.passengers", "Pasajeros:");
+        es.put("servicos.os.group.one", "1 transferencia en esta OS. IDs: {ids}.");
+        es.put("servicos.os.group.many", "{n} transferencias en esta OS.\nIDs: {ids}.");
+        es.put("servicos.table.os.bracket", "{os} ({n}×)");
+        es.put("servicos.table.os.branch.mid", "├─");
+        es.put("servicos.table.os.branch.last", "└─");
+        es.put("servicos.table.os.tooltip", "{os} — {n} transferencias en esta OS");
         es.put("servicos.label.status", "Estado:");
         es.put("servicos.table.title", "Servicios activos (transferencias en OS)");
         es.put("servicos.table.hint", "💡 Seleccione un servicio para cambiar estado, descargar PDF de la OS o eliminar la transferencia.");
