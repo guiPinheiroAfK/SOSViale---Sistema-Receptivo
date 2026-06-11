@@ -2,9 +2,12 @@ package br.com.sosviale.view;
 
 import br.com.sosviale.auth.AuthenticationService;
 import br.com.sosviale.auth.SessionManager;
+import br.com.sosviale.controller.dashboard.DashboardController;
+import br.com.sosviale.controller.dashboard.impl.DashboardControllerImpl;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.offline.OfflineSyncService;
+import br.com.sosviale.service.DashboardService;
 import br.com.sosviale.service.NotificationService;
 import br.com.sosviale.service.TransferService;
 import br.com.sosviale.App;
@@ -282,7 +285,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         heading.add(titleStack, BorderLayout.WEST);
 
         cardPanel.setBackground(APP_BACKGROUND);
-        dashboardPanel = new DashboardPanel();
+        DashboardController dashboardController = new DashboardControllerImpl(new DashboardService());
+        dashboardPanel = new DashboardPanel(dashboardController);
         cardPanel.add(dashboardPanel, "dashboard");
         cardPanel.add(new PassageirosPanel(),  "passageiros");
         cardPanel.add(new PontosColetaPanel(), "pontosColeta");

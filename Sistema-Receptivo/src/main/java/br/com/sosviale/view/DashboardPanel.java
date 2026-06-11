@@ -1,13 +1,9 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.controller.dashboard.DashboardController;
+import br.com.sosviale.controller.dashboard.dto.DashboardResponse;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Transfer;
-import br.com.sosviale.repository.MotoristaRepository;
-import br.com.sosviale.repository.PassageiroRepository;
-import br.com.sosviale.repository.TransferRepository;
-import br.com.sosviale.repository.VeiculoRepository;
-import br.com.sosviale.service.StatusTransfer;
-import br.com.sosviale.service.TransferService;
 import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
@@ -15,11 +11,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DashboardPanel extends JPanel implements LanguageManager.LanguageChangeListener {
 
@@ -48,7 +41,10 @@ public class DashboardPanel extends JPanel implements LanguageManager.LanguageCh
     private DefaultTableModel upcomingModel;
     private final JLabel[] metricValueLabels = new JLabel[8];
 
-    public DashboardPanel() {
+    private final DashboardController dashboardController;
+
+    public DashboardPanel(DashboardController dashboardController) {
+        this.dashboardController = dashboardController;
         setLayout(new BorderLayout(14, 14));
         setOpaque(false);
         LanguageManager.getInstance().addLanguageChangeListener(this);
@@ -70,59 +66,23 @@ public class DashboardPanel extends JPanel implements LanguageManager.LanguageCh
             }
             return;
         }
-        long totalPassageiros = 0, totalMotoristas = 0, totalVeiculos = 0, transfersSemOS = 0;
-        long transfersHoje = 0, transfersComOs = 0, emExecucao = 0, totalOs = 0;
-        List<Transfer> proximos = List.of();
-
         try {
-            totalPassageiros = new PassageiroRepository().contar();
-            totalMotoristas = new MotoristaRepository().contar();
-            totalVeiculos = new VeiculoRepository().contar();
-            transfersSemOS = new TransferRepository().contarSemOrdemServico();
+            DashboardResponse data = dashboardController.carregarMetricas();
 
-            List<Transfer> todos = new TransferService().listarTodos();
-            LocalDate hoje = LocalDate.now();
-            LocalDateTime agora = LocalDateTime.now();
+            setMetricValue(0, data.totalPassageiros());
+            setMetricValue(1, data.totalMotoristas());
+            setMetricValue(2, data.totalVeiculos());
+            setMetricValue(3, data.transfersSemOS());
+            setMetricValue(4, data.totalOs());
+            setMetricValue(5, data.transfersHoje());
+            setMetricValue(6, data.transfersComOs());
+            setMetricValue(7, data.emExecucao());
 
-            transfersHoje = todos.stream()
-                    .filter(t -> hoje.equals(t.getDataTransfer()))
-                    .count();
-            transfersComOs = todos.stream()
-                    .filter(t -> t.getOrdemServico() != null)
-                    .count();
-            emExecucao = todos.stream()
-                    .filter(t -> t.getStatus() == StatusTransfer.EM_EXECUCAO)
-                    .count();
-            totalOs = todos.stream()
-                    .filter(t -> t.getOrdemServico() != null)
-                    .map(t -> t.getOrdemServico().getId())
-                    .distinct()
-                    .count();
-
-            proximos = todos.stream()
-                    .filter(t -> t.getDataTransfer() != null && t.getHoraTransfer() != null)
-                    .filter(t -> {
-                        LocalDateTime dt = LocalDateTime.of(t.getDataTransfer(), t.getHoraTransfer());
-                        return !dt.isBefore(agora);
-                    })
-                    .sorted(Comparator.comparing(t ->
-                            LocalDateTime.of(t.getDataTransfer(), t.getHoraTransfer())))
-                    .limit(8)
-                    .collect(Collectors.toList());
+            loadUpcoming(data.proximosTransfers());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        setMetricValue(0, totalPassageiros);
-        setMetricValue(1, totalMotoristas);
-        setMetricValue(2, totalVeiculos);
-        setMetricValue(3, transfersSemOS);
-        setMetricValue(4, totalOs);
-        setMetricValue(5, transfersHoje);
-        setMetricValue(6, transfersComOs);
-        setMetricValue(7, emExecucao);
-
-        loadUpcoming(proximos);
         dateLabel.setText(LocalDate.now().format(DATE_FMT));
     }
 
