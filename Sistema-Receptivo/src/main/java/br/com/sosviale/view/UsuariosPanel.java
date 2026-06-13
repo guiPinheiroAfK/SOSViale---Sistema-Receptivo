@@ -2,6 +2,8 @@ package br.com.sosviale.view;
 
 import br.com.sosviale.auth.AuthenticationException;
 import br.com.sosviale.auth.ValidationException;
+import br.com.sosviale.i18n.I18nRegistry;
+import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.model.User;
 import br.com.sosviale.service.UserService;
@@ -12,6 +14,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.SimpleDateFormat;
+import java.util.Map;
 
 public class UsuariosPanel extends JPanel {
 
@@ -39,15 +42,57 @@ public class UsuariosPanel extends JPanel {
     private JButton excluirButton;
     private String usuarioSelecionado = null;
 
+    // labels/titulos traduzíveis
+    private JLabel formTitleLabel;
+    private JLabel tableTitleLabel;
+    private JLabel lblNome, lblUsuario, lblSenha, lblPerfil, lblSenhaAdmin;
+    private JLabel dicaLabel;
+
     public UsuariosPanel() {
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        I18nRegistry.register(this::refreshTexts);
     }
 
     public void atualizar() {
         carregarUsuarios();
+    }
+
+    private void refreshTexts() {
+        LanguageManager lm = LanguageManager.getInstance();
+
+        if (formTitleLabel != null) formTitleLabel.setText(lm.translate("users.title"));
+        if (tableTitleLabel != null) tableTitleLabel.setText(lm.translate("users.list.title"));
+
+        if (lblNome != null) lblNome.setText(lm.translate("users.label.fullname"));
+        if (lblUsuario != null) lblUsuario.setText(lm.translate("users.label.username"));
+        if (lblSenha != null) lblSenha.setText(lm.translate("users.label.password"));
+        if (lblPerfil != null) lblPerfil.setText(lm.translate("register.profile.label"));
+        if (lblSenhaAdmin != null) lblSenhaAdmin.setText(lm.translate("users.label.adminpassword"));
+
+        if (senhaField != null) senhaField.setToolTipText(lm.translate("users.label.password.hint"));
+        if (senhaAdminField != null) senhaAdminField.setToolTipText(lm.translate("users.label.adminpassword.hint"));
+
+        if (excluirButton != null) excluirButton.setText(lm.translate("users.button.delete"));
+        if (salvarButton != null) {
+            salvarButton.setText(usuarioSelecionado == null
+                    ? lm.translate("passengers.button.add")
+                    : lm.translate("transfers.button.edit"));
+        }
+
+        if (dicaLabel != null) dicaLabel.setText(lm.translate("users.table.hint"));
+
+        if (tableModel != null) {
+            tableModel.setColumnIdentifiers(new String[]{
+                    lm.translate("users.table.col.id"),
+                    lm.translate("users.table.col.name"),
+                    lm.translate("users.table.col.username"),
+                    lm.translate("users.table.col.profile"),
+                    lm.translate("users.table.col.created")
+            });
+        }
     }
 
     private JComponent buildForm() {
@@ -64,35 +109,38 @@ public class UsuariosPanel extends JPanel {
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel title = new JLabel("Cadastro de Usuário");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
+        formTitleLabel = new JLabel();
+        formTitleLabel.setFont(SECTION_FONT);
+        formTitleLabel.setForeground(TEXT_COLOR);
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 14, 0);
-        form.add(title, gbc);
+        form.add(formTitleLabel, gbc);
 
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.gridy++;
-        form.add(label("Nome completo:"), gbc);
+        lblNome = label("");
+        form.add(lblNome, gbc);
         nomeField = field();
         gbc.gridy++;
         form.add(nomeField, gbc);
 
         gbc.gridy++;
-        form.add(label("Usuário (login):"), gbc);
+        lblUsuario = label("");
+        form.add(lblUsuario, gbc);
         usuarioField = field();
         gbc.gridy++;
         form.add(usuarioField, gbc);
 
         gbc.gridy++;
-        form.add(label("Senha:"), gbc);
+        lblSenha = label("");
+        form.add(lblSenha, gbc);
         senhaField = passwordField();
-        senhaField.setToolTipText("Obrigatória ao cadastrar. Ao editar, preencha só para trocar a senha.");
         gbc.gridy++;
         form.add(senhaField, gbc);
 
         gbc.gridy++;
-        form.add(label("Perfil:"), gbc);
+        lblPerfil = label("");
+        form.add(lblPerfil, gbc);
         perfilCombo = new JComboBox<>(Perfil.values());
         perfilCombo.setFont(BASE_FONT);
         perfilCombo.setBackground(Color.WHITE);
@@ -101,23 +149,23 @@ public class UsuariosPanel extends JPanel {
         form.add(perfilCombo, gbc);
 
         gbc.gridy++;
-        form.add(label("Senha do administrador:"), gbc);
+        lblSenhaAdmin = label("");
+        form.add(lblSenhaAdmin, gbc);
         senhaAdminField = passwordField();
-        senhaAdminField.setToolTipText("Necessária para salvar, excluir ou redefinir senha.");
         gbc.gridy++;
         form.add(senhaAdminField, gbc);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
 
-        salvarButton = styledButton("Adicionar", PRIMARY_BLUE);
+        salvarButton = styledButton("", PRIMARY_BLUE);
         salvarButton.addActionListener(e -> salvarOuAtualizar());
 
-        excluirButton = styledButton("Excluir usuário", DANGER_RED);
+        excluirButton = styledButton("", DANGER_RED);
         excluirButton.setEnabled(false);
         excluirButton.addActionListener(e -> excluirUsuario());
 
-        JButton limpar = styledButton("Limpar", Color.LIGHT_GRAY);
+        JButton limpar = styledButton("", Color.LIGHT_GRAY);
         limpar.setForeground(TEXT_COLOR);
         limpar.addActionListener(e -> limparForm());
 
@@ -131,6 +179,9 @@ public class UsuariosPanel extends JPanel {
         gbc.insets = new Insets(18, 0, 0, 0);
         form.add(actions, gbc);
 
+        // "Limpar" usa a mesma chave comum de outros painéis
+        limpar.setText(LanguageManager.getInstance().translate("common.clear"));
+
         return form;
     }
 
@@ -142,10 +193,10 @@ public class UsuariosPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)
         ));
 
-        JLabel title = new JLabel("Usuários cadastrados");
-        title.setFont(SECTION_FONT);
-        title.setForeground(TEXT_COLOR);
-        panel.add(title, BorderLayout.NORTH);
+        tableTitleLabel = new JLabel();
+        tableTitleLabel.setFont(SECTION_FONT);
+        tableTitleLabel.setForeground(TEXT_COLOR);
+        panel.add(tableTitleLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(
                 new String[]{"ID", "Nome", "Usuário", "Perfil", "Criado em"}, 0) {
@@ -169,24 +220,24 @@ public class UsuariosPanel extends JPanel {
                     perfilCombo.setSelectedIndex(0);
                 }
                 senhaField.setText("");
-                boolean isAdmin = "ADMIN".equals(String.valueOf(tableModel.getValueAt(row, 3)));
                 perfilCombo.setEnabled(true);
                 excluirButton.setEnabled(true);
-                salvarButton.setText("Salvar alteração");
+                salvarButton.setText(LanguageManager.getInstance().translate("transfers.button.edit"));
             }
         });
 
-        JLabel dica = new JLabel("💡 Clique em um usuário para editar. Excluir pede apenas a senha do administrador.");
-        dica.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        dica.setForeground(MUTED_TEXT);
+        dicaLabel = new JLabel();
+        dicaLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        dicaLabel.setForeground(MUTED_TEXT);
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(dica, BorderLayout.SOUTH);
+        panel.add(dicaLabel, BorderLayout.SOUTH);
         carregarUsuarios();
         return panel;
     }
 
     private void salvarOuAtualizar() {
+        LanguageManager lm = LanguageManager.getInstance();
         String nome = nomeField.getText().trim();
         String usuario = usuarioField.getText().trim();
         String senha = new String(senhaField.getPassword());
@@ -196,48 +247,65 @@ public class UsuariosPanel extends JPanel {
         try {
             if (usuarioSelecionado == null) {
                 if (senha.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Informe a senha do novo usuário.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(this,
+                            lm.translate("users.message.password.required"),
+                            lm.translate("transfers.message.warning"),
+                            JOptionPane.WARNING_MESSAGE);
                     return;
                 }
                 service.registrar(nome, usuario, senha, senhaAdmin, perfil);
-                JOptionPane.showMessageDialog(this, "Usuário cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        lm.translate("users.message.created"),
+                        lm.translate("transfers.message.success"),
+                        JOptionPane.INFORMATION_MESSAGE);
             } else {
                 service.atualizar(usuarioSelecionado, nome, perfil, senhaAdmin);
                 if (!senha.isEmpty()) {
                     service.resetarSenhaAdmin(usuarioSelecionado, senha, senhaAdmin);
                 }
-                JOptionPane.showMessageDialog(this, "Usuário atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        lm.translate("users.message.updated"),
+                        lm.translate("transfers.message.success"),
+                        JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
             carregarUsuarios();
         } catch (AuthenticationException | ValidationException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, ex.getMessage(),
+                    lm.translate("transfers.message.warning"), JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    lm.translate("users.message.error", Map.of("msg", String.valueOf(ex.getMessage()))),
+                    lm.translate("transfers.message.error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void excluirUsuario() {
         if (usuarioSelecionado == null) return;
+        LanguageManager lm = LanguageManager.getInstance();
 
-        // 1. Mantém apenas a confirmação visual simples
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Excluir o usuário \"" + usuarioSelecionado + "\"?",
-                "Confirmar exclusão",
+                lm.translate("users.message.delete.confirm", Map.of("usuario", usuarioSelecionado)),
+                lm.translate("transfers.message.delete.confirm.title"),
                 JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            // 2. Chama o service passando apenas o usuário, sem pedir senha
             service.excluir(usuarioSelecionado);
 
             limparForm();
             carregarUsuarios();
-            JOptionPane.showMessageDialog(this, "Usuário excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    lm.translate("users.message.deleted"),
+                    lm.translate("transfers.message.success"),
+                    JOptionPane.INFORMATION_MESSAGE);
         } catch (AuthenticationException | ValidationException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, ex.getMessage(),
+                    lm.translate("transfers.message.warning"), JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao excluir: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    lm.translate("users.message.delete.error", Map.of("msg", String.valueOf(ex.getMessage()))),
+                    lm.translate("transfers.message.error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -258,6 +326,7 @@ public class UsuariosPanel extends JPanel {
     }
 
     private void limparForm() {
+        LanguageManager lm = LanguageManager.getInstance();
         usuarioSelecionado = null;
         nomeField.setText("");
         usuarioField.setText("");
@@ -266,7 +335,7 @@ public class UsuariosPanel extends JPanel {
         senhaAdminField.setText("");
         perfilCombo.setSelectedIndex(0);
         perfilCombo.setEnabled(true);
-        salvarButton.setText("Adicionar");
+        salvarButton.setText(lm.translate("passengers.button.add"));
         excluirButton.setEnabled(false);
         table.clearSelection();
     }

@@ -361,7 +361,7 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
 
         LanguageManager lm = LanguageManager.getInstance();
         String titleText = lm.translate(navLabelKeys.get(key));
-        String cleanTitle = titleText.replaceAll("[🛠️📊👥📍📋📦📝🧑‍✈️🚐⚙️🔒🚗🚙]", "").trim();
+        String cleanTitle = titleText.replaceFirst("^[\\p{So}\\p{Cn}\\uFE0F\\u200D]+\\s*", "").trim();
         pageTitle.setText(cleanTitle);
         pageSubtitle.setText(lm.translate(navSubtitleKeys.get(key)));
         cardLayout.show(cardPanel, key);
