@@ -2,7 +2,8 @@ package br.com.sosviale.view;
 
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
-import br.com.sosviale.service.VeiculoService;
+import br.com.sosviale.controller.veiculo.VeiculoController;
+import br.com.sosviale.controller.veiculo.dto.VeiculoRequest;
 import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
@@ -21,7 +22,7 @@ public class VeiculosPanel extends JPanel {
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
 
-    private final VeiculoService service = new VeiculoService();
+    private final VeiculoController veiculoController;
     private DefaultTableModel tableModel;
     private JTable table;
 
@@ -36,7 +37,8 @@ public class VeiculosPanel extends JPanel {
     private JLabel formTitleLabel;
     private JLabel tableTitleLabel;
 
-    public VeiculosPanel() {
+    public VeiculosPanel(VeiculoController veiculoController) {
+        this.veiculoController = veiculoController;
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -54,7 +56,9 @@ public class VeiculosPanel extends JPanel {
             tableModel.setColumnIdentifiers(new String[]{
                     lm.translate("vehicles.table.id"),
                     lm.translate("vehicles.table.model"),
+                    lm.translate("vehicles.table.brand"), // parar de printar erro no terminal
                     lm.translate("vehicles.table.plate"),
+                    lm.translate("vehicles.table.capacity"), // parar de printar erro no terminal
                     lm.translate("vehicles.table.capacity")
             });
         }
@@ -203,10 +207,10 @@ public class VeiculosPanel extends JPanel {
         try {
             int capacidade = Integer.parseInt(capStr);
             if (idSelecionado == null) {
-                service.salvar(labelTxt, placa, capacidade, marca, tipo);
+                veiculoController.salvar(new VeiculoRequest(null, labelTxt, placa, capacidade, marca, tipo));
                 JOptionPane.showMessageDialog(this, "Veículo cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                service.atualizar(idSelecionado, labelTxt, placa, capacidade, marca, tipo);
+                veiculoController.atualizar(new VeiculoRequest(idSelecionado, labelTxt, placa, capacidade, marca, tipo));
                 JOptionPane.showMessageDialog(this, "Veículo atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
@@ -230,7 +234,7 @@ public class VeiculosPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            service.excluir(idSelecionado);
+            veiculoController.excluir(idSelecionado);
             limparForm();
             carregarVeiculos();
             JOptionPane.showMessageDialog(this, "Veículo excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -242,7 +246,7 @@ public class VeiculosPanel extends JPanel {
     private void carregarVeiculos() {
         if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
-        service.listarTodos().forEach(v -> tableModel.addRow(new Object[]{
+        veiculoController.listarTodos().forEach(v -> tableModel.addRow(new Object[]{
                 v.getId(),
                 v.getLabel(),
                 v.getMarca() != null ? v.getMarca() : "",

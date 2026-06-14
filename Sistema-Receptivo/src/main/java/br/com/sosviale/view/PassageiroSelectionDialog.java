@@ -1,7 +1,7 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.model.Passageiro;
-import br.com.sosviale.service.PassageiroService;
+import br.com.sosviale.controller.passageiro.PassageiroController;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -16,10 +16,11 @@ public class PassageiroSelectionDialog extends JDialog {
     private JTable tabelaResultados;
     private DefaultTableModel model;
     private Passageiro selecionado;
-    private final PassageiroService service = new PassageiroService();
+    private final PassageiroController passageiroController;
 
-    public PassageiroSelectionDialog(Frame parent) {
+    public PassageiroSelectionDialog(Frame parent, PassageiroController passageiroController) {
         super(parent, "Selecionar Passageiro", true);
+        this.passageiroController = passageiroController;
         setLayout(new BorderLayout(10, 10));
         setSize(500, 400);
         setLocationRelativeTo(parent);
@@ -56,7 +57,7 @@ public class PassageiroSelectionDialog extends JDialog {
                 // Converte o índice da linha da tabela (que pode estar filtrada) para o modelo
                 int modelRow = tabelaResultados.convertRowIndexToModel(row);
                 Integer id = (Integer) model.getValueAt(modelRow, 0);
-                selecionado = service.buscarPorId(id);
+                selecionado = passageiroController.buscarPorId(id);
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Selecione um passageiro na lista.");
@@ -72,7 +73,7 @@ public class PassageiroSelectionDialog extends JDialog {
 
     private void carregarTodos() {
         model.setRowCount(0);
-        service.listarTodos().forEach(p ->
+        passageiroController.listarTodos().forEach(p ->
                 model.addRow(new Object[]{p.getId(), p.getNome(), p.getDocumento()})
         );
     }

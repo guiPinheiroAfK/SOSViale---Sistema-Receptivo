@@ -1,10 +1,11 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.controller.passageiro.PassageiroController;
+import br.com.sosviale.controller.passageiro.dto.PassageiroRequest;
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.TipoDocumento;
-import br.com.sosviale.service.PassageiroService;
 import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
@@ -25,7 +26,7 @@ public class PassageirosPanel extends JPanel {
     private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 16);
 
-    private final PassageiroService service = new PassageiroService();
+    private final PassageiroController passageiroController;
     private DefaultTableModel tableModel;
     private JTable table;
     private JTextField nomeField;
@@ -40,7 +41,8 @@ public class PassageirosPanel extends JPanel {
     private JLabel dicaLabel;
     private JLabel lblNome, lblDocumento, lblTipo, lblNacionalidade;
 
-    public PassageirosPanel() {
+    public PassageirosPanel(PassageiroController passageiroController) {
+        this.passageiroController = passageiroController;
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -160,10 +162,10 @@ public class PassageirosPanel extends JPanel {
 
         try {
             if (idSelecionado == null) {
-                service.salvar(nome, documento, tipo, nacionalidade);
+                passageiroController.salvar(new PassageiroRequest(null, nome, documento, tipo, nacionalidade));
                 JOptionPane.showMessageDialog(this, "Passageiro cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                service.atualizar(idSelecionado, nome, documento, tipo, nacionalidade);
+                passageiroController.atualizar(new PassageiroRequest(idSelecionado, nome, documento, tipo, nacionalidade));
                 JOptionPane.showMessageDialog(this, "Passageiro atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
@@ -250,14 +252,14 @@ public class PassageirosPanel extends JPanel {
     private void carregarPassageiros() {
         if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
-        service.listarTodos().forEach(p -> tableModel.addRow(new Object[]{
+        passageiroController.listarTodos().forEach(p -> tableModel.addRow(new Object[]{
                 p.getId(), p.getNome(), p.getTipoDocumento(), p.getDocumento(), p.getNacionalidade()
         }));
     }
 
     private void excluirPassageiro() {
         if (idSelecionado != null) {
-            service.excluir(idSelecionado);
+            passageiroController.excluir(idSelecionado);
             limparForm();
             carregarPassageiros();
         }

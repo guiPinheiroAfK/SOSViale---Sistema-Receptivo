@@ -8,14 +8,18 @@ import br.com.sosviale.controller.login.LoginController;
 import br.com.sosviale.controller.login.impl.LoginControllerImpl;
 import br.com.sosviale.controller.motorista.MotoristaController;
 import br.com.sosviale.controller.motorista.impl.MotoristaControllerImpl;
+import br.com.sosviale.controller.ordemservico.OrdemServicoController;
+import br.com.sosviale.controller.ordemservico.impl.OrdemServicoControllerImpl;
+import br.com.sosviale.controller.passageiro.PassageiroController;
+import br.com.sosviale.controller.passageiro.impl.PassageiroControllerImpl;
+import br.com.sosviale.controller.transfer.TransferController;
+import br.com.sosviale.controller.transfer.impl.TransferControllerImpl;
+import br.com.sosviale.controller.veiculo.VeiculoController;
+import br.com.sosviale.controller.veiculo.impl.VeiculoControllerImpl;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.offline.OfflineSyncService;
-import br.com.sosviale.service.DashboardService;
-import br.com.sosviale.service.MotoristaService;
-import br.com.sosviale.service.NotificationService;
-import br.com.sosviale.service.TransferService;
-import br.com.sosviale.service.UserService;
+import br.com.sosviale.service.*;
 import br.com.sosviale.App;
 
 import javax.swing.*;
@@ -294,13 +298,24 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         DashboardController dashboardController = new DashboardControllerImpl(new DashboardService());
         dashboardPanel = new DashboardPanel(dashboardController);
         cardPanel.add(dashboardPanel, "dashboard");
-        cardPanel.add(new PassageirosPanel(),  "passageiros");
+
+        PassageiroController passageiroController = new PassageiroControllerImpl(new PassageiroService());
+        cardPanel.add(new PassageirosPanel(passageiroController), "passageiros");
+
         cardPanel.add(new PontosColetaPanel(), "pontosColeta");
-        cardPanel.add(new TransfersPanel(),    "transfers");
-        cardPanel.add(new OrdemServicoUnifiedPanel(),       "ordens");
+
+        TransferController transferController = new TransferControllerImpl(new TransferService(), new PontoColetaService(), new PassageiroService());
+        cardPanel.add(new TransfersPanel(transferController), "transfers");
+
+        OrdemServicoController ordemServicoController = new OrdemServicoControllerImpl(new OrdemServicoService(), new MotoristaService(), new VeiculoService(), new TransferService());
+        cardPanel.add(new OrdemServicoUnifiedPanel(ordemServicoController), "ordens");
+
         MotoristaController motoristaController = new MotoristaControllerImpl(new MotoristaService());
         cardPanel.add(new MotoristasPanel(motoristaController),   "motoristas");
-        cardPanel.add(new VeiculosPanel(),     "veiculos");
+
+        VeiculoController veiculoController = new VeiculoControllerImpl(new VeiculoService());
+        cardPanel.add(new VeiculosPanel(veiculoController), "veiculos");
+
         servicosPanel = new ServicosPanel();
         cardPanel.add(servicosPanel, "servicos");
 
