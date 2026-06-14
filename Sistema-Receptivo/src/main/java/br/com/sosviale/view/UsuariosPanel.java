@@ -2,9 +2,10 @@ package br.com.sosviale.view;
 
 import br.com.sosviale.auth.AuthenticationException;
 import br.com.sosviale.auth.ValidationException;
+import br.com.sosviale.controller.usuario.UsuarioController;
+import br.com.sosviale.controller.usuario.dto.UsuarioRequest;
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.model.User;
-import br.com.sosviale.service.UserService;
 import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
@@ -24,7 +25,7 @@ public class UsuariosPanel extends JPanel {
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
 
-    private final UserService service = new UserService();
+    private final UsuarioController controller;
     private final SimpleDateFormat dateFmt = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     private DefaultTableModel tableModel;
@@ -39,7 +40,8 @@ public class UsuariosPanel extends JPanel {
     private JButton excluirButton;
     private String usuarioSelecionado = null;
 
-    public UsuariosPanel() {
+    public UsuariosPanel(UsuarioController controller) {
+        this.controller = controller;
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -169,7 +171,6 @@ public class UsuariosPanel extends JPanel {
                     perfilCombo.setSelectedIndex(0);
                 }
                 senhaField.setText("");
-                boolean isAdmin = "ADMIN".equals(String.valueOf(tableModel.getValueAt(row, 3)));
                 perfilCombo.setEnabled(true);
                 excluirButton.setEnabled(true);
                 salvarButton.setText("Salvar alteração");
@@ -187,11 +188,11 @@ public class UsuariosPanel extends JPanel {
     }
 
     private void salvarOuAtualizar() {
-        String nome = nomeField.getText().trim();
-        String usuario = usuarioField.getText().trim();
-        String senha = new String(senhaField.getPassword());
+        String nome       = nomeField.getText().trim();
+        String usuario    = usuarioField.getText().trim();
+        String senha      = new String(senhaField.getPassword());
         String senhaAdmin = new String(senhaAdminField.getPassword());
-        Perfil perfil = (Perfil) perfilCombo.getSelectedItem();
+        Perfil perfil     = (Perfil) perfilCombo.getSelectedItem();
 
         try {
             if (usuarioSelecionado == null) {
@@ -199,12 +200,12 @@ public class UsuariosPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Informe a senha do novo usuário.", "Aviso", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                service.registrar(nome, usuario, senha, senhaAdmin, perfil);
+                controller.registrar(new UsuarioRequest(usuario, nome, senha, senhaAdmin, perfil));
                 JOptionPane.showMessageDialog(this, "Usuário cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                service.atualizar(usuarioSelecionado, nome, perfil, senhaAdmin);
+                controller.atualizar(new UsuarioRequest(usuarioSelecionado, nome, null, senhaAdmin, perfil));
                 if (!senha.isEmpty()) {
-                    service.resetarSenhaAdmin(usuarioSelecionado, senha, senhaAdmin);
+                    controller.resetarSenha(new UsuarioRequest(usuarioSelecionado, null, senha, senhaAdmin, null));
                 }
                 JOptionPane.showMessageDialog(this, "Usuário atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -220,7 +221,6 @@ public class UsuariosPanel extends JPanel {
     private void excluirUsuario() {
         if (usuarioSelecionado == null) return;
 
-        // 1. Mantém apenas a confirmação visual simples
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Excluir o usuário \"" + usuarioSelecionado + "\"?",
                 "Confirmar exclusão",
@@ -228,9 +228,8 @@ public class UsuariosPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            // 2. Chama o service passando apenas o usuário, sem pedir senha
-            service.excluir(usuarioSelecionado);
-
+            String senhaAdmin = new String(senhaAdminField.getPassword());
+            controller.excluir(usuarioSelecionado, senhaAdmin);
             limparForm();
             carregarUsuarios();
             JOptionPane.showMessageDialog(this, "Usuário excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -244,7 +243,7 @@ public class UsuariosPanel extends JPanel {
     private void carregarUsuarios() {
         if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
-        for (User u : service.listarTodos()) {
+        for (User u : controller.listarTodos()) {
             String perfil = u.isAdmin() ? "ADMIN" : (u.getPerfil() != null ? u.getPerfil().name() : "—");
             String criado = u.getCriadoEm() != null ? dateFmt.format(u.getCriadoEm()) : "—";
             tableModel.addRow(new Object[]{

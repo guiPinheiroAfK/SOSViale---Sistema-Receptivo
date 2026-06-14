@@ -12,8 +12,12 @@ import br.com.sosviale.controller.ordemservico.OrdemServicoController;
 import br.com.sosviale.controller.ordemservico.impl.OrdemServicoControllerImpl;
 import br.com.sosviale.controller.passageiro.PassageiroController;
 import br.com.sosviale.controller.passageiro.impl.PassageiroControllerImpl;
+import br.com.sosviale.controller.pontoColeta.PontoColetaController;
+import br.com.sosviale.controller.pontoColeta.impl.PontoColetaControllerImpl;
 import br.com.sosviale.controller.transfer.TransferController;
 import br.com.sosviale.controller.transfer.impl.TransferControllerImpl;
+import br.com.sosviale.controller.usuario.UsuarioController;
+import br.com.sosviale.controller.usuario.impl.UsuarioControllerImpl;
 import br.com.sosviale.controller.veiculo.VeiculoController;
 import br.com.sosviale.controller.veiculo.impl.VeiculoControllerImpl;
 import br.com.sosviale.i18n.LanguageManager;
@@ -302,7 +306,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         PassageiroController passageiroController = new PassageiroControllerImpl(new PassageiroService());
         cardPanel.add(new PassageirosPanel(passageiroController), "passageiros");
 
-        cardPanel.add(new PontosColetaPanel(), "pontosColeta");
+        PontoColetaController pontoColetaController = new PontoColetaControllerImpl(new PontoColetaService());
+        cardPanel.add(new PontosColetaPanel(pontoColetaController), "pontosColeta");
 
         TransferController transferController = new TransferControllerImpl(new TransferService(), new PontoColetaService(), new PassageiroService());
         cardPanel.add(new TransfersPanel(transferController), "transfers");
@@ -319,7 +324,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         servicosPanel = new ServicosPanel();
         cardPanel.add(servicosPanel, "servicos");
 
-        usuariosPanel = new UsuariosPanel();
+        UsuarioController usuarioController = new UsuarioControllerImpl(new UserService());
+        usuariosPanel = new UsuariosPanel(usuarioController);
         cardPanel.add(usuariosPanel, "admin");
 
         main.add(heading,   BorderLayout.NORTH);

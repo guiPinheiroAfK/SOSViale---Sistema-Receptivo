@@ -1,9 +1,10 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.controller.pontoColeta.PontoColetaController;
+import br.com.sosviale.controller.pontoColeta.dto.PontoColetaRequest;
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.PontoColeta;
-import br.com.sosviale.service.PontoColetaService;
 import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
@@ -22,7 +23,7 @@ public class PontosColetaPanel extends JPanel {
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
 
-    private final PontoColetaService service = new PontoColetaService();
+    private final PontoColetaController controller;
 
     private DefaultTableModel tableModel;
     private JTable table;
@@ -36,7 +37,8 @@ public class PontosColetaPanel extends JPanel {
     private JLabel tableTitleLabel;
     private JLabel dicaLabel;
 
-    public PontosColetaPanel() {
+    public PontosColetaPanel(PontoColetaController controller) {
+        this.controller = controller;
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -156,7 +158,7 @@ public class PontosColetaPanel extends JPanel {
                 fieldLocal.setText(str(tableModel.getValueAt(row, 1)));
 
                 try {
-                    PontoColeta pc = service.buscarPorId(idSelecionado);
+                    PontoColeta pc = controller.buscarPorId(idSelecionado);
                     if (pc != null) {
                         fieldLat.setText(pc.getLatitude() != null ? String.valueOf(pc.getLatitude()) : "");
                         fieldLng.setText(pc.getLongitude() != null ? String.valueOf(pc.getLongitude()) : "");
@@ -189,26 +191,15 @@ public class PontosColetaPanel extends JPanel {
         }
 
         try {
-            PontoColeta pc;
-            if (idSelecionado != null) {
-                pc = service.buscarPorId(idSelecionado);
-                if (pc == null) {
-                    JOptionPane.showMessageDialog(this, "Local não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-            } else {
-                pc = new PontoColeta();
-            }
-
-            pc.setLocalColeta(local);
-            pc.setLatitude(parseDouble(fieldLat.getText().trim()));
-            pc.setLongitude(parseDouble(fieldLng.getText().trim()));
+            Double lat = parseDouble(fieldLat.getText().trim());
+            Double lng = parseDouble(fieldLng.getText().trim());
+            PontoColetaRequest request = new PontoColetaRequest(idSelecionado, local, lat, lng);
 
             if (idSelecionado != null) {
-                service.atualizar(pc);
+                controller.atualizar(request);
                 JOptionPane.showMessageDialog(this, "Local atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                service.cadastrar(pc);
+                controller.cadastrar(request);
                 JOptionPane.showMessageDialog(this, "Local cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
 
@@ -229,7 +220,7 @@ public class PontosColetaPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            service.excluir(idSelecionado);
+            controller.excluir(idSelecionado);
             limparForm();
             carregarPontos();
             JOptionPane.showMessageDialog(this, "Local excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -241,7 +232,7 @@ public class PontosColetaPanel extends JPanel {
     private void carregarPontos() {
         if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
-        for (PontoColeta pc : service.listarTodos()) {
+        for (PontoColeta pc : controller.listarTodos()) {
             tableModel.addRow(new Object[]{
                     pc.getId(),
                     pc.getLocalColeta(),

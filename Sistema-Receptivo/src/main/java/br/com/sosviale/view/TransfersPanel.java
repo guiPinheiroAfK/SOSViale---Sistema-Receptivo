@@ -28,6 +28,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+// todo: tem algum problema estourando no terminal, NullPointerException. Não interfere nas funcionalidade do sistema, mas é feio.
+
 public class TransfersPanel extends JPanel {
 
     private static final Color PANEL_BACKGROUND = Color.WHITE;
