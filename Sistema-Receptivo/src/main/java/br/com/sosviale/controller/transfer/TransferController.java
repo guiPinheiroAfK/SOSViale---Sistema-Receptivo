@@ -5,6 +5,7 @@ import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.model.Transfer;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface TransferController {
@@ -22,4 +23,9 @@ public interface TransferController {
     List<PontoColeta> listarPontosColeta();
 
     List<Passageiro> listarPassageiros();
+
+    // Dentro do TransferControllerImpl
+    public BigDecimal getCotacaoUsd();
+
+    public BigDecimal getCotacaoPyg();
 }

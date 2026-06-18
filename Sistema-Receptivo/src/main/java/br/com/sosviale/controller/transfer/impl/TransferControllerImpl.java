@@ -9,6 +9,7 @@ import br.com.sosviale.service.PassageiroService;
 import br.com.sosviale.service.PontoColetaService;
 import br.com.sosviale.service.TransferService;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,5 +75,14 @@ public class TransferControllerImpl implements TransferController {
         t.setMoedaOrigem(req.moeda());
         t.setStatus(req.status());
         t.setPassageiros(new ArrayList<>(req.passageiros()));
+    }
+
+    // Dentro do TransferControllerImpl
+    public BigDecimal getCotacaoUsd() {
+        return transferService.getCotacaoUsd();
+    }
+
+    public BigDecimal getCotacaoPyg() {
+        return transferService.getCotacaoPyg();
     }
 }

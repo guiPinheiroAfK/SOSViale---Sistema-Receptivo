@@ -271,7 +271,13 @@ public class TransfersPanel extends JPanel {
             BigDecimal val = new BigDecimal(txt);
             Moeda m = (Moeda) comboMoeda.getSelectedItem();
 
-            BigDecimal c = (m == Moeda.USD) ? new BigDecimal("5.00") : (m == Moeda.PYG) ? new BigDecimal("0.00068") : BigDecimal.ONE;
+            BigDecimal c = BigDecimal.ONE;
+            if (m == Moeda.USD) {
+                c = transferController.getCotacaoUsd();
+            } else if (m == Moeda.PYG) {
+                c = transferController.getCotacaoPyg();
+            }
+
             BigDecimal res = val.multiply(c);
 
             // Taxas fictícias SOS Viale
@@ -328,28 +334,55 @@ public class TransfersPanel extends JPanel {
     }
 
     private void preencherFormParaEdicao() {
-        int row = table.getSelectedRow();
-        if (row == -1) return;
-        Transfer t = transferController.buscarPorId((Integer) tableModel.getValueAt(row, 0));
-        idSelecionado = t.getId();
+        try {
+            int row = table.getSelectedRow();
+            if (row == -1) return;
 
-        // mudei para parar de printar nullPointer no terminal blz (nao funcionou 100%)
-        java.math.BigDecimal valor = t.getValorOriginal();
-        valorField.setText(valor != null ? valor.toString() : "0.00");
+            Integer id = (Integer) tableModel.getValueAt(row, 0);
+            Transfer t = transferController.buscarPorId(id);
 
-        comboMoeda.setSelectedItem(t.getMoedaOrigem());
+            if (t == null) {
+                JOptionPane.showMessageDialog(this, "Aviso: Transfer não encontrado no banco de dados.");
+                return;
+            }
 
-        valorField.setText(t.getValorOriginal().toString());
-        comboMoeda.setSelectedItem(t.getMoedaOrigem());
-        dataField.setText(t.getDataTransfer().format(DATE_FORMATTER));
-        horaField.setText(t.getHoraTransfer().format(TIME_FORMATTER));
+            idSelecionado = t.getId();
 
-        passageirosSelecionados.clear();
-        if (t.getPassageiros() != null) passageirosSelecionados.addAll(t.getPassageiros());
-        atualizarTabelaPassageiros();
+            // 1. Correção do Valor e Moeda
+            java.math.BigDecimal valor = t.getValorOriginal();
+            valorField.setText(valor != null ? valor.toString() : "0.00");
+            comboMoeda.setSelectedItem(t.getMoedaOrigem() != null ? t.getMoedaOrigem() : Moeda.BRL);
 
-        salvarButton.setText("Salvar alteração");
-        excluirButton.setVisible(true);
+            // 2. Atualizando Origem e Destino com o método blindado
+            selecionarNoCombo(comboOrigem, t.getOrigem());
+            selecionarNoCombo(comboDestino, t.getDestino());
+
+            // 3. Preenche Data e Hora
+            dataField.setText(t.getDataTransfer() != null ? t.getDataTransfer().format(DATE_FORMATTER) : "");
+            horaField.setText(t.getHoraTransfer() != null ? t.getHoraTransfer().format(TIME_FORMATTER) : "");
+
+            // 4. Atualiza a lista de passageiros
+            passageirosSelecionados.clear();
+            if (t.getPassageiros() != null) {
+                passageirosSelecionados.addAll(t.getPassageiros());
+            }
+            atualizarTabelaPassageiros();
+
+            // 5. Configura os botões
+            salvarButton.setText(LanguageManager.getInstance().translate("transfers.button.edit"));
+            excluirButton.setVisible(true);
+
+            // 6. Força a atualização do painel azul de preview de valores
+            atualizarPreview();
+
+        } catch (Exception e) {
+            // Isso vai jogar o erro vermelho no console e um pop-up na tela pra você saber o que quebrou!
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Ocorreu um erro ao carregar os dados na tela.\nMotivo: " + e.getMessage(),
+                    "Erro de Preenchimento",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void limparForm() {
@@ -421,9 +454,18 @@ public class TransfersPanel extends JPanel {
     }
 
     private void selecionarNoCombo(JComboBox<PontoColeta> combo, String nome) {
+        if (nome == null || nome.trim().isEmpty()) {
+            combo.setSelectedIndex(-1); // Deixa em branco se não houver origem/destino
+            return;
+        }
+
         for (int i = 0; i < combo.getItemCount(); i++) {
             PontoColeta p = combo.getItemAt(i);
-            if (p != null && p.getLocalColeta().equals(nome)) { combo.setSelectedIndex(i); break; }
+            // Verifica se o objeto e o nome não são nulos antes de comparar
+            if (p != null && p.getLocalColeta() != null && p.getLocalColeta().equalsIgnoreCase(nome.trim())) {
+                combo.setSelectedIndex(i);
+                return;
+            }
         }
     }
 
