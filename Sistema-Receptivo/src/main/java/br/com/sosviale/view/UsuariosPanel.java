@@ -55,6 +55,7 @@ public class UsuariosPanel extends JPanel {
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
         add(buildTable(), BorderLayout.CENTER);
+        refreshTexts();
         I18nRegistry.register(this::refreshTexts);
     }
 
@@ -253,15 +254,15 @@ public class UsuariosPanel extends JPanel {
                             JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                controller.registrar(new UsuarioRequest(nome, usuario, senha, senhaAdmin, perfil));
+                controller.registrar(new UsuarioRequest(usuario, nome, senha, senhaAdmin, perfil));
                 JOptionPane.showMessageDialog(this,
                         lm.translate("users.message.created"),
                         lm.translate("transfers.message.success"),
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                controller.atualizar(new UsuarioRequest(nome, usuarioSelecionado, null, senhaAdmin, perfil));
+                controller.atualizar(new UsuarioRequest(usuarioSelecionado, nome, null, senhaAdmin, perfil));
                 if (!senha.isEmpty()) {
-                controller.resetarSenha(new UsuarioRequest(nome, usuarioSelecionado, senha, senhaAdmin, perfil));                }
+                    controller.resetarSenha(new UsuarioRequest(usuarioSelecionado, null, senha, senhaAdmin, null));                }
                 JOptionPane.showMessageDialog(this,
                         lm.translate("users.message.updated"),
                         lm.translate("transfers.message.success"),
