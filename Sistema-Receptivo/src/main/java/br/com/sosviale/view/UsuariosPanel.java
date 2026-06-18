@@ -43,15 +43,14 @@ public class UsuariosPanel extends JPanel {
     private JButton excluirButton;
     private String usuarioSelecionado = null;
 
-    public UsuariosPanel(UsuarioController controller) {
-        this.controller = controller;
-    // labels/titulos traduzíveis
+    // labels traduzíveis
     private JLabel formTitleLabel;
     private JLabel tableTitleLabel;
     private JLabel lblNome, lblUsuario, lblSenha, lblPerfil, lblSenhaAdmin;
     private JLabel dicaLabel;
 
-    public UsuariosPanel() {
+    public UsuariosPanel(UsuarioController controller) {
+        this.controller = controller;
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -171,6 +170,7 @@ public class UsuariosPanel extends JPanel {
         JButton limpar = styledButton("", Color.LIGHT_GRAY);
         limpar.setForeground(TEXT_COLOR);
         limpar.addActionListener(e -> limparForm());
+        limpar.setText(LanguageManager.getInstance().translate("common.clear"));
 
         actions.add(salvarButton);
         actions.add(excluirButton);
@@ -181,9 +181,6 @@ public class UsuariosPanel extends JPanel {
         gbc.anchor = GridBagConstraints.SOUTHWEST;
         gbc.insets = new Insets(18, 0, 0, 0);
         form.add(actions, gbc);
-
-        // "Limpar" usa a mesma chave comum de outros painéis
-        limpar.setText(LanguageManager.getInstance().translate("common.clear"));
 
         return form;
     }
@@ -240,15 +237,12 @@ public class UsuariosPanel extends JPanel {
     }
 
     private void salvarOuAtualizar() {
-        String nome       = nomeField.getText().trim();
-        String usuario    = usuarioField.getText().trim();
-        String senha      = new String(senhaField.getPassword());
         LanguageManager lm = LanguageManager.getInstance();
-        String nome = nomeField.getText().trim();
-        String usuario = usuarioField.getText().trim();
-        String senha = new String(senhaField.getPassword());
+        String nome      = nomeField.getText().trim();
+        String usuario   = usuarioField.getText().trim();
+        String senha     = new String(senhaField.getPassword());
         String senhaAdmin = new String(senhaAdminField.getPassword());
-        Perfil perfil     = (Perfil) perfilCombo.getSelectedItem();
+        Perfil perfil    = (Perfil) perfilCombo.getSelectedItem();
 
         try {
             if (usuarioSelecionado == null) {
@@ -259,18 +253,15 @@ public class UsuariosPanel extends JPanel {
                             JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                controller.registrar(new UsuarioRequest(usuario, nome, senha, senhaAdmin, perfil));
-                JOptionPane.showMessageDialog(this, "Usuário cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                service.registrar(nome, usuario, senha, senhaAdmin, perfil);
+                controller.registrar(new UsuarioRequest(nome, usuario, senha, senhaAdmin, perfil));
                 JOptionPane.showMessageDialog(this,
                         lm.translate("users.message.created"),
                         lm.translate("transfers.message.success"),
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                controller.atualizar(new UsuarioRequest(usuarioSelecionado, nome, null, senhaAdmin, perfil));
+                controller.atualizar(new UsuarioRequest(nome, usuarioSelecionado, null, senhaAdmin, perfil));
                 if (!senha.isEmpty()) {
-                    controller.resetarSenha(new UsuarioRequest(usuarioSelecionado, null, senha, senhaAdmin, null));
-                }
+                controller.resetarSenha(new UsuarioRequest(nome, usuarioSelecionado, senha, senhaAdmin, perfil));                }
                 JOptionPane.showMessageDialog(this,
                         lm.translate("users.message.updated"),
                         lm.translate("transfers.message.success"),
@@ -299,9 +290,11 @@ public class UsuariosPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
+            // 1. Extraímos o texto da senha de dentro do JPasswordField
             String senhaAdmin = new String(senhaAdminField.getPassword());
+
+            // 2. Passamos o texto extraído para o controller
             controller.excluir(usuarioSelecionado, senhaAdmin);
-            service.excluir(usuarioSelecionado);
 
             limparForm();
             carregarUsuarios();
