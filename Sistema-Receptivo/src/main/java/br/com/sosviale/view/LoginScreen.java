@@ -1,15 +1,14 @@
 package br.com.sosviale.view;
 
 import br.com.sosviale.auth.AuthenticationException;
-import br.com.sosviale.auth.AuthenticationService;
-import br.com.sosviale.auth.SessionManager;
 import br.com.sosviale.auth.ValidationException;
-import br.com.sosviale.model.Perfil;
-import br.com.sosviale.offline.OfflineStore;
-import br.com.sosviale.offline.dto.OfflineSessionDto;
+import br.com.sosviale.controller.login.LoginController;
+import br.com.sosviale.controller.login.dto.LoginRequest;
+import br.com.sosviale.controller.login.dto.RegisterRequest;
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
-import br.com.sosviale.service.UserService;
+import br.com.sosviale.model.Perfil;
+import br.com.sosviale.offline.OfflineStore;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -32,9 +31,8 @@ public class LoginScreen extends JFrame {
     private static final Font LABEL_FONT = new Font("SansSerif", Font.PLAIN, 14);
     private static final Font BUTTON_FONT = new Font("SansSerif", Font.BOLD, 13);
 
-    private final AuthenticationService authService;
+    private final LoginController loginController;
     private final boolean databaseDisponivel;
-    private final UserService userService = new UserService();
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -62,8 +60,8 @@ public class LoginScreen extends JFrame {
     private JButton registerBackButton;
     private JComboBox<Perfil> registerPerfilCombo;
 
-    public LoginScreen(AuthenticationService authService, boolean databaseDisponivel) {
-        this.authService = authService;
+    public LoginScreen(LoginController loginController, boolean databaseDisponivel) {
+        this.loginController = loginController;
         this.databaseDisponivel = databaseDisponivel;
         initializeUI();
     }
@@ -221,7 +219,7 @@ public class LoginScreen extends JFrame {
         registerPerfilCombo.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                           boolean isSelected, boolean cellHasFocus) {
+                                                          boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof Perfil perfil) {
                     setText(LanguageManager.getInstance().translate("perfil." + perfil.name()));
@@ -267,18 +265,15 @@ public class LoginScreen extends JFrame {
             JLabel registerErrorLabel
     ) {
         try {
-            String name = nameField.getText().trim();
-            String username = regUsernameField.getText().trim();
-            String password = new String(regPasswordField.getPassword()).trim();
-            String adminPassword = new String(adminPasswordField.getPassword()).trim();
-            Perfil perfil = (Perfil) perfilCombo.getSelectedItem();
+            RegisterRequest request = new RegisterRequest(
+                    nameField.getText().trim(),
+                    regUsernameField.getText().trim(),
+                    new String(regPasswordField.getPassword()).trim(),
+                    new String(adminPasswordField.getPassword()).trim(),
+                    (Perfil) perfilCombo.getSelectedItem()
+            );
 
-            if (name.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                registerErrorLabel.setText(LanguageManager.getInstance().translate("register.validation.required"));
-                return;
-            }
-
-            userService.registrar(name, username, password, adminPassword, perfil);
+            loginController.registrar(request);
 
             JOptionPane.showMessageDialog(
                     LoginScreen.this,
@@ -295,29 +290,15 @@ public class LoginScreen extends JFrame {
 
     private void performOfflineLogin() {
         String username = usernameField.getText().trim();
-        if (username.isEmpty()) {
-            errorLabel.setText(LanguageManager.getInstance().translate("login.offline.need.user"));
-            return;
+        try {
+            loginController.loginOffline(username);
+            SwingUtilities.invokeLater(() -> {
+                dispose();
+                if (loginCallback != null) loginCallback.onLoginSuccess(username);
+            });
+        } catch (AuthenticationException ex) {
+            errorLabel.setText(ex.getMessage());
         }
-        OfflineSessionDto session = OfflineStore.getInstance().loadSession(username)
-                .or(() -> OfflineStore.getInstance().loadAnySession())
-                .orElse(null);
-        if (session == null || !OfflineStore.getInstance().hasSnapshot(session.getUsuario())) {
-            errorLabel.setText(LanguageManager.getInstance().translate("login.offline.no.cache"));
-            return;
-        }
-        SessionManager.getInstance().iniciarSessaoOffline(
-                session.getUsuario(),
-                session.getNome(),
-                Perfil.valueOf(session.getPerfil()),
-                session.isAdmin()
-        );
-        SwingUtilities.invokeLater(() -> {
-            dispose();
-            if (loginCallback != null) {
-                loginCallback.onLoginSuccess(session.getUsuario());
-            }
-        });
     }
 
     private void performLogin() {
@@ -327,23 +308,14 @@ public class LoginScreen extends JFrame {
             return;
         }
 
-        String username = usernameField.getText().trim();
-        String password = new String(passwordField.getPassword()).trim();
-
-        if (username.isEmpty() || password.isEmpty()) {
-            errorLabel.setText(LanguageManager.getInstance().translate("login.validation.fill.credentials"));
-            return;
-        }
-
         try {
-            authService.login(username, password);
-
+            loginController.login(new LoginRequest(
+                    usernameField.getText().trim(),
+                    new String(passwordField.getPassword()).trim()
+            ));
             SwingUtilities.invokeLater(() -> {
                 dispose();
-
-                if (loginCallback != null) {
-                    loginCallback.onLoginSuccess(username);
-                }
+                if (loginCallback != null) loginCallback.onLoginSuccess(usernameField.getText().trim());
             });
         } catch (AuthenticationException ex) {
             errorLabel.setText(ex.getMessage());

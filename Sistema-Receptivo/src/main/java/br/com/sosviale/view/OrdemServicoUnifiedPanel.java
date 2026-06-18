@@ -3,7 +3,9 @@ package br.com.sosviale.view;
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.*;
-import br.com.sosviale.service.*;
+import br.com.sosviale.controller.ordemservico.OrdemServicoController;
+import br.com.sosviale.controller.ordemservico.dto.OrdemServicoRequest;
+import br.com.sosviale.service.pathfinding.RouteResult;
 import br.com.sosviale.service.pathfinding.RouteResult;
 import br.com.sosviale.util.OfflineReadGuard;
 
@@ -36,10 +38,8 @@ public class OrdemServicoUnifiedPanel extends JPanel {
     private static final Font BASE_FONT    = new Font("SansSerif", Font.PLAIN, 12);
 
     //SERVICES
-    private final OrdemServicoService osService = new OrdemServicoService();
-    private final MotoristaService motoristaService = new MotoristaService();
-    private final VeiculoService veiculoService = new VeiculoService();
-    private final TransferService transferService = new TransferService();
+
+    private final OrdemServicoController osController;
 
     // COMPONENTES
     private JComboBox<Motorista> comboMotoristas;
@@ -66,7 +66,8 @@ public class OrdemServicoUnifiedPanel extends JPanel {
     private JLabel headerTitleLabel;
 
     // CONSTRUTOR
-    public OrdemServicoUnifiedPanel() {
+    public OrdemServicoUnifiedPanel(OrdemServicoController osController) {
+        this.osController = osController;
 
         setLayout(new BorderLayout(10,10));
         setBackground(new Color(245,246,248));
@@ -322,11 +323,11 @@ public class OrdemServicoUnifiedPanel extends JPanel {
             return;
         }
 
-        for(Motorista m : motoristaService.listarTodos()) {
+        for(Motorista m : osController.listarMotoristas()) {
             comboMotoristas.addItem(m);
         }
 
-        for(Veiculo v : veiculoService.listarTodos()) {
+        for(Veiculo v : osController.listarVeiculos()) {
             comboVeiculos.addItem(v);
         }
 
@@ -337,20 +338,12 @@ public class OrdemServicoUnifiedPanel extends JPanel {
     private void criarNovaOS() {
 
         try {
-
             Motorista motorista = (Motorista) comboMotoristas.getSelectedItem();
             Veiculo veiculo = (Veiculo) comboVeiculos.getSelectedItem();
 
-            OrdemServico os = new OrdemServico();
-
-            os.setDataServico(LocalDate.now());
-            os.setMotorista(motorista);
-            os.setVeiculo(veiculo);
-
-            osService.cadastrar(os);
+            osController.criar(new OrdemServicoRequest(motorista, veiculo, LocalDate.now()));
 
             carregarDados();
-
             log("OS criada com sucesso.");
 
         } catch (Exception ex) {
@@ -367,7 +360,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
 
         Integer osId = (Integer) osTableModel.getValueAt(row,0);
 
-        osSelecionada = osService.buscarComTransfers(osId);
+        osSelecionada = osController.buscarComTransfers(osId);
 
         if(osSelecionada == null) return;
 
@@ -411,13 +404,13 @@ public class OrdemServicoUnifiedPanel extends JPanel {
                 Integer transferId = (Integer)
                         transferTableModel.getValueAt(row,0);
 
-                Transfer t = transferService.buscarPorId(transferId);
+                Transfer t = osController.buscarTransferPorId(transferId);
 
-                transferService.vincularAOS(transferId, osSelecionada);
+                osController.vincularTransfer(transferId, osSelecionada);
             }
 
             osSelecionada =
-                    osService.buscarComTransfers(osSelecionada.getId());
+                    osController.buscarComTransfers(osSelecionada.getId());
 
             atualizarTabelaTransfersNaOS();
             carregarTransfersDisponiveis();
@@ -440,9 +433,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
         }
 
         try {
-
-            RouteResult resultado =
-                    PathFindingTimeWindow.otimizarComTimeWindow(osSelecionada);
+            RouteResult resultado = osController.otimizarRota(osSelecionada);
 
             textAreaLog.setText(
                     "ROTA OTIMIZADA\n\n" +
@@ -461,7 +452,7 @@ public class OrdemServicoUnifiedPanel extends JPanel {
 
         osTableModel.setRowCount(0);
 
-        for(OrdemServico os : osService.listarTodos()) {
+        for(OrdemServico os : osController.listarTodos()) {
 
             if("ABERTA".equals(os.getStatus())) {
 
@@ -501,17 +492,14 @@ public class OrdemServicoUnifiedPanel extends JPanel {
 
         transferTableModel.setRowCount(0);
 
-        for(Transfer t : transferService.listarTodos()) {
+        for(Transfer t : osController.listarTransfersDisponiveis()) {
 
-            if(t.getOrdemServico() == null) {
-
-                transferTableModel.addRow(new Object[]{
-                        t.getId(),
-                        t.getHoraTransfer(),
-                        t.getOrigem() + " → " + t.getDestino(),
-                        t.getPassageiros().size()
-                });
-            }
+            transferTableModel.addRow(new Object[]{
+                    t.getId(),
+                    t.getHoraTransfer(),
+                    t.getOrigem() + " → " + t.getDestino(),
+                    t.getPassageiros().size()
+            });
         }
     }
 

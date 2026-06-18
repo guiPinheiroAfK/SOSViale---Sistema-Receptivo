@@ -5,11 +5,10 @@ import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Passageiro;
 import br.com.sosviale.model.PontoColeta;
 import br.com.sosviale.model.Transfer;
+import br.com.sosviale.controller.transfer.TransferController;
+import br.com.sosviale.controller.transfer.dto.TransferRequest;
 import br.com.sosviale.service.Moeda;
-import br.com.sosviale.service.PassageiroService;
-import br.com.sosviale.service.PontoColetaService;
 import br.com.sosviale.service.StatusTransfer;
-import br.com.sosviale.service.TransferService;
 import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
@@ -29,6 +28,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+// todo: tem algum problema estourando no terminal, NullPointerException. Não interfere nas funcionalidade do sistema, mas é feio.
+
 public class TransfersPanel extends JPanel {
 
     private static final Color PANEL_BACKGROUND = Color.WHITE;
@@ -37,9 +38,7 @@ public class TransfersPanel extends JPanel {
     private static final Color DANGER_RED = new Color(200, 50, 50);
     private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, 13);
 
-    private final TransferService service = new TransferService();
-    private final PontoColetaService pcService = new PontoColetaService();
-    private final PassageiroService passageiroService = new PassageiroService();
+    private final TransferController transferController;
     private final List<Passageiro> passageirosSelecionados = new ArrayList<>();
 
     private DefaultTableModel tableModel, modelPassageirosTransfer;
@@ -55,7 +54,8 @@ public class TransfersPanel extends JPanel {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    public TransfersPanel() {
+    public TransfersPanel(TransferController transferController) {
+        this.transferController = transferController;
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -210,7 +210,7 @@ public class TransfersPanel extends JPanel {
     }
 
     private void abrirSeletorPassageiros() {
-        List<Passageiro> todos = passageiroService.listarTodos();
+        List<Passageiro> todos = transferController.listarPassageiros();
 
         if (todos == null || todos.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Nenhum passageiro cadastrado.");
@@ -271,7 +271,13 @@ public class TransfersPanel extends JPanel {
             BigDecimal val = new BigDecimal(txt);
             Moeda m = (Moeda) comboMoeda.getSelectedItem();
 
-            BigDecimal c = (m == Moeda.USD) ? new BigDecimal("5.00") : (m == Moeda.PYG) ? new BigDecimal("0.00068") : BigDecimal.ONE;
+            BigDecimal c = BigDecimal.ONE;
+            if (m == Moeda.USD) {
+                c = transferController.getCotacaoUsd();
+            } else if (m == Moeda.PYG) {
+                c = transferController.getCotacaoPyg();
+            }
+
             BigDecimal res = val.multiply(c);
 
             // Taxas fictícias SOS Viale
@@ -304,18 +310,20 @@ public class TransfersPanel extends JPanel {
                 return;
             }
 
-            Transfer t = (idSelecionado == null) ? new Transfer() : service.buscarPorId(idSelecionado);
-            t.setOrigem(o.getLocalColeta());
-            t.setDestino(d.getLocalColeta());
-            t.setDataTransfer(LocalDate.parse(dataField.getText(), DATE_FORMATTER));
-            t.setHoraTransfer(LocalTime.parse(horaField.getText(), TIME_FORMATTER));
-            t.setValorOriginal(new BigDecimal(valorField.getText().replace(",", ".")));
-            t.setMoedaOrigem((Moeda) comboMoeda.getSelectedItem());
-            t.setStatus(StatusTransfer.AGUARDANDO_OS);
-            t.setPassageiros(new ArrayList<>(passageirosSelecionados));
+            TransferRequest request = new TransferRequest(
+                    idSelecionado,
+                    o.getLocalColeta(),
+                    d.getLocalColeta(),
+                    LocalDate.parse(dataField.getText(), DATE_FORMATTER),
+                    LocalTime.parse(horaField.getText(), TIME_FORMATTER),
+                    new BigDecimal(valorField.getText().replace(",", ".")),
+                    (Moeda) comboMoeda.getSelectedItem(),
+                    StatusTransfer.AGUARDANDO_OS,
+                    new ArrayList<>(passageirosSelecionados)
+            );
 
-            if (idSelecionado == null) service.cadastrar(t);
-            else service.atualizar(t);
+            if (idSelecionado == null) transferController.cadastrar(request);
+            else transferController.atualizar(request);
 
             limparForm();
             carregarTransfers();
@@ -326,24 +334,55 @@ public class TransfersPanel extends JPanel {
     }
 
     private void preencherFormParaEdicao() {
-        int row = table.getSelectedRow();
-        if (row == -1) return;
-        Transfer t = service.buscarPorId((Integer) tableModel.getValueAt(row, 0));
-        idSelecionado = t.getId();
+        try {
+            int row = table.getSelectedRow();
+            if (row == -1) return;
 
-        selecionarNoCombo(comboOrigem, t.getOrigem());
-        selecionarNoCombo(comboDestino, t.getDestino());
-        valorField.setText(t.getValorOriginal().toString());
-        comboMoeda.setSelectedItem(t.getMoedaOrigem());
-        dataField.setText(t.getDataTransfer().format(DATE_FORMATTER));
-        horaField.setText(t.getHoraTransfer().format(TIME_FORMATTER));
+            Integer id = (Integer) tableModel.getValueAt(row, 0);
+            Transfer t = transferController.buscarPorId(id);
 
-        passageirosSelecionados.clear();
-        if (t.getPassageiros() != null) passageirosSelecionados.addAll(t.getPassageiros());
-        atualizarTabelaPassageiros();
+            if (t == null) {
+                JOptionPane.showMessageDialog(this, "Aviso: Transfer não encontrado no banco de dados.");
+                return;
+            }
 
-        salvarButton.setText("Salvar alteração");
-        excluirButton.setVisible(true);
+            idSelecionado = t.getId();
+
+            // 1. Correção do Valor e Moeda
+            java.math.BigDecimal valor = t.getValorOriginal();
+            valorField.setText(valor != null ? valor.toString() : "0.00");
+            comboMoeda.setSelectedItem(t.getMoedaOrigem() != null ? t.getMoedaOrigem() : Moeda.BRL);
+
+            // 2. Atualizando Origem e Destino com o método blindado
+            selecionarNoCombo(comboOrigem, t.getOrigem());
+            selecionarNoCombo(comboDestino, t.getDestino());
+
+            // 3. Preenche Data e Hora
+            dataField.setText(t.getDataTransfer() != null ? t.getDataTransfer().format(DATE_FORMATTER) : "");
+            horaField.setText(t.getHoraTransfer() != null ? t.getHoraTransfer().format(TIME_FORMATTER) : "");
+
+            // 4. Atualiza a lista de passageiros
+            passageirosSelecionados.clear();
+            if (t.getPassageiros() != null) {
+                passageirosSelecionados.addAll(t.getPassageiros());
+            }
+            atualizarTabelaPassageiros();
+
+            // 5. Configura os botões
+            salvarButton.setText(LanguageManager.getInstance().translate("transfers.button.edit"));
+            excluirButton.setVisible(true);
+
+            // 6. Força a atualização do painel azul de preview de valores
+            atualizarPreview();
+
+        } catch (Exception e) {
+            // Isso vai jogar o erro vermelho no console e um pop-up na tela pra você saber o que quebrou!
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Ocorreu um erro ao carregar os dados na tela.\nMotivo: " + e.getMessage(),
+                    "Erro de Preenchimento",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void limparForm() {
@@ -380,7 +419,7 @@ public class TransfersPanel extends JPanel {
 
     private void carregarCombos() {
         if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
-        List<PontoColeta> locais = pcService.listarTodos();
+        List<PontoColeta> locais = transferController.listarPontosColeta();
         comboOrigem.removeAllItems(); comboDestino.removeAllItems();
         for (PontoColeta p : locais) { comboOrigem.addItem(p); comboDestino.addItem(p); }
     }
@@ -388,7 +427,7 @@ public class TransfersPanel extends JPanel {
     private void carregarTransfers() {
         if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
-        for (Transfer t : service.listarTodos()) {
+        for (Transfer t : transferController.listarTodos()) {
             tableModel.addRow(new Object[]{t.getId(), t.getOrigem(), t.getDestino(),
                     t.getDataTransfer().format(DATE_FORMATTER), t.getHoraTransfer().format(TIME_FORMATTER),
                     "R$ " + t.getValorBase(),
@@ -415,15 +454,24 @@ public class TransfersPanel extends JPanel {
     }
 
     private void selecionarNoCombo(JComboBox<PontoColeta> combo, String nome) {
+        if (nome == null || nome.trim().isEmpty()) {
+            combo.setSelectedIndex(-1); // Deixa em branco se não houver origem/destino
+            return;
+        }
+
         for (int i = 0; i < combo.getItemCount(); i++) {
             PontoColeta p = combo.getItemAt(i);
-            if (p != null && p.getLocalColeta().equals(nome)) { combo.setSelectedIndex(i); break; }
+            // Verifica se o objeto e o nome não são nulos antes de comparar
+            if (p != null && p.getLocalColeta() != null && p.getLocalColeta().equalsIgnoreCase(nome.trim())) {
+                combo.setSelectedIndex(i);
+                return;
+            }
         }
     }
 
     private void excluirTransfer() {
         if (idSelecionado != null && JOptionPane.showConfirmDialog(this, "Excluir este agendamento?") == 0) {
-            service.excluir(idSelecionado); limparForm(); carregarTransfers();
+            transferController.excluir(idSelecionado); limparForm(); carregarTransfers();
         }
     }
 }

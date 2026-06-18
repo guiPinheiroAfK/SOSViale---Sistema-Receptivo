@@ -4,12 +4,26 @@ import br.com.sosviale.auth.AuthenticationService;
 import br.com.sosviale.auth.SessionManager;
 import br.com.sosviale.controller.dashboard.DashboardController;
 import br.com.sosviale.controller.dashboard.impl.DashboardControllerImpl;
+import br.com.sosviale.controller.login.LoginController;
+import br.com.sosviale.controller.login.impl.LoginControllerImpl;
+import br.com.sosviale.controller.motorista.MotoristaController;
+import br.com.sosviale.controller.motorista.impl.MotoristaControllerImpl;
+import br.com.sosviale.controller.ordemservico.OrdemServicoController;
+import br.com.sosviale.controller.ordemservico.impl.OrdemServicoControllerImpl;
+import br.com.sosviale.controller.passageiro.PassageiroController;
+import br.com.sosviale.controller.passageiro.impl.PassageiroControllerImpl;
+import br.com.sosviale.controller.pontoColeta.PontoColetaController;
+import br.com.sosviale.controller.pontoColeta.impl.PontoColetaControllerImpl;
+import br.com.sosviale.controller.transfer.TransferController;
+import br.com.sosviale.controller.transfer.impl.TransferControllerImpl;
+import br.com.sosviale.controller.usuario.UsuarioController;
+import br.com.sosviale.controller.usuario.impl.UsuarioControllerImpl;
+import br.com.sosviale.controller.veiculo.VeiculoController;
+import br.com.sosviale.controller.veiculo.impl.VeiculoControllerImpl;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Perfil;
 import br.com.sosviale.offline.OfflineSyncService;
-import br.com.sosviale.service.DashboardService;
-import br.com.sosviale.service.NotificationService;
-import br.com.sosviale.service.TransferService;
+import br.com.sosviale.service.*;
 import br.com.sosviale.App;
 
 import javax.swing.*;
@@ -288,16 +302,30 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
         DashboardController dashboardController = new DashboardControllerImpl(new DashboardService());
         dashboardPanel = new DashboardPanel(dashboardController);
         cardPanel.add(dashboardPanel, "dashboard");
-        cardPanel.add(new PassageirosPanel(),  "passageiros");
-        cardPanel.add(new PontosColetaPanel(), "pontosColeta");
-        cardPanel.add(new TransfersPanel(),    "transfers");
-        cardPanel.add(new OrdemServicoUnifiedPanel(),       "ordens");
-        cardPanel.add(new MotoristasPanel(),   "motoristas");
-        cardPanel.add(new VeiculosPanel(),     "veiculos");
+
+        PassageiroController passageiroController = new PassageiroControllerImpl(new PassageiroService());
+        cardPanel.add(new PassageirosPanel(passageiroController), "passageiros");
+
+        PontoColetaController pontoColetaController = new PontoColetaControllerImpl(new PontoColetaService());
+        cardPanel.add(new PontosColetaPanel(pontoColetaController), "pontosColeta");
+
+        TransferController transferController = new TransferControllerImpl(new TransferService(), new PontoColetaService(), new PassageiroService());
+        cardPanel.add(new TransfersPanel(transferController), "transfers");
+
+        OrdemServicoController ordemServicoController = new OrdemServicoControllerImpl(new OrdemServicoService(), new MotoristaService(), new VeiculoService(), new TransferService());
+        cardPanel.add(new OrdemServicoUnifiedPanel(ordemServicoController), "ordens");
+
+        MotoristaController motoristaController = new MotoristaControllerImpl(new MotoristaService());
+        cardPanel.add(new MotoristasPanel(motoristaController),   "motoristas");
+
+        VeiculoController veiculoController = new VeiculoControllerImpl(new VeiculoService());
+        cardPanel.add(new VeiculosPanel(veiculoController), "veiculos");
+
         servicosPanel = new ServicosPanel();
         cardPanel.add(servicosPanel, "servicos");
 
-        usuariosPanel = new UsuariosPanel();
+        UsuarioController usuarioController = new UsuarioControllerImpl(new UserService());
+        usuariosPanel = new UsuariosPanel(usuarioController);
         cardPanel.add(usuariosPanel, "admin");
 
         main.add(heading,   BorderLayout.NORTH);
@@ -361,7 +389,7 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
 
         LanguageManager lm = LanguageManager.getInstance();
         String titleText = lm.translate(navLabelKeys.get(key));
-        String cleanTitle = titleText.replaceAll("[🛠️📊👥📍📋📦📝🧑‍✈️🚐⚙️🔒🚗🚙]", "").trim();
+        String cleanTitle = titleText.replaceFirst("^[\\p{So}\\p{Cn}\\uFE0F\\u200D]+\\s*", "").trim();
         pageTitle.setText(cleanTitle);
         pageSubtitle.setText(lm.translate(navSubtitleKeys.get(key)));
         cardLayout.show(cardPanel, key);
@@ -425,7 +453,8 @@ public class MainDashboard extends JFrame implements LanguageManager.LanguageCha
             authService.logout();
             dispose();
             SwingUtilities.invokeLater(() -> {
-                LoginScreen ls = new LoginScreen(authService, App.isDatabaseDisponivel());
+                LoginController loginController = new LoginControllerImpl(authService, new UserService());
+                LoginScreen ls = new LoginScreen(loginController, App.isDatabaseDisponivel());
                 TransferService transferService = new TransferService();
                 ls.setLoginCallback(u -> new MainDashboard(authService, transferService).setVisible(true));
                 ls.setVisible(true);

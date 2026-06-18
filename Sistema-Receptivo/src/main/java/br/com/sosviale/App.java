@@ -1,6 +1,9 @@
 package br.com.sosviale;
 
 import br.com.sosviale.auth.AuthenticationService;
+import br.com.sosviale.controller.login.LoginController;
+import br.com.sosviale.controller.login.impl.LoginControllerImpl;
+import br.com.sosviale.service.UserService;
 import br.com.sosviale.config.DatabaseConfig;
 import br.com.sosviale.config.EnvLoader;
 import br.com.sosviale.offline.ConnectivityService;
@@ -45,7 +48,8 @@ public class App {
         SwingUtilities.invokeLater(() -> {
             try {
                 AuthenticationService authService = new AuthenticationService();
-                LoginScreen loginScreen = new LoginScreen(authService, databaseDisponivel);
+                LoginController loginController = new LoginControllerImpl(authService, new UserService());
+                LoginScreen loginScreen = new LoginScreen(loginController, databaseDisponivel);
 
                 loginScreen.setLoginCallback(username -> {
                     TransferService transferService = new TransferService();

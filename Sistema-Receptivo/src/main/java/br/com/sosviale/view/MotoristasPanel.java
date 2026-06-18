@@ -1,9 +1,10 @@
 package br.com.sosviale.view;
 
+import br.com.sosviale.controller.motorista.MotoristaController;
+import br.com.sosviale.controller.motorista.dto.MotoristaRequest;
 import br.com.sosviale.i18n.I18nRegistry;
 import br.com.sosviale.i18n.LanguageManager;
 import br.com.sosviale.model.Motorista;
-import br.com.sosviale.service.MotoristaService;
 import br.com.sosviale.util.OfflineReadGuard;
 
 import javax.swing.*;
@@ -22,7 +23,7 @@ public class MotoristasPanel extends JPanel {
     private static final Font  BASE_FONT        = new Font("SansSerif", Font.PLAIN, 13);
     private static final Font  SECTION_FONT     = new Font("SansSerif", Font.BOLD, 16);
 
-    private final MotoristaService service = new MotoristaService();
+    private final MotoristaController motoristaController;
     private DefaultTableModel tableModel;
     private JTable table;
     private JTextField nomeField;
@@ -34,7 +35,8 @@ public class MotoristasPanel extends JPanel {
     private JLabel formTitleLabel;
     private JLabel tableTitleLabel;
 
-    public MotoristasPanel() {
+    public MotoristasPanel(MotoristaController motoristaController) {
+        this.motoristaController = motoristaController;
         setLayout(new BorderLayout(14, 0));
         setOpaque(false);
         add(buildForm(), BorderLayout.WEST);
@@ -174,10 +176,10 @@ public class MotoristasPanel extends JPanel {
 
         try {
             if (idSelecionado == null) {
-                service.salvar(nome, cnh, telefone);
+                motoristaController.salvar(new MotoristaRequest(null, nome, cnh, telefone));
                 JOptionPane.showMessageDialog(this, "Motorista cadastrado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                service.atualizar(idSelecionado, nome, cnh, telefone);
+                motoristaController.atualizar(new MotoristaRequest(idSelecionado, nome, cnh, telefone));
                 JOptionPane.showMessageDialog(this, "Motorista atualizado!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             limparForm();
@@ -200,7 +202,7 @@ public class MotoristasPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            service.excluir(idSelecionado);
+            motoristaController.excluir(idSelecionado);
             limparForm();
             carregarMotoristas();
             JOptionPane.showMessageDialog(this, "Motorista excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -212,7 +214,7 @@ public class MotoristasPanel extends JPanel {
     private void carregarMotoristas() {
         if (OfflineReadGuard.shouldSkipDatabaseReads()) return;
         tableModel.setRowCount(0);
-        service.listarTodos().forEach(m -> tableModel.addRow(new Object[]{
+        motoristaController.listarTodos().forEach(m -> tableModel.addRow(new Object[]{
                 m.getId(),
                 m.getNome(),
                 m.getCnh(),

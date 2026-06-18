@@ -3,17 +3,88 @@ package br.com.sosviale.service;
 import br.com.sosviale.model.OrdemServico;
 import br.com.sosviale.model.Transfer;
 import br.com.sosviale.repository.TransferRepository;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 
 public class TransferService {
 
     private final TransferRepository repository = new TransferRepository();
 
-    // Cotações fixas (Exemplo: 1 USD = 5.00 BRL | 1 PYG ≈ 0.00068 BRL)
-    private static final BigDecimal CAMBIO_USD = new BigDecimal("5.00");
-    private static final BigDecimal CAMBIO_PYG = new BigDecimal("0.00068");
+    // COTAÇÕES VARIAVEIS!!! Removido campo "final" dos cambios para adicionar conexão a API
+    private static BigDecimal CAMBIO_USD = new BigDecimal("5.00");
+    private static BigDecimal CAMBIO_PYG = new BigDecimal("0.00068");
+
+    // "trava" para saber se já buscamos hoje. antes ele pesquisava varias vezes por causa das telas
+    private static boolean cotacoesAtualizadas = false;
+
+    public BigDecimal getCotacaoUsd() {
+        return CAMBIO_USD;
+    }
+
+    public BigDecimal getCotacaoPyg() {
+        return CAMBIO_PYG;
+    }
+
+    public TransferService() {
+        // Atualiza sempre que abre o sistema :>
+        if (!cotacoesAtualizadas) { // a trava aqui
+            atualizarCotacoes();
+        }
+    }
+
+    /**
+     * Busca as cotações mais recentes na AwesomeAPI.
+     */
+    public void atualizarCotacoes() {
+        try {
+            // Cria o cliente HTTP
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(5)) // Timeout rápido pra não travar a tela
+                    .build();
+
+            // Configura a requisição para USD e PYG simultaneamente
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://economia.awesomeapi.com.br/last/USD-BRL,PYG-BRL"))
+                    .GET()
+                    .build();
+
+            // Envia a requisição
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                // Lê o retorno da API
+                JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
+
+                // Extrai o valor de compra ("bid") do JSON
+                String bidUsd = json.getAsJsonObject("USDBRL").get("bid").getAsString();
+                String bidPyg = json.getAsJsonObject("PYGBRL").get("bid").getAsString();
+
+                // Atualiza as variáveis estáticas do sistema
+                CAMBIO_USD = new BigDecimal(bidUsd);
+                CAMBIO_PYG = new BigDecimal(bidPyg);
+
+                // o boolean para garantir :>
+                cotacoesAtualizadas = true;
+
+                System.out.println("✅ Cotações atualizadas com sucesso: USD = " + CAMBIO_USD + " | PYG = " + CAMBIO_PYG);
+            } else {
+                System.err.println("⚠️ Falha ao buscar cotação. Status: " + response.statusCode());
+            }
+
+        } catch (Exception e) {
+            System.err.println("❌ Erro de conexão com a API de câmbio. Usando cotações de fallback (5.00 e 0.00068). Erro: " + e.getMessage());
+            // Como não tem 'final' mais, se der erro ele apenas mantém o valor anterior/padrão e o sistema não quebra.
+        }
+    }
 
     public void cadastrar(Transfer transfer) {
         validarTransfer(transfer);
